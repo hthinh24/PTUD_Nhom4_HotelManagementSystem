@@ -9,6 +9,8 @@ public class KhachHang {
     private String soDienThoai;
     private Timestamp thoiGianTao;
 
+
+
     public KhachHang() {
     }
 
@@ -18,17 +20,6 @@ public class KhachHang {
         this.tenKhachHang = tenKhachHang;
         this.soDienThoai = soDienThoai;
         this.thoiGianTao = thoiGianTao;
-    }
-
-    @Override
-    public String toString() {
-        return "KhachHang{" +
-               "maKhachHang='" + maKhachHang + '\'' +
-               ", CCCD='" + CCCD + '\'' +
-               ", tenKhachHang='" + tenKhachHang + '\'' +
-               ", soDienThoai='" + soDienThoai + '\'' +
-               ", thoiGianTao=" + thoiGianTao +
-               '}';
     }
 
     // Getters and Setters

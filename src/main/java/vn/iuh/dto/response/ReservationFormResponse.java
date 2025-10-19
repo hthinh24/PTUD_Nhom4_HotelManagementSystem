@@ -5,16 +5,14 @@ import java.sql.Timestamp;
 public class ReservationFormResponse {
     private String customerName;
     private String maDonDatPhong;
-    private String roomId;
     private String roomName;
     private Timestamp timeIn;
     private Timestamp timeOut;
 
-    public ReservationFormResponse(String customerName, String maDonDatPhong, String roomId, String roomName,
-                                   Timestamp timeIn, Timestamp timeOut) {
+    public ReservationFormResponse(String customerName, String maDonDatPhong, String roomName, Timestamp timeIn,
+                                   Timestamp timeOut) {
         this.customerName = customerName;
         this.maDonDatPhong = maDonDatPhong;
-        this.roomId = roomId;
         this.roomName = roomName;
         this.timeIn = timeIn;
         this.timeOut = timeOut;
@@ -26,10 +24,6 @@ public class ReservationFormResponse {
 
     public String getMaDonDatPhong() {
         return maDonDatPhong;
-    }
-
-    public String getRoomId() {
-        return roomId;
     }
 
     public String getRoomName() {

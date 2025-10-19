@@ -5,7 +5,6 @@ import vn.iuh.dao.CongViecDAO;
 import vn.iuh.dao.PhongDAO;
 import vn.iuh.dto.event.create.RoomCreationEvent;
 import vn.iuh.dto.event.update.RoomModificationEvent;
-import vn.iuh.dto.repository.RoomFurnitureItem;
 import vn.iuh.entity.CongViec;
 import vn.iuh.entity.Phong;
 import vn.iuh.service.RoomService;
@@ -49,11 +48,6 @@ public class RoomServiceImpl implements RoomService {
         } else {
             return phongs;
         }
-    }
-
-    @Override
-    public List<RoomFurnitureItem> getAllFurnitureInRoom(String roomID) {
-        return phongDAO.timTatCaNoiThatTrongPhong(roomID);
     }
 
     @Override
@@ -101,7 +95,7 @@ public class RoomServiceImpl implements RoomService {
 
     public boolean completeCleaning(String roomID) {
         CongViec congViec = congViecDAO.layCongViecHienTaiCuaPhong(roomID);
-        System.out.println("Hoàn tất dọn dẹp phòng: " + roomID);
+        System.out.println(congViec.getMaCongViec());
         return congViecDAO.removeJob(congViec.getMaCongViec());
     }
 }

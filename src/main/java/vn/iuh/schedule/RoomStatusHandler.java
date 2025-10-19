@@ -171,32 +171,26 @@ public class RoomStatusHandler implements Job {
                 Timestamp tgKetThuc = null;
                 String roomId = rj.getRoomId();
 
-                //kiểm tra -> sử dụng
+                //Checking -> Using
                 if (currentStatus.equalsIgnoreCase(RoomStatus.ROOM_CHECKING_STATUS.getStatus())) {
                     newStatus = RoomStatus.ROOM_USING_STATUS.getStatus();
                     tgKetThuc = res.getTimeOut();
 
-                    //sử dụng ->checkout trễ
+                    //Using ->Checkout late
                 } else if (currentStatus.equalsIgnoreCase(RoomStatus.ROOM_USING_STATUS.getStatus())) {
                     newStatus = RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus();
                     tgKetThuc = Timestamp.valueOf(rj.getEndTime().toLocalDateTime()
                             .plusMinutes(WorkTimeCost.CHECKOUT_LATE_MIN.getMinutes()));
                     createMessageForLateCheckOut(rj.getRoomId());
 
-                    //trễ checkout -> dọn dẹp
+                    //Checkout late -> Cleaning
                 } else if (currentStatus.equalsIgnoreCase(RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus())) {
                     newStatus = RoomStatus.ROOM_CLEANING_STATUS.getStatus();
-//                    tgKetThuc = Timestamp.valueOf(rj.getEndTime().toLocalDateTime()
-//                            .plusMinutes(WorkTimeCost.CLEANING_TIME.getMinutes()));
+                    tgKetThuc = Timestamp.valueOf(rj.getEndTime().toLocalDateTime()
+                            .plusMinutes(WorkTimeCost.CLEANING_TIME.getMinutes()));
                     checkOutService.checkOutByReservationDetail(res.getMaChiTietDatPhong());
-                    res.setRoomStatus(newStatus);
-                    updatedBookingResponse.add(res);
-                    System.out.println(maCongViecMoiNhat);
-                    maCongViecMoiNhat = congViecService.taoMaCongViecMoi(null);
-                    System.out.println(maCongViecMoiNhat);
-                    continue;
 
-                    //chờ check-in hoặc dọn dẹp hết hạn -> xoá công việc
+                    //Booked hoặc Cleaning hết hạn -> xoá công việc
                 } else if (
                         currentStatus.equalsIgnoreCase(RoomStatus.ROOM_BOOKED_STATUS.getStatus()) ||
                                 currentStatus.equalsIgnoreCase(RoomStatus.ROOM_CLEANING_STATUS.getStatus())
@@ -206,9 +200,11 @@ public class RoomStatusHandler implements Job {
                     updatedBookingResponse.add(res);
                     // kết thúc vòng lặp vì không tạo công việc mới
                     continue;
+
                 } else {
                     continue;
                 }
+
                 if (newStatus != null) {
                     congViecCanThem.add(new CongViec(
                             maCongViecMoiNhat,
@@ -239,19 +235,22 @@ public class RoomStatusHandler implements Job {
             }
         }
 
+        //Cập nhật giao diện
+        gridRoomPanel.updateRoomItemStatus(updatedBookingResponse);
 
         //Xử lý xóa và thêm công việc batch
         if (!congViecCanKetThuc.isEmpty()) {
             jobDAO.xoaDanhSachCongViec(congViecCanKetThuc);
         }
+
         if (!congViecCanThem.isEmpty()) {
             jobDAO.themDanhSachCongViec(congViecCanThem);
         }
-        //Cập nhật giao diện
-        gridRoomPanel.updateRoomItemStatus(updatedBookingResponse);
+
         System.out.printf("Đã thêm %d công việc mới, xóa %d công việc cũ%n",
                 congViecCanThem.size(), congViecCanKetThuc.size());
     }
+
 
     private void createMessageForLateCheckOut(String roomId){
         try {
@@ -270,7 +269,7 @@ public class RoomStatusHandler implements Job {
 
             Trigger trigger = TriggerBuilder.newTrigger()
                     .withIdentity("trigger_room_" + roomId, jobGroup)
-                    .startAt(DateBuilder.futureDate(5, DateBuilder.IntervalUnit.SECOND))
+                    .startAt(DateBuilder.futureDate(WorkTimeCost.CHECK_OUT_LATE_SEND_MESSAGE.getMinutes(), DateBuilder.IntervalUnit.MINUTE))
                     .build();
 
             scheduler.scheduleJob(jobDetail, trigger);

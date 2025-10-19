@@ -16,13 +16,13 @@ public class BellButton extends JButton {
     private JPopupMenu popup;
 
     public BellButton() {
-        super("\uD83D\uDD14");
+        super("\uD83D\uDD14"); // 🔔 emoji
         this.notifications = new ArrayList<>();
         setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24));
         setFocusPainted(false);
         setBorderPainted(false);
         setContentAreaFilled(true);
-        setBackground(CustomUI.darkBlue);
+        setBackground(defaultColor);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         // Khi click vào chuông → reset trạng thái
