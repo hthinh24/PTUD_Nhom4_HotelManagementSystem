@@ -92,6 +92,10 @@ public class BookingFormPanel extends JPanel {
     private JPanel bookingInfoContent;
     private JPanel actionMenuContent;
 
+    // Buttons on bottom navbar
+    private JButton btnGoiDichVu;
+    private JButton btnDatPhong;
+
     // Close button
     private JButton closeButton;
 
@@ -114,7 +118,11 @@ public class BookingFormPanel extends JPanel {
         setBackground(Color.WHITE);
         setLayout(new BorderLayout(10, 10));
 
-        ServiceSelectionPanel servicePanel = new ServiceSelectionPanel(PanelName.BOOKING.getName(), 1, selectedRoom.getMaChiTietDatPhong(), (services) -> {
+        ServiceSelectionPanel servicePanel = new ServiceSelectionPanel(PanelName.BOOKING.getName(), 1,
+                                                                       Collections.singletonList(
+                                                                               selectedRoom.getRoomName()),
+                                                                       selectedRoom.getMaChiTietDatPhong(),
+                                                                       (services) -> {
                 serviceOrdered.clear();
                 serviceOrdered.addAll(services);
                 updateTotalServicePrice(); // Update service price when services are selected
@@ -161,6 +169,10 @@ public class BookingFormPanel extends JPanel {
         txtNote = new JTextArea(4, 25);
         txtNote.setLineWrap(true);
         txtNote.setWrapStyleWord(true);
+
+        // Initialize navbar buttons
+        btnGoiDichVu = new JButton("GỌI DỊCH VỤ");
+        btnDatPhong = new JButton("ĐẶT PHÒNG");
     }
 
     private void setupLayout() {
@@ -214,9 +226,73 @@ public class BookingFormPanel extends JPanel {
         mainScrollPane.getVerticalScrollBar().setUnitIncrement(40);
         mainScrollPane.getViewport().setBackground(Color.WHITE);
 
+        // Create footer navbar panel
+        JPanel footerPanel = createFooterNavbar();
+
         // Add to main panel
         add(headerPanel, BorderLayout.NORTH);
         add(mainScrollPane, BorderLayout.CENTER);
+        add(footerPanel, BorderLayout.SOUTH);
+    }
+
+    private JPanel createFooterNavbar() {
+        JPanel footerPanel = new JPanel(new BorderLayout());
+        footerPanel.setPreferredSize(new Dimension(0, 50));
+        footerPanel.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
+        footerPanel.setBackground(CustomUI.darkBlue);
+
+        // Button panel with horizontal layout
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
+        buttonPanel.setBackground(CustomUI.darkBlue);
+        buttonPanel.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
+        buttonPanel.setOpaque(true);
+
+        // Style and configure buttons
+        btnGoiDichVu.setFont(CustomUI.bigFont);
+        btnGoiDichVu.setBackground(CustomUI.blue);
+        btnGoiDichVu.setForeground(CustomUI.white);
+        btnGoiDichVu.setPreferredSize(new Dimension(300, 40));
+        btnGoiDichVu.setFocusPainted(false);
+        btnGoiDichVu.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+
+        btnDatPhong.setFont(CustomUI.bigFont);
+        btnDatPhong.setBackground(CustomUI.darkGreen.brighter());
+        btnDatPhong.setForeground(CustomUI.white);
+        btnDatPhong.setPreferredSize(new Dimension(300, 40));
+        btnDatPhong.setFocusPainted(false);
+        btnDatPhong.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+
+        // Add hover effects
+        btnGoiDichVu.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btnGoiDichVu.setBackground(CustomUI.blue.brighter());
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btnGoiDichVu.setBackground(CustomUI.blue);
+            }
+        });
+
+        btnDatPhong.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btnDatPhong.setBackground(CustomUI.darkGreen);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btnDatPhong.setBackground(CustomUI.darkGreen.brighter());
+            }
+        });
+
+        buttonPanel.add(btnGoiDichVu);
+        buttonPanel.add(Box.createHorizontalStrut(170));
+        buttonPanel.add(btnDatPhong);
+
+        footerPanel.add(buttonPanel, BorderLayout.CENTER);
+        return footerPanel;
     }
 
     private JPanel createBaseContentPanel() {
@@ -236,34 +312,25 @@ public class BookingFormPanel extends JPanel {
         contentPanel.add(bookingPanel, gbc);
 
         // Right Column - Row 0: Action menu panel (WHITE background)
-        JPanel actionMenu = createActionMenuPanel();
+        JPanel customerPanel = createCustomerInfoPanel();
         bookingPanel.setBackground(Color.WHITE);
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.gridwidth = 1;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 0.4; gbc.weighty = 0.6; // More height for booking info
-        gbc.insets = new Insets(0, 5, 5, 5);
-        contentPanel.add(actionMenu, gbc);
+        gbc.insets = new Insets(0, 5, 5, 0);
+        contentPanel.add(customerPanel, gbc);
 
         // LEFT COLUMN - Row 1: Room info panel (WHITE background)
         JPanel rightRoomPanel = createRoomInfoPanel();
         rightRoomPanel.setBackground(Color.WHITE);
         gbc.gridx = 0; gbc.gridy = 1;
-        gbc.gridwidth = 1;
+        gbc.gridwidth = 2;
         gbc.gridheight = 1; // Reset to single row
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 0.6; gbc.weighty = 0.4; // Less height for customer info
-        gbc.insets = new Insets(5, 0, 10, 5);
+        gbc.insets = new Insets(5, 0, 10, 0);
         contentPanel.add(rightRoomPanel, gbc);
-
-        // RIGHT COLUMN - Row 1: Customer info panel (WHITE background)
-        JPanel customerPanel = createCustomerInfoPanel();
-        gbc.gridx = 1; gbc.gridy = 1;
-        gbc.gridwidth = 1;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 0.4; gbc.weighty = 0.4;
-        gbc.insets = new Insets(5, 5, 10, 5);
-        contentPanel.add(customerPanel, gbc);
 
         return contentPanel;
     }
@@ -313,37 +380,6 @@ public class BookingFormPanel extends JPanel {
 
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(customerInfoContent, BorderLayout.CENTER);
-
-        return mainPanel;
-    }
-
-    private JPanel createActionMenuPanel() {
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(Color.WHITE);
-
-        ImageIcon menuIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/action.png")));
-        menuIcon = new ImageIcon(menuIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH));
-
-        // Create collapsible header
-        JPanel headerPanel = createCollapsibleHeader(menuIcon, "BẢNG THAO TÁC",
-                                                     new Color(70, 130, 180), CustomUI.white, () -> {
-                    isActionMenuCollapsed = !isActionMenuCollapsed;
-                    togglePanelVisibility(actionMenuContent, isActionMenuCollapsed);
-                });
-
-        // Create content panel - flexible grid based on number of actions
-        actionMenuContent = new JPanel();
-        actionMenuContent.setBackground(Color.WHITE);
-        actionMenuContent.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(70, 130, 180), 2),
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        ));
-
-        // Populate action items based on room status
-        populateActionItems();
-
-        mainPanel.add(headerPanel, BorderLayout.NORTH);
-        mainPanel.add(actionMenuContent, BorderLayout.CENTER);
 
         return mainPanel;
     }
@@ -772,9 +808,7 @@ public class BookingFormPanel extends JPanel {
     private void updateTotalServicePrice() {
         double totalServicePrice = 0.0;
         for (DonGoiDichVu service : serviceOrdered) {
-            if (!service.isDuocTang()) { // Only count non-gift services
-                totalServicePrice += service.getGiaThoiDiemDo() * service.getSoLuong();
-            }
+            totalServicePrice += service.getGiaThoiDiemDo() * service.getSoLuong();
         }
         txtTotalServicePrice.setText(priceFormatter.format(totalServicePrice) + " VNĐ");
         calculateDepositPrice(); // Recalculate deposit when service price changes
@@ -954,7 +988,21 @@ public class BookingFormPanel extends JPanel {
             return false;
         }
 
-        // Regex check for CCCD/CMND format (12 digits)
+        if (txtCustomerName.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên khách hàng!",
+                                          "Lỗi", JOptionPane.WARNING_MESSAGE);
+            txtCustomerName.requestFocus();
+            return false;
+        }
+
+        if (txtPhoneNumber.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập số điện thoại!",
+                                          "Lỗi", JOptionPane.WARNING_MESSAGE);
+            txtPhoneNumber.requestFocus();
+            return false;
+        }
+
+//        // Regex check for CCCD/CMND format (12 digits)
 //        String cccdPattern = "^[0-9]{12}$";
 //        if (!txtCCCD.getText().trim().matches(cccdPattern)) {
 //            JOptionPane.showMessageDialog(this, "CCCD/CMND không hợp lệ! Vui lòng nhập đúng định dạng 12 chữ số.",
@@ -962,15 +1010,8 @@ public class BookingFormPanel extends JPanel {
 //            txtCCCD.requestFocus();
 //            return false;
 //        }
-
-        if (txtCustomerName.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên khách hàng!",
-                "Lỗi", JOptionPane.WARNING_MESSAGE);
-            txtCustomerName.requestFocus();
-            return false;
-        }
-
-        // Simple name validation (Last name & first name, letters and spaces only)
+//
+//        // Simple name validation (Last name & first name, letters and spaces only)
 //        String namePattern = "^[A-ZÀ-ỹ][a-zà-ỹ]*(\\s[A-ZÀ-ỹ][a-zà-ỹ]*)+$";
 //        if (!txtCustomerName.getText().trim().matches(namePattern)) {
 //            JOptionPane.showMessageDialog(this, "Tên khách hàng không hợp lệ! Tên chỉ chứa ký tự và khoảng trắng.\nVui lòng nhập đầy đủ họ và tên.",
@@ -978,15 +1019,8 @@ public class BookingFormPanel extends JPanel {
 //            txtCustomerName.requestFocus();
 //            return false;
 //        }
-
-        if (txtPhoneNumber.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập số điện thoại!",
-                "Lỗi", JOptionPane.WARNING_MESSAGE);
-            txtPhoneNumber.requestFocus();
-            return false;
-        }
-
-        // Simple phone number validation (digits only, length 10-15)
+//
+//        // Simple phone number validation (digits only, length 10-15)
 //        String phonePattern = "^[0-9]{10,15}$";
 //        if (!txtPhoneNumber.getText().trim().matches(phonePattern)) {
 //            JOptionPane.showMessageDialog(this, "Số điện thoại không hợp lệ! Vui lòng nhập đúng định dạng từ 10 đến 15 chữ số.",
@@ -1060,6 +1094,11 @@ public class BookingFormPanel extends JPanel {
         boolean daDatTruoc = chkIsAdvanced.isSelected();
         List<String> danhSachMaPhong = java.util.Arrays.asList(selectedRoom.getRoomId());
 
+        // Assign roomId for each service ordered
+        for (DonGoiDichVu service : serviceOrdered) {
+            service.setMaPhong(selectedRoom.getRoomId());
+        }
+
         String maPhienDangNhap = Main.getCurrentLoginSession();
 
         return new BookingCreationEvent(tenKhachHang, soDienThoai, cccd, moTa,
@@ -1076,6 +1115,9 @@ public class BookingFormPanel extends JPanel {
         closeButton.addActionListener(e -> handleCloseReservation());
         chkIsAdvanced.addActionListener(e -> handleCalculateDeposit());
         reservationButton.addActionListener(e -> handleShowReservationManagement());
+
+        btnGoiDichVu.addActionListener(e -> handleCallService());
+        btnDatPhong.addActionListener(e -> handleConfirmBooking());
     }
 
     private void handleFindCustomer() {

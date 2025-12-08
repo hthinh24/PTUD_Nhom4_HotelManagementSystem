@@ -307,7 +307,7 @@ public class Main extends JFrame {
         blue.setBackground(Color.blue);
         BookingManagementPanel bookingManagementPanel = new BookingManagementPanel();
         ReservationManagementPanel reservationManagementPanel = new ReservationManagementPanel();
-        PreReservationManagementPanel preReservationManagementPanel = new PreReservationManagementPanel();
+//        PreReservationManagementPanel preReservationManagementPanel = new PreReservationManagementPanel();
         pnlStatistic = new RevenueStatisticPanel();
         QuanLyHoaDonPanel pnlQuanLyHoaDon = new QuanLyHoaDonPanel();
         pnlQuanLyNhanVien = new QuanLyNhanVienPanel();
@@ -322,7 +322,7 @@ public class Main extends JFrame {
 //        pnlCenter.add(pnlQuanLyKhachHang, "Quản lý khách hàng");
         pnlCenter.add(bookingManagementPanel, PanelName.BOOKING_MANAGEMENT.getName());
         pnlCenter.add(reservationManagementPanel, PanelName.RESERVATION_MANAGEMENT.getName());
-        pnlCenter.add(preReservationManagementPanel, PanelName.PRE_RESERVATION_MANAGEMENT.getName());
+//        pnlCenter.add(preReservationManagementPanel, PanelName.PRE_RESERVATION_MANAGEMENT.getName());
         pnlCenter.add(pnlQuanLyTaiKhoan, "Quản lý tài khoản");
         pnlCenter.add(pnlStatistic, "Thống kê doanh thu");
         pnlCenter.add(pnlQuanLyHoaDon, "Tìm hóa đơn");

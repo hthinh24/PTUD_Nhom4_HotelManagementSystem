@@ -203,10 +203,12 @@ public class DatPhongDAO {
                 "SELECT DISTINCT p.ma_phong, p.ten_phong, kh.ten_khach_hang, ddp.ma_don_dat_phong, ctdp.tg_nhan_phong, ctdp.tg_tra_phong" +
                 " FROM Phong p" +
                 " JOIN ChiTietDatPhong ctdp ON p.ma_phong = ctdp.ma_phong" +
+                " LEFT JOIN LichSuDiVao lsdv ON lsdv.ma_chi_tiet_dat_phong = ctdp.ma_chi_tiet_dat_phong" +
                 " JOIN DonDatPhong ddp ON ddp.ma_don_dat_phong = ctdp.ma_don_dat_phong" +
                 " JOIN KhachHang kh ON kh.ma_khach_hang = ddp.ma_khach_hang" +
                 " JOIN CongViec cv ON cv.ma_phong = p.ma_phong " +
-                " WHERE ctdp.tg_nhan_phong >= DATEADD(HOUR, ?, GETDATE())" + // Get all booking from now - X hours
+                " WHERE ctdp.tg_nhan_phong >= DATEADD(HOUR, ?, GETDATE()) " +
+                        "AND lsdv.la_lan_dau_tien is null AND lsdv.thoi_gian_tao is null "+// Get all booking from now - X hours
                 " AND cv.ten_trang_thai = ?" +
                 " AND ctdp.da_xoa = 0" +
                 " AND ddp.da_xoa = 0" +
@@ -333,16 +335,17 @@ public class DatPhongDAO {
             return new ArrayList<>();
 
         StringBuilder query = new StringBuilder(
-                "SELECT p.ma_phong, kh.ten_khach_hang, ddp.ma_don_dat_phong, ctdp.ma_chi_tiet_dat_phong, ctdp.tg_nhan_phong, ctdp.tg_tra_phong" +
+                "SELECT DISTINCT p.ma_phong, kh.ten_khach_hang, ddp.ma_don_dat_phong, ctdp.ma_chi_tiet_dat_phong, ctdp.tg_nhan_phong, ctdp.tg_tra_phong" +
                 " FROM Phong p" +
                 " JOIN ChiTietDatPhong ctdp ON p.ma_phong = ctdp.ma_phong" +
                 " JOIN DonDatPhong ddp ON ddp.ma_don_dat_phong = ctdp.ma_don_dat_phong" +
                 " JOIN KhachHang kh ON kh.ma_khach_hang = ddp.ma_khach_hang" +
                 " JOIN CongViec cv ON cv.ma_phong = p.ma_phong " +
-                " AND ctdp.tg_nhan_phong <= GETDATE()" +
-                " AND (GETDATE() <= DATEADD(MINUTE, ?, ctdp.tg_tra_phong) OR cv.ten_trang_thai = ?)" +
-                " AND ddp.da_xoa = 0" +
-                " WHERE p.ma_phong IN (");
+                " WHERE ctdp.tg_nhan_phong <= GETDATE()" +
+                " AND (GETDATE() <= DATEADD(MINUTE, ?, ctdp.tg_tra_phong)" +
+                " AND cv.ten_trang_thai != ?)" +
+                " AND cv.da_xoa = 0" +
+                " AND p.ma_phong IN (");
 
         for (int i = 0; i < phongKhongKhaDungs.size(); i++) {
             query.append("?");
@@ -359,7 +362,7 @@ public class DatPhongDAO {
             int i = 1;
             ps.setInt(i, WorkTimeCost.CHECKOUT_LATE_MIN.getMinutes());
             i++;
-            ps.setString(i, RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus());
+            ps.setString(i, RoomStatus.ROOM_CLEANING_STATUS.getStatus());
             i++;
 
             for (String maPhong : phongKhongKhaDungs) {
@@ -757,37 +760,6 @@ public class DatPhongDAO {
         }
     }
 
-    public List<vn.iuh.dto.response.ReservationResponse> getAllReservationsWithStatus() {
-        String query =
-                "SELECT DISTINCT kh.CCCD, kh.ten_khach_hang, ddp.ma_don_dat_phong, " +
-                "p.ma_phong, p.ten_phong, ctdp.tg_nhan_phong, ctdp.tg_tra_phong, " +
-                "cv.ten_trang_thai, ddp.da_xoa " +
-                "FROM DonDatPhong ddp " +
-                "JOIN KhachHang kh ON kh.ma_khach_hang = ddp.ma_khach_hang " +
-                "JOIN ChiTietDatPhong ctdp ON ctdp.ma_don_dat_phong = ddp.ma_don_dat_phong " +
-                "JOIN Phong p ON p.ma_phong = ctdp.ma_phong " +
-                "LEFT JOIN CongViec cv ON cv.ma_phong = p.ma_phong " +
-                "    AND cv.da_xoa = 0 " +
-                "WHERE cv.tg_bat_dau = ctdp.tg_nhan_phong " +
-                "ORDER BY ctdp.tg_nhan_phong ASC, ddp.ma_don_dat_phong ASC";
-
-        List<vn.iuh.dto.response.ReservationResponse> reservations = new ArrayList<>();
-        try {
-            PreparedStatement ps = connection.prepareStatement(query);
-            var rs = ps.executeQuery();
-
-            while (rs.next()) {
-                reservations.add(chuyenKetQuaThanhReservationResponse(rs));
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Error fetching reservations with status: " + e.getMessage());
-            throw new RuntimeException(e);
-        }
-
-        return reservations;
-    }
-
     public List<DonDatPhong> getAllCurrentReservation() {
         String query =
                 "SELECT DISTINCT ddp.* " +
@@ -912,40 +884,6 @@ public class DatPhongDAO {
         return reservations;
     }
 
-    public List<vn.iuh.dto.response.ReservationResponse> getAllCurrentReservationsWithStatus() {
-        String query =
-                "SELECT DISTINCT kh.CCCD, kh.ten_khach_hang, ddp.ma_don_dat_phong, " +
-                "ddp.loai, ctdp.tg_nhan_phong, ctdp.tg_tra_phong, " +
-                "cv.ten_trang_thai, ddp.da_xoa " +
-                "FROM DonDatPhong ddp " +
-                "JOIN KhachHang kh ON kh.ma_khach_hang = ddp.ma_khach_hang " +
-                "JOIN ChiTietDatPhong ctdp ON ctdp.ma_don_dat_phong = ddp.ma_don_dat_phong " +
-                "JOIN Phong p ON p.ma_phong = ctdp.ma_phong " +
-                "LEFT JOIN CongViec cv ON cv.ma_phong = ctdp.ma_phong " +
-                "    AND cv.da_xoa = 0 " +
-                "WHERE cv.da_xoa = 0 AND ddp.da_xoa = 0 " +
-                "AND cv.ten_trang_thai != ? " +
-                "AND ((GETDATE() <= ctdp.tg_nhan_phong) OR (GETDATE() <= ctdp.tg_tra_phong)) " +
-                "ORDER BY ctdp.tg_nhan_phong ASC, ddp.ma_don_dat_phong ASC";
-
-        List<vn.iuh.dto.response.ReservationResponse> reservations = new ArrayList<>();
-        try {
-            PreparedStatement ps = connection.prepareStatement(query);
-            ps.setString(1, RoomStatus.ROOM_CLEANING_STATUS.getStatus());
-            var rs = ps.executeQuery();
-
-            while (rs.next()) {
-                reservations.add(chuyenKetQuaThanhReservationResponse(rs));
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Error fetching reservations with status: " + e.getMessage());
-            throw new RuntimeException(e);
-        }
-
-        return reservations;
-    }
-
     public List<ReservationResponse> getAllPassReservationsWithStatusInRange(Timestamp startDate, Timestamp endDate) {
         String query =
                 "SELECT DISTINCT kh.CCCD, kh.ten_khach_hang, ddp.ma_don_dat_phong, " +
@@ -985,11 +923,12 @@ public class DatPhongDAO {
 
     public List<ReservationDetailRepository> getReservationDetailByReservationId(String maDonDatPhong) {
         List<ReservationDetailRepository> reservationDetails = new ArrayList<>();
-        String query = "SELECT ctdp.ma_chi_tiet_dat_phong, ctdp.ma_phong, p.ten_phong, lsdv.la_lan_dau_tien, " +
+        String query = "SELECT DISTINCT ctdp.ma_chi_tiet_dat_phong, ctdp.ma_don_dat_phong, ctdp.ma_phong, p.ten_phong, lsdv.la_lan_dau_tien, " +
                        "ctdp.kieu_ket_thuc, ctdp.tg_nhan_phong, ctdp.tg_tra_phong, ctdp.da_xoa " +
                        "FROM ChiTietDatPhong ctdp " +
                        "LEFT JOIN LichSuDiVao lsdv ON ctdp.ma_chi_tiet_dat_phong = lsdv.ma_chi_tiet_dat_phong " +
                        "JOIN Phong p ON ctdp.ma_phong = p.ma_phong " +
+                       "AND (la_lan_dau_tien = 1 OR (la_lan_dau_tien is null AND lsdv.thoi_gian_tao is null)) " +
                        "WHERE ctdp.ma_don_dat_phong = ? "
                 ;
 
@@ -1000,6 +939,7 @@ public class DatPhongDAO {
             while (rs.next()) {
                 reservationDetails.add(new ReservationDetailRepository(
                         rs.getString("ma_chi_tiet_dat_phong"),
+                        rs.getString("ma_don_dat_phong"),
                         rs.getString("ma_phong"),
                         rs.getString("ten_phong"),
                         rs.getString("kieu_ket_thuc"),

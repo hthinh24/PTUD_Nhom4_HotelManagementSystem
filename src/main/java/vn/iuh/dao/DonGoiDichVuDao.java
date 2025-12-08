@@ -2,7 +2,6 @@ package vn.iuh.dao;
 
 import vn.iuh.dto.repository.RoomUsageServiceInfo;
 import vn.iuh.dto.repository.ThongTinDichVu;
-import vn.iuh.entity.Phong;
 import vn.iuh.entity.PhongDungDichVu;
 import vn.iuh.exception.TableEntityMismatch;
 import vn.iuh.util.DatabaseUtil;
@@ -56,8 +55,8 @@ public class DonGoiDichVuDao {
 
     public void themPhongDungDichVu(List<PhongDungDichVu> danhSachPhongDungDichVu) {
         String query = "INSERT INTO PhongDungDichVu" +
-                       " (ma_phong_dung_dich_vu, so_luong, gia_thoi_diem_do, duoc_tang, ma_chi_tiet_dat_phong, ma_dich_vu, ma_phien_dang_nhap, tong_tien)" +
-                       " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                       " (ma_phong_dung_dich_vu, so_luong, gia_thoi_diem_do, ma_chi_tiet_dat_phong, ma_dich_vu, ma_phien_dang_nhap, tong_tien)" +
+                       " VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try {
             PreparedStatement ps = connection.prepareStatement(query);
@@ -66,11 +65,10 @@ public class DonGoiDichVuDao {
                 ps.setString(1, phongDungDichVu.getMaPhongDungDichVu());
                 ps.setInt(2, phongDungDichVu.getSoLuong());
                 ps.setDouble(3, phongDungDichVu.getGiaThoiDiemDo());
-                ps.setBoolean(4, phongDungDichVu.getDuocTang());
-                ps.setString(5, phongDungDichVu.getMaChiTietDatPhong());
-                ps.setString(6, phongDungDichVu.getMaDichVu());
-                ps.setString(7, phongDungDichVu.getMaPhienDangNhap());
-                ps.setBigDecimal(8, phongDungDichVu.getTongTien());
+                ps.setString(4, phongDungDichVu.getMaChiTietDatPhong());
+                ps.setString(5, phongDungDichVu.getMaDichVu());
+                ps.setString(6, phongDungDichVu.getMaPhienDangNhap());
+                ps.setBigDecimal(7, phongDungDichVu.getTongTien());
                 ps.addBatch();
             }
 
@@ -194,7 +192,7 @@ public class DonGoiDichVuDao {
                         "JOIN ChiTietDatPhong ctdp ON pddv.ma_chi_tiet_dat_phong = ctdp.ma_chi_tiet_dat_phong "+
                         "JOIN Phong p ON ctdp.ma_phong = p.ma_phong " +
                         "WHERE ctdp.ma_don_dat_phong = ? " +
-                        "ORDER BY pddv.duoc_tang, pddv.so_luong desc";
+                        "ORDER BY pddv.so_luong desc";
         try{
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1,maDonDatPhong);
@@ -212,24 +210,24 @@ public class DonGoiDichVuDao {
         return danhSachPhongDungDichVu;
     }
 
-    public List<PhongDungDichVu> timDonGoiDichVuBangChiTietDatPhong(String maChiTietDatPhong) {
-        String query = "SELECT * FROM PhongDungDichVu WHERE ma_chi_tiet_dat_phong = ? ORDER BY ma_phong_dung_dich_vu DESC";
-
-        List<PhongDungDichVu> danhSachPhongDungDichVu = new ArrayList<>();
-        try {
-            PreparedStatement ps = connection.prepareStatement(query);
-            ps.setString(1, maChiTietDatPhong);
-            var rs = ps.executeQuery();
-            while (rs.next())
-                danhSachPhongDungDichVu.add(chuyenKetQuaThanhPhongDungDichVu(rs));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (TableEntityMismatch mismatchException) {
-            System.out.println(mismatchException.getMessage());
-        }
-
-        return danhSachPhongDungDichVu;
-    }
+//    public List<PhongDungDichVu> timDonGoiDichVuBangChiTietDatPhong(String maChiTietDatPhong) {
+//        String query = "SELECT * FROM PhongDungDichVu WHERE ma_chi_tiet_dat_phong = ? ORDER BY ma_phong_dung_dich_vu DESC";
+//
+//        List<PhongDungDichVu> danhSachPhongDungDichVu = new ArrayList<>();
+//        try {
+//            PreparedStatement ps = connection.prepareStatement(query);
+//            ps.setString(1, maChiTietDatPhong);
+//            var rs = ps.executeQuery();
+//            while (rs.next())
+//                danhSachPhongDungDichVu.add(chuyenKetQuaThanhPhongDungDichVu(rs));
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        } catch (TableEntityMismatch mismatchException) {
+//            System.out.println(mismatchException.getMessage());
+//        }
+//
+//        return danhSachPhongDungDichVu;
+//    }
 
     public List<RoomUsageServiceInfo> timTatCaDonGoiDichVuBangChiTietDatPhong(String maChiTietDatPhong) {
 
@@ -304,7 +302,6 @@ public class DonGoiDichVuDao {
                     rs.getString("ma_phong_dung_dich_vu"),
                     rs.getInt("so_luong"),
                     rs.getDouble("gia_thoi_diem_do"),
-                    rs.getBoolean("duoc_tang"),
                     rs.getString("ma_chi_tiet_dat_phong"),
                     rs.getString("ten_phong"),
                     rs.getString("ma_dich_vu"),
@@ -371,7 +368,6 @@ public class DonGoiDichVuDao {
             phongDungDichVu.setMaDichVu(rs.getString("ma_dich_vu"));
             phongDungDichVu.setMaPhienDangNhap(rs.getString("ma_phien_dang_nhap"));
             phongDungDichVu.setTongTien(BigDecimal.valueOf(rs.getDouble("tong_tien")));
-            phongDungDichVu.setDuocTang(rs.getBoolean("duoc_tang"));
             return phongDungDichVu;
         }catch (SQLException e) {
             throw new TableEntityMismatch("Lỗi chuyển ResultSet thành PhongDungDichVu" + e.getMessage());
@@ -384,7 +380,6 @@ public class DonGoiDichVuDao {
                     rs.getString("ma_phong_dung_dich_vu"),
                     rs.getInt("so_luong"),
                     rs.getDouble("gia_thoi_diem_do"),
-                    rs.getBoolean("duoc_tang"),
                     rs.getString("ma_chi_tiet_dat_phong"),
                     rs.getString("ma_dich_vu"),
                     rs.getString("ma_phien_dang_nhap"),
