@@ -1362,8 +1362,12 @@ public class RoomUsageFormPanel extends JPanel {
             btnEntering.setEnabled(false);
             btnLeaving.setEnabled(true);
 
-            // Refesh sau khi checkin
+            // Refresh dữ liệu liên quan
             RefreshManager.refreshAfterCheckIn();
+
+            // Quay về giao diện quản lý đặt phòng
+            // đảm bảo chạy trên EDT
+            SwingUtilities.invokeLater(() -> Main.showCard(PanelName.BOOKING_MANAGEMENT.getName()));
         } else {
             // Hiện thông báo lỗi chung
             JOptionPane.showMessageDialog(this,
@@ -1371,6 +1375,7 @@ public class RoomUsageFormPanel extends JPanel {
                     "Thất bại", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
 
     private void handleCompleteCleaning() {
