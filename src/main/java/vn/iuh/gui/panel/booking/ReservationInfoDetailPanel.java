@@ -413,9 +413,6 @@ public class ReservationInfoDetailPanel extends JPanel {
             btnExtendTime.setEnabled(false);
         }
 
-        // TODO: Change this line to pass Reservation instead of Detail
-        btnExtendTime.addActionListener(e -> handleExtendTime(reservationInfo.getDetails().get(0)));
-
         return btnExtendTime;
     }
 
