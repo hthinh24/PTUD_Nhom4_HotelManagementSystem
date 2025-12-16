@@ -145,9 +145,9 @@ public class QuanLyLoaiDichVuPanel extends JPanel {
         // search button
         configureSearchButton(searchButton, SEARCH_BUTTON_SIZE);
 
-        addButton = createActionButton("Thêm loại dịch vụ", ACTION_BUTTON_SIZE, "#16A34A", "#86EFAC");
-        editButton = createActionButton("Sửa loại dịch vụ", ACTION_BUTTON_SIZE, "#2563EB", "#93C5FD");
-        deleteButton = createActionButton("Xóa loại dịch vụ", ACTION_BUTTON_SIZE, "#DC2626", "#FCA5A5");
+        addButton = createActionButton("Thêm loại dịch vụ", ACTION_BUTTON_SIZE, CustomUI.darkGreen, "#86EFAC");
+        editButton = createActionButton("Sửa loại dịch vụ", ACTION_BUTTON_SIZE, CustomUI.blue, "#93C5FD");
+        deleteButton = createActionButton("Xóa loại dịch vụ", ACTION_BUTTON_SIZE, CustomUI.red, "#FCA5A5");
 
         addButton.addActionListener(e -> onAdd());
         editButton.addActionListener(e -> onEdit());
@@ -165,13 +165,13 @@ public class QuanLyLoaiDichVuPanel extends JPanel {
         btn.addActionListener(e -> applyFilters());
     }
 
-    private JButton createActionButton(String text, Dimension size, String bgHex, String borderHex) {
+    private JButton createActionButton(String text, Dimension size, Color bgHex, String borderHex) {
         JButton button = new JButton(text);
         button.setPreferredSize(size);
         button.setMinimumSize(size);
         button.setMaximumSize(size);
         button.setFont(FONT_ACTION);
-        try { button.setBackground(Color.decode(bgHex)); } catch (Exception ignored) { button.setBackground(new Color(0x888888)); }
+        try { button.setBackground(bgHex); } catch (Exception ignored) { button.setBackground(new Color(0x888888)); }
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
         button.putClientProperty(FlatClientProperties.STYLE, "arc: 18; borderWidth: 2; borderColor:" + borderHex);

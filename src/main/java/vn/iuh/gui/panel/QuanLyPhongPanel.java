@@ -110,9 +110,9 @@ public class QuanLyPhongPanel extends JPanel {
         configureSearchButton(searchButton, SEARCH_BUTTON_SIZE);
 
         // Các nút hành động (thêm/sửa/xóa) -> kích thước giống panel khách hàng
-        addButton    = createActionButton("Thêm phòng", ACTION_BUTTON_SIZE, "#16A34A", "#86EFAC");
-        editButton   = createActionButton("Sửa phòng", ACTION_BUTTON_SIZE, "#2563EB", "#93C5FD");
-        deleteButton = createActionButton("Xóa phòng", ACTION_BUTTON_SIZE, "#DC2626", "#FCA5A5");
+        addButton    = createActionButton("Thêm phòng", ACTION_BUTTON_SIZE, CustomUI.darkGreen, "#86EFAC");
+        editButton   = createActionButton("Sửa phòng", ACTION_BUTTON_SIZE, CustomUI.blue, "#93C5FD");
+        deleteButton = createActionButton("Xóa phòng", ACTION_BUTTON_SIZE, CustomUI.red, "#FCA5A5");
 
         // Sự kiện của nút thêm
         addButton.addActionListener(e -> {
@@ -303,14 +303,14 @@ public class QuanLyPhongPanel extends JPanel {
     }
 
     // Tạo các action button (phiên bản tối giản: không tải icon)
-    private JButton createActionButton(String text, Dimension size, String bgHex, String borderHex) {
+    private JButton createActionButton(String text, Dimension size, Color bgHex, String borderHex) {
         JButton button = new JButton(text);
         button.setPreferredSize(size);
         button.setMinimumSize(size);
         button.setMaximumSize(size);
         button.setFont(FONT_ACTION);
         try {
-            button.setBackground(Color.decode(bgHex));
+            button.setBackground(bgHex);
         } catch (Exception ignored) {}
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
@@ -341,8 +341,8 @@ public class QuanLyPhongPanel extends JPanel {
     private JPanel createSearchPanel() {
         JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.Y_AXIS));
-        searchPanel.setPreferredSize(new Dimension(0, 200));
-        searchPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 240));
+        searchPanel.setPreferredSize(new Dimension(0, 180));
+        searchPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
         searchPanel.setBackground(CustomUI.white);
         searchPanel.setOpaque(true);
         // Đồng bộ border/arc với QuanLyKhachHangPanel (arc:25)
@@ -560,7 +560,7 @@ public class QuanLyPhongPanel extends JPanel {
 
         searchPanel.add(row1);
         // tăng khoảng cách để hài hòa với các nút chức năng
-        searchPanel.add(Box.createVerticalStrut(20));
+        searchPanel.add(Box.createVerticalStrut(30));
 
         // Action buttons row (centered) - sizes match customer panel
         JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 12));

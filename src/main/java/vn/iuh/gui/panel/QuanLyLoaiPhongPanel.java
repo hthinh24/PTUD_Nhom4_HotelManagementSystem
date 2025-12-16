@@ -123,9 +123,9 @@ public class QuanLyLoaiPhongPanel extends JPanel {
         configureSearchButton(searchButton, SEARCH_BUTTON_SIZE);
 
         // tạo action button KHÔNG tải icon - giờ cả 3 nút có cùng kích thước ACTION_BUTTON_SIZE
-        addButton    = createActionButton("Thêm loại phòng", ACTION_BUTTON_SIZE, "#16A34A", "#86EFAC");
-        editButton   = createActionButton("Sửa loại phòng", ACTION_BUTTON_SIZE, "#2563EB", "#93C5FD");
-        deleteButton = createActionButton("Xóa loại phòng", ACTION_BUTTON_SIZE, "#DC2626", "#FCA5A5");
+        addButton    = createActionButton("Thêm loại phòng", ACTION_BUTTON_SIZE, CustomUI.darkGreen, "#86EFAC");
+        editButton   = createActionButton("Sửa loại phòng", ACTION_BUTTON_SIZE, CustomUI.blue, "#93C5FD");
+        deleteButton = createActionButton("Xóa loại phòng", ACTION_BUTTON_SIZE, CustomUI.red, "#FCA5A5");
 
         // Thêm action cho Thêm
         addButton.addActionListener(e -> {
@@ -358,13 +358,13 @@ public class QuanLyLoaiPhongPanel extends JPanel {
         btn.setBackground(Color.decode("#1D4ED8"));
     }
 
-    private JButton createActionButton(String text, Dimension size, String bgHex, String borderHex) {
+    private JButton createActionButton(String text, Dimension size, Color bgHex, String borderHex) {
         JButton button = new JButton(text);
         button.setPreferredSize(size);
         button.setMinimumSize(size);
         button.setMaximumSize(size);
         button.setFont(FONT_ACTION);
-        try { button.setBackground(Color.decode(bgHex)); } catch (Exception e) { button.setBackground(new Color(0x888888)); }
+        try { button.setBackground(bgHex); } catch (Exception e) { button.setBackground(new Color(0x888888)); }
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
         button.setOpaque(true);

@@ -184,10 +184,10 @@ public class QuanLyDichVuPanel extends JPanel {
         configureSearchTextField(searchTextField, SEARCH_TEXT_SIZE, "Tên dịch vụ");
         configureSearchButton(searchButton, SEARCH_BUTTON_SIZE);
 
-        addButton = createActionButton("Thêm dịch vụ", ACTION_BUTTON_SIZE, "#16A34A", "#86EFAC");
-        editButton = createActionButton("Sửa dịch vụ", ACTION_BUTTON_SIZE, "#2563EB", "#93C5FD");
-        deleteButton = createActionButton("Xóa dịch vụ", ACTION_BUTTON_SIZE, "#DC2626", "#FCA5A5");
-        adjustStockButton = createActionButton("Chỉnh tồn kho", ACTION_BUTTON_SIZE, "#F59E0B", "#FCD34D");
+        addButton = createActionButton("Thêm dịch vụ", ACTION_BUTTON_SIZE, CustomUI.darkGreen, "#86EFAC");
+        editButton = createActionButton("Sửa dịch vụ", ACTION_BUTTON_SIZE, CustomUI.blue, "#93C5FD");
+        deleteButton = createActionButton("Xóa dịch vụ", ACTION_BUTTON_SIZE, CustomUI.red, "#FCA5A5");
+        adjustStockButton = createActionButton("Chỉnh tồn kho", ACTION_BUTTON_SIZE, CustomUI.orange, "#FCD34D");
         adjustStockButton.addActionListener(e -> onAdjustStock());
 
 
@@ -235,13 +235,13 @@ public class QuanLyDichVuPanel extends JPanel {
         btn.addActionListener(e -> applyFilters());
     }
 
-    private JButton createActionButton(String text, Dimension size, String bgHex, String borderHex) {
+    private JButton createActionButton(String text, Dimension size, Color bgHex, String borderHex) {
         JButton button = new JButton(text);
         button.setPreferredSize(size);
         button.setMinimumSize(size);
         button.setMaximumSize(size);
         button.setFont(FONT_ACTION);
-        try { button.setBackground(Color.decode(bgHex)); } catch (Exception ignored) { button.setBackground(new Color(0x888888)); }
+        try { button.setBackground(bgHex); } catch (Exception ignored) { button.setBackground(new Color(0x888888)); }
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
         button.putClientProperty(FlatClientProperties.STYLE, "arc: 20; borderWidth: 2; borderColor:" + borderHex);

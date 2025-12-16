@@ -21,13 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * QuanLyKhachHangPanel (đã tối giản: loại bỏ hoàn toàn icon, đồng bộ style bảng,
- * tìm kiếm theo Tên / CCCD, table đặt tương tự QuanLyLoaiPhongPanel, nội dung bảng không in đậm)
- *
- * Lưu ý: toàn bộ text trong phần search panel (combo, placeholder, nút) là BOLD.
- *       Table sử dụng CustomUI.TABLE_FONT (không in đậm).
- */
 public class QuanLyKhachHangPanel extends JPanel {
 
     // Chuẩn hoá chiều cao cho các control tìm kiếm
@@ -89,9 +82,9 @@ public class QuanLyKhachHangPanel extends JPanel {
         configureSearchButton(searchButton, SEARCH_BUTTON_SIZE);
 
         // Action buttons - NO ICONS to speed up startup
-        addButton    = createActionButton("Thêm khách hàng", ACTION_BUTTON_SIZE, "#16A34A", "#86EFAC");
-        editButton   = createActionButton("Sửa khách hàng", ACTION_BUTTON_SIZE, "#2563EB", "#93C5FD");
-        deleteButton = createActionButton("Xóa khách hàng", ACTION_BUTTON_SIZE, "#DC2626", "#FCA5A5");
+        addButton    = createActionButton("Thêm khách hàng", ACTION_BUTTON_SIZE, CustomUI.darkGreen, "#86EFAC");
+        editButton   = createActionButton("Sửa khách hàng", ACTION_BUTTON_SIZE, CustomUI.blue, "#93C5FD");
+        deleteButton = createActionButton("Xóa khách hàng", ACTION_BUTTON_SIZE, CustomUI.red, "#FCA5A5");
 
         addButton.addActionListener(e -> {
             ThemKhachHangDialog dlg = new ThemKhachHangDialog(SwingUtilities.getWindowAncestor(this),
@@ -221,11 +214,11 @@ public class QuanLyKhachHangPanel extends JPanel {
     }
 
     // create action button (no icon)
-    private JButton createActionButton(String text, Dimension size, String bgHex, String borderHex) {
+    private JButton createActionButton(String text, Dimension size, Color bgHex, String borderHex) {
         JButton button = new JButton(text);
         button.setPreferredSize(size);
         button.setFont(FONT_ACTION);
-        try { button.setBackground(Color.decode(bgHex)); } catch (Exception ignored) { button.setBackground(new Color(0x888888)); }
+        try { button.setBackground(bgHex); } catch (Exception ignored) { button.setBackground(new Color(0x888888)); }
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
         button.putClientProperty(FlatClientProperties.STYLE, "arc: 18; borderWidth: 2; borderColor:" + borderHex);
