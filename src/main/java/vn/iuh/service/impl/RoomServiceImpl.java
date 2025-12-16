@@ -7,6 +7,7 @@ import vn.iuh.dao.*;
 import vn.iuh.dto.event.create.RoomCreationEvent;
 import vn.iuh.dto.event.update.RoomModificationEvent;
 import vn.iuh.dto.repository.RoomFurnitureItem;
+import vn.iuh.dto.repository.ThongTinDonDep;
 import vn.iuh.entity.CongViec;
 import vn.iuh.entity.LichSuThaoTac;
 import vn.iuh.entity.LoaiPhong;
@@ -526,5 +527,12 @@ public class RoomServiceImpl implements RoomService {
         }
     }
 
-
+    public ThongTinDonDep getCleaningInfoById(String roomId) {
+        try {
+            return phongDAO.getCleaningInfoById(roomId);
+        } catch (Exception e) {
+            System.out.println("RoomServiceImpl.getCleaningInfoById error: " + e.getMessage());
+            return null;
+        }
+    }
 }

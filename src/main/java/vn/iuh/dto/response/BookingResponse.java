@@ -1,5 +1,7 @@
 package vn.iuh.dto.response;
 
+import vn.iuh.constraint.RoomStatus;
+
 import java.sql.Timestamp;
 import java.util.Objects;
 
@@ -16,6 +18,8 @@ public class BookingResponse {
     private String maChiTietDatPhong;
     private Timestamp timeIn;
     private Timestamp timeOut;
+    private Timestamp cleaningStartTime;
+    private Timestamp cleaningEndTime;
 
     public BookingResponse(String roomId, String roomName, boolean isActive, String roomStatus, String roomType, String numberOfCustomers,
                            double dailyPrice, double hourlyPrice) {
@@ -100,6 +104,17 @@ public class BookingResponse {
         this.timeOut = timeOut;
     }
 
+    public void updateCleaningInfo(Timestamp cleaningStartTime, Timestamp cleaningEndTime) {
+        if (this.roomStatus == null ||
+            !this.roomStatus.equalsIgnoreCase(RoomStatus.ROOM_CLEANING_STATUS.getStatus())) {
+            System.out.println("Cannot update cleaning info for room not in CLEANING status");
+            return;
+        }
+
+        this.cleaningStartTime = cleaningStartTime;
+        this.cleaningEndTime = cleaningEndTime;
+    }
+
     public String getRoomName() {
         return roomName;
     }
@@ -150,5 +165,13 @@ public class BookingResponse {
 
     public Timestamp getTimeOut() {
         return timeOut;
+    }
+
+    public Timestamp getCleaningStartTime() {
+        return cleaningStartTime;
+    }
+
+    public Timestamp getCleaningEndTime() {
+        return cleaningEndTime;
     }
 }

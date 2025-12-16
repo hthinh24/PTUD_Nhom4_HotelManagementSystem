@@ -60,6 +60,9 @@ public class BookingManagementPanel extends JPanel {
 
     private final String ALL_STATUS = "TẤT CẢ";
 
+    // Flag to prevent recursive listener calls
+    private boolean isUpdatingValues = false;
+
     public BookingManagementPanel() {
         init();
         setupMultiBookingCallbacks();
@@ -257,7 +260,6 @@ public class BookingManagementPanel extends JPanel {
         int usingCount = getStatusCount(RoomStatus.ROOM_USING_STATUS.getStatus());
         int lateCount = getStatusCount(RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus());
         int cleaningCount = getStatusCount(RoomStatus.ROOM_CLEANING_STATUS.getStatus());
-        int maintenanceCount = getStatusCount(RoomStatus.ROOM_MAINTENANCE_STATUS.getStatus());
 
         // Create status buttons with actual quantities and proper colors
         JButton btnAll = createStatusButton(ALL_STATUS + " (" + totalRooms + ")", CustomUI.green, ALL_STATUS);
@@ -307,22 +309,15 @@ public class BookingManagementPanel extends JPanel {
         gbc.gridy = 2;
         panel.add(btnCleaning, gbc);
 
-        JButton btnMaintenance =
-                createStatusButton(RoomStatus.ROOM_MAINTENANCE_STATUS.getStatus() + " (" + maintenanceCount + ")",
-                                   CustomUI.gray, RoomStatus.ROOM_MAINTENANCE_STATUS.getStatus());
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        panel.add(btnMaintenance, gbc);
-
         JButton btnReset = createStatusButton("LÀM MỚI", CustomUI.lightGray, null);
         btnReset.removeActionListener(btnReset.getActionListeners()[0]); // Remove existing listener
         btnReset.addActionListener(e -> refreshPanel());
-        gbc.gridx = 2;
+        gbc.gridx = 1;
         gbc.gridy = 2;
         panel.add(btnReset, gbc);
         // Store references to status buttons for later updates
         statusButtons =
-                new JButton[]{btnAll, btnAvailable, btnBooked, btnChecking, btnUsing, btnLate, btnCleaning, btnMaintenance, btnReset};
+                new JButton[]{btnAll, btnAvailable, btnBooked, btnChecking, btnUsing, btnLate, btnCleaning, btnReset};
 
         return panel;
     }
@@ -335,7 +330,6 @@ public class BookingManagementPanel extends JPanel {
         int usingCount = 0;
         int lateCount = 0;
         int cleaningCount = 0;
-        int maintenanceCount = 0;
 
         if (roomFilter.checkInDate != null && roomFilter.checkOutDate != null) {
             availableCount = filteredRooms.size();
@@ -349,7 +343,9 @@ public class BookingManagementPanel extends JPanel {
                     case ROOM_USING_STATUS -> usingCount++;
                     case ROOM_CHECKOUT_LATE_STATUS -> lateCount++;
                     case ROOM_CLEANING_STATUS -> cleaningCount++;
-                    case ROOM_MAINTENANCE_STATUS -> maintenanceCount++;
+                    case ROOM_MAINTENANCE_STATUS -> {
+                        // Maintenance status, do nothing for now
+                    }
                     case null -> {
                         // Unknown status, do nothing
                     }
@@ -363,7 +359,6 @@ public class BookingManagementPanel extends JPanel {
         statusButtons[4].setText(RoomStatus.ROOM_USING_STATUS.getStatus() + " (" + usingCount + ")");
         statusButtons[5].setText(RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus() + " (" + lateCount + ")");
         statusButtons[6].setText(RoomStatus.ROOM_CLEANING_STATUS.getStatus() + " (" + cleaningCount + ")");
-        statusButtons[7].setText(RoomStatus.ROOM_MAINTENANCE_STATUS.getStatus() + " (" + maintenanceCount + ")");
     }
 
     private int getStatusCount(String status) {
@@ -612,6 +607,8 @@ public class BookingManagementPanel extends JPanel {
     }
 
     private void handleCheckinDateChange() {
+        if (isUpdatingValues) return;
+
         Date now = new Date();
         Date checkInDate = (Date) spnCheckInDate.getValue();
         System.out.println("Check-in date changed to: " + checkInDate);
@@ -619,6 +616,7 @@ public class BookingManagementPanel extends JPanel {
 
         // Handle past check-in date
         if (checkInDate.before(Date.from(now.toInstant().minus(10, ChronoUnit.MINUTES)))) {
+            isUpdatingValues = true;
             JOptionPane.showMessageDialog(this,
                                           "Ngày check-in không được trước ngày hiện tại!",
                                           "Lỗi ngày tháng",
@@ -627,6 +625,7 @@ public class BookingManagementPanel extends JPanel {
             spnCheckOutDate.setValue(Date.from(now.toInstant().plus(1, ChronoUnit.DAYS)));
             roomFilter.checkInDate = now;
             roomFilter.checkOutDate = Date.from(now.toInstant().plus(1, ChronoUnit.DAYS));
+            isUpdatingValues = false;
             search();
             refreshFilterBtn();
             return;
@@ -637,8 +636,10 @@ public class BookingManagementPanel extends JPanel {
             (currentCheckOutDate.getTime() - checkInDate.getTime()) < (60 * 60 * 1000)) {
             // Set checkout to be 1 day after checkin
             Date newCheckOutDate = Date.from(checkInDate.toInstant().plus(1, ChronoUnit.DAYS));
+            isUpdatingValues = true;
             spnCheckOutDate.setValue(newCheckOutDate);
             roomFilter.checkOutDate = newCheckOutDate;
+            isUpdatingValues = false;  // Reset flag AFTER updating roomFilter
         }
 
         roomFilter.checkInDate = checkInDate;
@@ -654,6 +655,8 @@ public class BookingManagementPanel extends JPanel {
     }
 
     private void handleCheckoutDateChange() {
+        if (isUpdatingValues) return;
+
         Date checkInDate = (Date) spnCheckInDate.getValue();
         Date checkOutDate = (Date) spnCheckOutDate.getValue();
 
@@ -661,6 +664,7 @@ public class BookingManagementPanel extends JPanel {
         if (!checkOutDate.after(checkInDate) ||
             (checkOutDate.getTime() - checkInDate.getTime()) < (60 * 60 * 1000)) {
 
+            isUpdatingValues = true;
             JOptionPane.showMessageDialog(this,
                                           "Ngày check-out phải sau ngày check-in ít nhất 1 giờ!",
                                           "Lỗi ngày tháng",
@@ -680,6 +684,7 @@ public class BookingManagementPanel extends JPanel {
             ;
             spnCheckOutDate.setValue(newCheckOutDate);
             roomFilter.checkOutDate = newCheckOutDate;
+            isUpdatingValues = false;
             search();
             refreshFilterBtn();
             return;
@@ -736,6 +741,14 @@ public class BookingManagementPanel extends JPanel {
             // Reset by set off / on
             btnMultiBookingToggle.setSelected(false);
             toggleMultiBookingMode();
+        }
+
+        if (roomFilter.checkInDate == null) {
+            roomFilter.checkInDate = (Date) spnCheckInDate.getValue();
+        }
+
+        if (roomFilter.checkOutDate == null) {
+            roomFilter.checkOutDate = (Date) spnCheckOutDate.getValue();
         }
 
         filteredRooms = new ArrayList<>();

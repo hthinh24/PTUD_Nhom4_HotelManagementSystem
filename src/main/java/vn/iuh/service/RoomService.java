@@ -3,6 +3,7 @@ package vn.iuh.service;
 import vn.iuh.dto.event.create.RoomCreationEvent;
 import vn.iuh.dto.event.update.RoomModificationEvent;
 import vn.iuh.dto.repository.RoomFurnitureItem;
+import vn.iuh.dto.repository.ThongTinDonDep;
 import vn.iuh.entity.CongViec;
 import vn.iuh.entity.LoaiPhong;
 import vn.iuh.entity.Phong;
@@ -35,4 +36,6 @@ public interface RoomService {
     boolean scheduleMaintenance(String maPhong, int days);
 
     boolean endMaintenance(String maPhong);
+
+    ThongTinDonDep getCleaningInfoById(String roomId);
 }

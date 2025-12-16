@@ -222,7 +222,8 @@ public class HoaDonDAO {
         String query =
                 "SELECT DISTINCT hd.kieu_hoa_don," +
                 " hd.tong_tien as tong_tien_dat_coc," +
-                " (SELECT SUM(pddv.tong_tien) FROM PhongDungDichVu pddv where pddv.ma_chi_tiet_dat_phong = ?) AS tong_tien_dich_vu" +
+                " (SELECT SUM(pddv.tong_tien) FROM PhongDungDichVu pddv where pddv.ma_chi_tiet_dat_phong = ?) AS tong_tien_dich_vu," +
+                " ddp.mo_ta" +
                 " FROM ChiTietDatPhong ctdp" +
                 " JOIN DonDatPhong ddp ON ctdp.ma_don_dat_phong = ddp.ma_don_dat_phong" +
                 " LEFT JOIN HoaDon hd ON ddp.ma_don_dat_phong = hd.ma_don_dat_phong" +
@@ -241,6 +242,7 @@ public class HoaDonDAO {
                 String kieuHoaDon = rs.getString("kieu_hoa_don");
                 BigDecimal tongTienDatCoc = rs.getBigDecimal("tong_tien_dat_coc");
                 BigDecimal tongTienDichVu = rs.getBigDecimal("tong_tien_dich_vu");
+                String note = rs.getString("mo_ta");
 
                 if (kieuHoaDon == null || !kieuHoaDon.equalsIgnoreCase(InvoiceType.DEPOSIT_INVOICE.getStatus())) {
                     tongTienDatCoc = BigDecimal.ZERO;
@@ -248,7 +250,8 @@ public class HoaDonDAO {
 
                 return new CustomerPayments(
                         tongTienDatCoc,
-                        tongTienDichVu
+                        tongTienDichVu,
+                        note
                 );
             }
             else

@@ -146,7 +146,8 @@ public class DatPhongDAO {
                        "    FROM CongViec cv " +
                        "    WHERE cv.ma_phong = p.ma_phong AND (GETDATE() >= cv.tg_bat_dau) and da_xoa = 0" +
                        ") AS cv " +
-                       "WHERE p.da_xoa = 0 ";
+                       "WHERE p.da_xoa = 0 " +
+                       "AND p.dang_hoat_dong != 0 ";
         List<ThongTinPhong> thongTinPhongs = new ArrayList<>();
 
         try {
@@ -1078,6 +1079,58 @@ public class DatPhongDAO {
         }
 
         return null;
+    }
+
+    public List<ThongTinDonDep> timTatCaThongTinDonDepTheoDanhSachMaPhong(List<String> cleaningRoomIds) {
+        if (cleaningRoomIds.isEmpty())
+            return new ArrayList<>();
+
+        StringBuilder query = new StringBuilder(
+                "SELECT p.ma_phong, p.ten_phong, cv.tg_bat_dau, cv.tg_ket_thuc" +
+                " FROM Phong p" +
+                " JOIN CongViec cv ON cv.ma_phong = p.ma_phong " +
+                " AND (GETDATE() >= cv.tg_bat_dau) " +
+                " AND GETDATE() <= cv.tg_ket_thuc " +
+                " AND cv.ten_trang_thai = ?" +
+                " AND cv.da_xoa = 0" +
+                " AND p.ma_phong IN (");
+
+        for (int i = 0; i < cleaningRoomIds.size(); i++) {
+            query.append("?");
+            if (i < cleaningRoomIds.size() - 1) {
+                query.append(", ");
+            }
+        }
+        query.append(") ORDER by cv.tg_bat_dau ASC");
+
+        List<ThongTinDonDep> thongTinDonDeps = new ArrayList<>();
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+
+            PreparedStatement ps = connection.prepareStatement(query.toString());
+
+            int i = 1;
+            ps.setString(i, RoomStatus.ROOM_CLEANING_STATUS.getStatus()); i++;
+            for (String maPhong : cleaningRoomIds) {
+                ps.setString(i, maPhong);
+                i++;
+            }
+
+            var rs = ps.executeQuery();
+
+            while (rs.next())
+                thongTinDonDeps.add(new ThongTinDonDep(
+                        rs.getString("ma_phong"),
+                        rs.getString("ten_phong"),
+                        rs.getTimestamp("tg_bat_dau"),
+                        rs.getTimestamp("tg_ket_thuc")
+                ));
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return thongTinDonDeps;
     }
 }
 

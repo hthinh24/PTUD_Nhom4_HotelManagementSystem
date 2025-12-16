@@ -732,7 +732,7 @@ public class RoomItem extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.weightx = 0.0;
-        JLabel lblHourlyLabel = new JLabel("Giá theo giờ:");
+        JLabel lblHourlyLabel = new JLabel("Thời gian bắt đầu:");
         lblHourlyLabel.setFont(CustomUI.supperSmallFont);
         lblHourlyLabel.setForeground(Color.BLACK);
         panel.add(lblHourlyLabel, gbc);
@@ -740,18 +740,22 @@ public class RoomItem extends JPanel {
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         gbc.anchor = GridBagConstraints.EAST;
-        JLabel lblHourlyPrice = new JLabel(String.format("%.0f vnđ", bookingResponse.getHourlyPrice()));
-        lblHourlyPrice.setText(priceFormatter.format(bookingResponse.getHourlyPrice()) + " VNĐ");
-        lblHourlyPrice.setFont(CustomUI.supperSmallFont);
-        lblHourlyPrice.setForeground(Color.BLACK);
-        panel.add(lblHourlyPrice, gbc);
+//        JLabel lblHourlyPrice = new JLabel(String.format("%.0f vnđ", bookingResponse.getHourlyPrice()));
+        JLabel lblCleaningStartTime = new JLabel(bookingResponse.getCleaningStartTime() != null
+                ? bookingResponse.getCleaningStartTime().toLocalDateTime().format(
+                TimeFormat.getFormatter())
+                : "Chưa xác định");
+//        lblCleaningStartTime.setText(priceFormatter.format(bookingResponse.getHourlyPrice()) + " VNĐ");
+        lblCleaningStartTime.setFont(CustomUI.supperSmallFont);
+        lblCleaningStartTime.setForeground(Color.BLACK);
+        panel.add(lblCleaningStartTime, gbc);
 
         // Daily price row
         gbc.gridx = 0;
         gbc.gridy = 3;
         gbc.weightx = 0.0;
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel lblDailyLabel = new JLabel("Giá theo ngày:");
+        JLabel lblDailyLabel = new JLabel("Dự kiến kết thúc:");
         lblDailyLabel.setFont(CustomUI.supperSmallFont);
         lblDailyLabel.setForeground(Color.BLACK);
         panel.add(lblDailyLabel, gbc);
@@ -759,11 +763,15 @@ public class RoomItem extends JPanel {
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         gbc.anchor = GridBagConstraints.EAST;
-        JLabel lblDailyPrice = new JLabel(String.format("%.0f vnđ", bookingResponse.getDailyPrice()));
-        lblDailyPrice.setText(priceFormatter.format(bookingResponse.getDailyPrice()) + " VNĐ");
-        lblDailyPrice.setFont(CustomUI.supperSmallFont);
-        lblDailyPrice.setForeground(Color.BLACK);
-        panel.add(lblDailyPrice, gbc);
+//        JLabel lblDailyPrice = new JLabel(String.format("%.0f vnđ", bookingResponse.getDailyPrice()));
+        JLabel lblCleaningEndTime = new JLabel(bookingResponse.getCleaningEndTime() != null
+                ? bookingResponse.getCleaningEndTime().toLocalDateTime().format(
+                TimeFormat.getFormatter())
+                : "Chưa xác định");
+//        lblCleaningEndTime.setText(priceFormatter.format(bookingResponse.getDailyPrice()) + " VNĐ");
+        lblCleaningEndTime.setFont(CustomUI.supperSmallFont);
+        lblCleaningEndTime.setForeground(Color.BLACK);
+        panel.add(lblCleaningEndTime, gbc);
 
         return panel;
     }

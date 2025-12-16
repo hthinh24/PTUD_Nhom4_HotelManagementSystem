@@ -423,15 +423,67 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+//    public List<BookingResponse> getAllBookingInfo() {
+//        // 1.Get All Room Info
+//        List<ThongTinPhong> thongTinPhongs = datPhongDAO.timTatCaThongTinPhong();
+//
+//        // 2. Get All non-available Room Ids
+//        List<String> bookedRoomIds = new ArrayList<>();
+//
+//        // 3. Create BookingResponse each Room info
+//        List<BookingResponse> bookingResponses = new ArrayList<>();
+//        for (ThongTinPhong thongTinPhong : thongTinPhongs) {
+//            // Set default Room Status if null or empty
+//            if (Objects.isNull(thongTinPhong.getTenTrangThai()) || thongTinPhong.getTenTrangThai().isEmpty()) {
+//                thongTinPhong.setTenTrangThai(thongTinPhong.isDangHoatDong()
+//                                                      ? RoomStatus.ROOM_EMPTY_STATUS.getStatus()
+//                                                      : RoomStatus.ROOM_MAINTENANCE_STATUS.getStatus()
+//                );
+//            }
+//
+//            if (Objects.equals(thongTinPhong.getTenTrangThai(), RoomStatus.ROOM_BOOKED_STATUS.getStatus()) ||
+//                Objects.equals(thongTinPhong.getTenTrangThai(), RoomStatus.ROOM_CHECKING_STATUS.getStatus()) ||
+//                Objects.equals(thongTinPhong.getTenTrangThai(), RoomStatus.ROOM_USING_STATUS.getStatus()) ||
+//                Objects.equals(thongTinPhong.getTenTrangThai(), RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus())
+//            ) {
+//
+//                bookedRoomIds.add(thongTinPhong.getMaPhong());
+//            }
+//
+//            bookingResponses.add(createBookingResponse(thongTinPhong));
+//        }
+//
+//        // 4. Find all Booking Info for non-available rooms
+//        List<ThongTinDatPhong> thongTinDatPhongs =
+//                datPhongDAO.timTatCaThongTinDatPhongTheoDanhSachMaPhong(bookedRoomIds);
+//
+//        // 5. Update BookingResponse with Booking Info
+//        for (ThongTinDatPhong thongTinDatPhong : thongTinDatPhongs) {
+//            for (BookingResponse bookingResponse : bookingResponses) {
+//                if (Objects.equals(bookingResponse.getRoomId(), thongTinDatPhong.getMaPhong())) {
+//                    bookingResponse.updateBookingInfo(
+//                            thongTinDatPhong.getTenKhachHang(),
+//                            thongTinDatPhong.getMaChiTietDatPhong(),
+//                            thongTinDatPhong.getTgNhanPhong(),
+//                            thongTinDatPhong.getTgTraPhong()
+//                    );
+//                }
+//            }
+//        }
+//        return bookingResponses;
+//    }
+
     public List<BookingResponse> getAllBookingInfo() {
         // 1.Get All Room Info
         List<ThongTinPhong> thongTinPhongs = datPhongDAO.timTatCaThongTinPhong();
 
         // 2. Get All non-available Room Ids
-        List<String> nonAvailableRoomIds = new ArrayList<>();
+        List<String> bookedRoomIds = new ArrayList<>();
+        List<String> cleaningRoomIds = new ArrayList<>();
+
+        Map<String, BookingResponse> RoomIdTobookingResponse = new HashMap<>();
 
         // 3. Create BookingResponse each Room info
-        List<BookingResponse> bookingResponses = new ArrayList<>();
         for (ThongTinPhong thongTinPhong : thongTinPhongs) {
             // Set default Room Status if null or empty
             if (Objects.isNull(thongTinPhong.getTenTrangThai()) || thongTinPhong.getTenTrangThai().isEmpty()) {
@@ -447,29 +499,60 @@ public class BookingServiceImpl implements BookingService {
                 Objects.equals(thongTinPhong.getTenTrangThai(), RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus())
             ) {
 
-                nonAvailableRoomIds.add(thongTinPhong.getMaPhong());
+                bookedRoomIds.add(thongTinPhong.getMaPhong());
+            } else if (Objects.equals(thongTinPhong.getTenTrangThai(), RoomStatus.ROOM_CLEANING_STATUS.getStatus())) {
+                cleaningRoomIds.add(thongTinPhong.getMaPhong());
             }
 
-            bookingResponses.add(createBookingResponse(thongTinPhong));
+            RoomIdTobookingResponse.put(thongTinPhong.getMaPhong(), createBookingResponse(thongTinPhong));
         }
 
         // 4. Find all Booking Info for non-available rooms
         List<ThongTinDatPhong> thongTinDatPhongs =
-                datPhongDAO.timTatCaThongTinDatPhongTheoDanhSachMaPhong(nonAvailableRoomIds);
+                datPhongDAO.timTatCaThongTinDatPhongTheoDanhSachMaPhong(bookedRoomIds);
+
+        List<ThongTinDonDep> thongTinDonDeps =
+                datPhongDAO.timTatCaThongTinDonDepTheoDanhSachMaPhong(cleaningRoomIds);
 
         // 5. Update BookingResponse with Booking Info
+//        for (ThongTinDatPhong thongTinDatPhong : thongTinDatPhongs) {
+//            for (BookingResponse bookingResponse : RoomIdTobookingResponse) {
+//                if (Objects.equals(bookingResponse.getRoomId(), thongTinDatPhong.getMaPhong())) {
+//                    bookingResponse.updateBookingInfo(
+//                            thongTinDatPhong.getTenKhachHang(),
+//                            thongTinDatPhong.getMaChiTietDatPhong(),
+//                            thongTinDatPhong.getTgNhanPhong(),
+//                            thongTinDatPhong.getTgTraPhong()
+//                    );
+//                }
+//            }
+//        }
+        // 5. Update BookingResponse with Booking Info
         for (ThongTinDatPhong thongTinDatPhong : thongTinDatPhongs) {
-            for (BookingResponse bookingResponse : bookingResponses) {
-                if (Objects.equals(bookingResponse.getRoomId(), thongTinDatPhong.getMaPhong())) {
-                    bookingResponse.updateBookingInfo(
-                            thongTinDatPhong.getTenKhachHang(),
-                            thongTinDatPhong.getMaChiTietDatPhong(),
-                            thongTinDatPhong.getTgNhanPhong(),
-                            thongTinDatPhong.getTgTraPhong()
-                    );
-                }
+            BookingResponse bookingResponse = RoomIdTobookingResponse.get(thongTinDatPhong.getMaPhong());
+            if (bookingResponse != null) {
+                bookingResponse.updateBookingInfo(
+                        thongTinDatPhong.getTenKhachHang(),
+                        thongTinDatPhong.getMaChiTietDatPhong(),
+                        thongTinDatPhong.getTgNhanPhong(),
+                        thongTinDatPhong.getTgTraPhong()
+                );
             }
         }
+
+        for (ThongTinDonDep thongTinDonDep : thongTinDonDeps) {
+            BookingResponse bookingResponse = RoomIdTobookingResponse.get(thongTinDonDep.getMaPhong());
+            if (bookingResponse != null) {
+                bookingResponse.updateCleaningInfo(
+                        thongTinDonDep.getThoiGianBatDau(),
+                        thongTinDonDep.getThoiGianKetThuc()
+                );
+            }
+        }
+
+        // Sort by room id
+        List<BookingResponse> bookingResponses = new ArrayList<>(RoomIdTobookingResponse.values());
+        bookingResponses.sort(Comparator.comparing(BookingResponse::getRoomId));
         return bookingResponses;
     }
 
@@ -507,7 +590,7 @@ public class BookingServiceImpl implements BookingService {
                 hoaDonDAO.timThongTinThanhToanCuaKhachHangBangMaChiTietDatPhong(maChiTietDatPhong);
 
         if (Objects.isNull(customerPayments)) {
-            customerPayments = new CustomerPayments(BigDecimal.ZERO, BigDecimal.ZERO);
+            customerPayments = new CustomerPayments(BigDecimal.ZERO, BigDecimal.ZERO, "");
         } else {
             // 3. Remove decimal part
             if (customerPayments.getTotalServiceCost() != null) {
@@ -533,6 +616,7 @@ public class BookingServiceImpl implements BookingService {
                 customerInfo.getCCCD(),
                 customerInfo.getTenKhachHang(),
                 customerInfo.getSoDienThoai(),
+                customerPayments.getCustomerNote() != null ? customerPayments.getCustomerNote() : "",
                 customerPayments.getTotalServiceCost().toBigInteger().doubleValue(),
                 customerPayments.getAdvancePayment().toBigInteger().doubleValue()
         );

@@ -8,6 +8,7 @@ import vn.iuh.constraint.RoomStatus;
 import vn.iuh.dto.event.create.DonGoiDichVu;
 import vn.iuh.dto.repository.BookThemGioInfo;
 import vn.iuh.dto.repository.RoomFurnitureItem;
+import vn.iuh.dto.repository.ThongTinDonDep;
 import vn.iuh.dto.response.BookingResponse;
 import vn.iuh.dto.response.CustomerInfoWithPayments;
 import vn.iuh.dto.response.InvoiceResponse;
@@ -126,7 +127,7 @@ public class RoomUsageFormPanel extends JPanel {
             }
 
             selectedRoom = createDefaultValueForBookingInfo(roomInfo);
-            customerInfoWithPayments = new CustomerInfoWithPayments("N/A", "N/A", "N/A", "N/A", 0, 0);
+            customerInfoWithPayments = new CustomerInfoWithPayments("N/A", "N/A", "N/A", "N/A", "", 0, 0);
         }
 
         initializeComponents();
@@ -502,7 +503,6 @@ public class RoomUsageFormPanel extends JPanel {
         gbc.gridy = 7;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 1.0;
-        JTextArea txtNote = new JTextArea();
         txtNote.setPreferredSize(new Dimension(300, 100));
         txtNote.setBorder(BorderFactory.createLineBorder(CustomUI.gray, 1));
         txtNote.setEditable(false);
@@ -632,9 +632,6 @@ public class RoomUsageFormPanel extends JPanel {
 
         button.add(iconLabel, BorderLayout.CENTER);
         button.add(textLabel, BorderLayout.SOUTH);
-
-        System.out.println("Adding hover effect for: " + item.getText());
-        System.out.println("isActive: " + item.isActive());
 
         // Add hover effects
         if (item.isActive()) {
@@ -1005,6 +1002,8 @@ public class RoomUsageFormPanel extends JPanel {
         txtCustomerName.setText(customerInfoWithPayments.getCustomerName());
         txtPhoneNumber.setText(customerInfoWithPayments.getCustomerPhone());
         txtCCCD.setText(customerInfoWithPayments.getCCCD());
+
+        txtNote.setText(customerInfoWithPayments.getCustomerNote());
     }
 
     // Method to update total service price from ServiceSelectionPanel
@@ -1395,22 +1394,24 @@ public class RoomUsageFormPanel extends JPanel {
     }
 
     private void handleCreateReservationForm() {
-        BookingResponse bookingResponse = new BookingResponse(
-                selectedRoom.getRoomId(),
-                selectedRoom.getRoomName(),
-                selectedRoom.isActive(),
-                RoomStatus.ROOM_CLEANING_STATUS.status,
-                selectedRoom.getRoomType(),
-                selectedRoom.getNumberOfCustomers(),
-                selectedRoom.getDailyPrice(),
-                selectedRoom.getHourlyPrice(),
-                selectedRoom.getCustomerName(),
-                null,
-                selectedRoom.getTimeIn(),
-                selectedRoom.getTimeOut()
-        );
+        // Handle special case for cleaning status
+        if (selectedRoom.getRoomStatus().equalsIgnoreCase(RoomStatus.ROOM_CLEANING_STATUS.getStatus())) {
+            ThongTinDonDep thongTinDonDep = roomService.getCleaningInfoById(selectedRoom.getRoomId());
+            BookingResponse cleaningDefaultBookingInfo = createDefaultValueForBookingInfo(selectedRoom);
+            cleaningDefaultBookingInfo.updateCleaningInfo(
+                    thongTinDonDep.getThoiGianBatDau(),
+                    thongTinDonDep.getThoiGianKetThuc()
+            );
 
-        BookingFormPanel bookingFormPanel = new BookingFormPanel(bookingResponse, PanelName.ROOM_USING.getName());
+            BookingFormPanel bookingFormPanel = new BookingFormPanel(cleaningDefaultBookingInfo, PanelName.ROOM_USING.getName());
+            String panelName = PanelName.BOOKING.getName();
+            Main.addCard(bookingFormPanel, panelName);
+            Main.showCard(panelName);
+
+            return;
+        }
+
+        BookingFormPanel bookingFormPanel = new BookingFormPanel(selectedRoom, PanelName.ROOM_USING.getName());
         String panelName = PanelName.BOOKING.getName();
         Main.addCard(bookingFormPanel, panelName);
         Main.showCard(panelName);

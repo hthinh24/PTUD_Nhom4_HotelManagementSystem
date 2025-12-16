@@ -456,7 +456,6 @@ public class BookingFormPanel extends JPanel {
         gbc.gridy = 7;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 1.0;
-        JTextArea txtNote = new JTextArea();
         txtNote.setPreferredSize(new Dimension(300, 100));
         txtNote.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
         bookingInfoContent.add(txtNote, gbc);
@@ -984,14 +983,6 @@ public class BookingFormPanel extends JPanel {
 
 
     private boolean validateInput() {
-        if (!chkIsAdvanced.isSelected()
-            && selectedRoom.getRoomStatus().equals(RoomStatus.ROOM_CLEANING_STATUS.getStatus())) {
-            JOptionPane.showMessageDialog(this, "Không thể đặt phòng trực tiếp khi phòng đang trong trạng thái dọn dẹp!",
-                                          "Lỗi", JOptionPane.WARNING_MESSAGE);
-            txtCCCD.requestFocus();
-            return false;
-        }
-
         if (txtCCCD.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập CCCD/CMND!",
                                           "Lỗi", JOptionPane.WARNING_MESSAGE);
@@ -1082,6 +1073,32 @@ public class BookingFormPanel extends JPanel {
                                               "Lỗi thời gian",
                                               JOptionPane.WARNING_MESSAGE);
                 spnCheckInDate.setValue(Date.from(now.toInstant().plus(1, ChronoUnit.HOURS).plus(1, ChronoUnit.MINUTES)));
+                return false;
+            }
+        }
+
+        if (!chkIsAdvanced.isSelected()
+            // Prevent direct booking if room is in cleaning status
+            && selectedRoom.getRoomStatus().equals(RoomStatus.ROOM_CLEANING_STATUS.getStatus())) {
+
+            JOptionPane.showMessageDialog(this, "Không thể đặt phòng trực tiếp khi phòng đang trong trạng thái dọn dẹp!",
+                                          "Lỗi", JOptionPane.WARNING_MESSAGE);
+            txtCCCD.requestFocus();
+
+            return false;
+        }
+
+        // Prevent booking advanced if check-in time is in cleaning time
+        if (chkIsAdvanced.isSelected()) {
+            if (selectedRoom.getCleaningEndTime() != null
+                && checkIn.before(selectedRoom.getCleaningEndTime())) {
+                JOptionPane.showMessageDialog(this,
+                                              "Không thể đặt phòng trước khi thời gian dọn dẹp chưa kết thúc!\n" +
+                                              "Vui lòng chọn thời gian nhận phòng sau " +
+                                              selectedRoom.getCleaningEndTime().toLocalDateTime().format(TimeFormat.getFormatter()),
+                                              "Lỗi thời gian",
+                                              JOptionPane.WARNING_MESSAGE);
+                spnCheckInDate.setValue(Date.from(selectedRoom.getCleaningEndTime().toInstant().plus(1, ChronoUnit.HOURS)));
                 return false;
             }
         }
