@@ -186,7 +186,7 @@ public class QuanLyDichVuPanel extends JPanel {
 
         addButton = createActionButton("Thêm dịch vụ", ACTION_BUTTON_SIZE, CustomUI.darkGreen, "#86EFAC");
         editButton = createActionButton("Sửa dịch vụ", ACTION_BUTTON_SIZE, CustomUI.blue, "#93C5FD");
-        deleteButton = createActionButton("Xóa dịch vụ", ACTION_BUTTON_SIZE, CustomUI.red, "#FCA5A5");
+        deleteButton = createActionButton("Xóa dịch vụ", ACTION_BUTTON_SIZE, CustomUI.newRed, "#FCA5A5");
         adjustStockButton = createActionButton("Chỉnh tồn kho", ACTION_BUTTON_SIZE, CustomUI.orange, "#FCD34D");
         adjustStockButton.addActionListener(e -> onAdjustStock());
 
@@ -244,7 +244,7 @@ public class QuanLyDichVuPanel extends JPanel {
         try { button.setBackground(bgHex); } catch (Exception ignored) { button.setBackground(new Color(0x888888)); }
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
-        button.putClientProperty(FlatClientProperties.STYLE, "arc: 20; borderWidth: 2; borderColor:" + borderHex);
+        button.putClientProperty(FlatClientProperties.STYLE, "arc: 20;");
         return button;
     }
 

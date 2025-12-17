@@ -84,7 +84,7 @@ public class QuanLyKhachHangPanel extends JPanel {
         // Action buttons - NO ICONS to speed up startup
         addButton    = createActionButton("Thêm khách hàng", ACTION_BUTTON_SIZE, CustomUI.darkGreen, "#86EFAC");
         editButton   = createActionButton("Sửa khách hàng", ACTION_BUTTON_SIZE, CustomUI.blue, "#93C5FD");
-        deleteButton = createActionButton("Xóa khách hàng", ACTION_BUTTON_SIZE, CustomUI.red, "#FCA5A5");
+        deleteButton = createActionButton("Xóa khách hàng", ACTION_BUTTON_SIZE, CustomUI.newRed, "#FCA5A5");
 
         addButton.addActionListener(e -> {
             ThemKhachHangDialog dlg = new ThemKhachHangDialog(SwingUtilities.getWindowAncestor(this),
@@ -221,7 +221,7 @@ public class QuanLyKhachHangPanel extends JPanel {
         try { button.setBackground(bgHex); } catch (Exception ignored) { button.setBackground(new Color(0x888888)); }
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
-        button.putClientProperty(FlatClientProperties.STYLE, "arc: 18; borderWidth: 2; borderColor:" + borderHex);
+        button.putClientProperty(FlatClientProperties.STYLE, "arc: 20;");
         return button;
     }
 

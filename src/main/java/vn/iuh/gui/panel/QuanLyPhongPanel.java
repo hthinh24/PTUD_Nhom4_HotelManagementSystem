@@ -112,7 +112,7 @@ public class QuanLyPhongPanel extends JPanel {
         // Các nút hành động (thêm/sửa/xóa) -> kích thước giống panel khách hàng
         addButton    = createActionButton("Thêm phòng", ACTION_BUTTON_SIZE, CustomUI.darkGreen, "#86EFAC");
         editButton   = createActionButton("Sửa phòng", ACTION_BUTTON_SIZE, CustomUI.blue, "#93C5FD");
-        deleteButton = createActionButton("Xóa phòng", ACTION_BUTTON_SIZE, CustomUI.red, "#FCA5A5");
+        deleteButton = createActionButton("Xóa phòng", ACTION_BUTTON_SIZE, CustomUI.newRed, "#FCA5A5");
 
         // Sự kiện của nút thêm
         addButton.addActionListener(e -> {
@@ -317,7 +317,7 @@ public class QuanLyPhongPanel extends JPanel {
         button.setOpaque(true);
 
         // Bo góc và viền màu giống các panel khác
-        button.putClientProperty(FlatClientProperties.STYLE, "arc: 18; borderWidth: 2; borderColor:" + borderHex);
+        button.putClientProperty(FlatClientProperties.STYLE, "arc: 20;");
         return button;
     }
 
