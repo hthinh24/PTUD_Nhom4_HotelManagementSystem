@@ -125,7 +125,7 @@ public class QuanLyLoaiPhongPanel extends JPanel {
         // tạo action button KHÔNG tải icon - giờ cả 3 nút có cùng kích thước ACTION_BUTTON_SIZE
         addButton    = createActionButton("Thêm loại phòng", ACTION_BUTTON_SIZE, CustomUI.darkGreen, "#86EFAC");
         editButton   = createActionButton("Sửa loại phòng", ACTION_BUTTON_SIZE, CustomUI.blue, "#93C5FD");
-        deleteButton = createActionButton("Xóa loại phòng", ACTION_BUTTON_SIZE, CustomUI.red, "#FCA5A5");
+        deleteButton = createActionButton("Xóa loại phòng", ACTION_BUTTON_SIZE, CustomUI.newRed, "#FCA5A5");
 
         // Thêm action cho Thêm
         addButton.addActionListener(e -> {
@@ -368,7 +368,7 @@ public class QuanLyLoaiPhongPanel extends JPanel {
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
         button.setOpaque(true);
-        button.putClientProperty(FlatClientProperties.STYLE, "arc: 20; borderWidth: 2; borderColor:" + borderHex);
+        button.putClientProperty(FlatClientProperties.STYLE, "arc: 20;");
 
         return button;
     }
