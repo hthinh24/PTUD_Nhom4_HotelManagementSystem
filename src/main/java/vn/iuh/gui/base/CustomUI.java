@@ -39,6 +39,9 @@ public class CustomUI {
     public static final Font veryBigFont = new Font("Roboto", Font.BOLD, 30);
 
 
+    // Title bar attributes
+    public static final int TOP_PANEL_HEIGHT = 50;
+
     // Table font and color settings
     public static final Font HEADER_FONT = new Font("Roboto", Font.BOLD, 16);
     public static final Font TABLE_FONT  = new Font("Roboto", Font.PLAIN, 13);

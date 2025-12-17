@@ -178,12 +178,14 @@ public class BookingFormPanel extends JPanel {
     private void setupLayout() {
         // Header panel
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setPreferredSize(new Dimension(0, 40));
         headerPanel.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
         headerPanel.setBackground(CustomUI.blue);
+        headerPanel.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
 
         // Title Panel
-        JPanel titlePanel = new JPanel();
+        JPanel titlePanel = new JPanel(new BorderLayout());
         titlePanel.setOpaque(false);
 
         // Title with room name

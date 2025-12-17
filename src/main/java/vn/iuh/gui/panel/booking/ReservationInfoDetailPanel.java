@@ -113,9 +113,9 @@ public class ReservationInfoDetailPanel extends JPanel {
     private void createTopPanel() {
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(CustomUI.blue);
-        topPanel.setPreferredSize(new Dimension(0, 50));
-        topPanel.setMinimumSize(new Dimension(0, 50));
-        topPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        topPanel.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        topPanel.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        topPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
         topPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
 
         // Title

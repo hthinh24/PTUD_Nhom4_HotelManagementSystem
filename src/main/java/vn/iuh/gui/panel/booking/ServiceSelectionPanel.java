@@ -323,8 +323,10 @@ public class ServiceSelectionPanel extends JPanel {
     private void setupLayout() {
         // Header panel
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setPreferredSize(new Dimension(0, 40));
-        headerPanel.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
+        headerPanel.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
         headerPanel.setBackground(CustomUI.blue);
 
         JLabel titleLabel = new JLabel("GỌI DỊCH VỤ (" + totalRoom + " PHÒNG)", SwingConstants.CENTER);

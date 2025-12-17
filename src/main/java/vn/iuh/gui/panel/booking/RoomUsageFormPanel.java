@@ -211,12 +211,14 @@ public class RoomUsageFormPanel extends JPanel {
     private void setupLayout() {
         // Header panel
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setPreferredSize(new Dimension(0, 40));
-        headerPanel.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
         headerPanel.setBackground(CustomUI.blue);
+        headerPanel.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
 
         // Title Panel
-        JPanel titlePanel = new JPanel();
+        JPanel titlePanel = new JPanel(new BorderLayout());
         titlePanel.setOpaque(false);
 
         // Title with room name
@@ -234,18 +236,35 @@ public class RoomUsageFormPanel extends JPanel {
         checkoutIcon = new ImageIcon(checkoutIcon.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH));
         btnLeaving = new JButton(checkoutIcon);
 
-        boolean isExisted = movingHistoryService.isExisted(selectedRoom.getMaChiTietDatPhong());
-        if (isExisted) {
-            btnEntering.setEnabled(true);
+        if (selectedRoom.getRoomStatus().equalsIgnoreCase(RoomStatus.ROOM_CLEANING_STATUS.getStatus())
+            || selectedRoom.getRoomStatus().equalsIgnoreCase(RoomStatus.ROOM_BOOKED_STATUS.getStatus())
+        ) {
+            btnEntering.setEnabled(false);
             btnLeaving.setEnabled(false);
         } else {
-            btnEntering.setEnabled(false);
-            btnLeaving.setEnabled(true);
+            boolean isExisted = movingHistoryService.isExisted(selectedRoom.getMaChiTietDatPhong());
+            if (isExisted) {
+                btnEntering.setEnabled(true);
+                btnLeaving.setEnabled(false);
+            } else {
+                btnEntering.setEnabled(false);
+                btnLeaving.setEnabled(true);
+            }
         }
 
-        titlePanel.add(btnEntering);
-        titlePanel.add(titleLabel);
-        titlePanel.add(btnLeaving);
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        leftPanel.setOpaque(false);
+        leftPanel.setBorder(BorderFactory.createEmptyBorder(5, 150, 5, 0));
+        leftPanel.add(btnEntering);
+
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        rightPanel.setOpaque(false);
+        rightPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 150));
+        rightPanel.add(btnLeaving);
+
+        titlePanel.add(leftPanel, BorderLayout.WEST);
+        titlePanel.add(titleLabel, BorderLayout.CENTER);
+        titlePanel.add(rightPanel, BorderLayout.EAST);
 
         btnClose = new JButton("x");
         btnClose.setFont(CustomUI.bigFont);

@@ -86,10 +86,10 @@ public class PreReservationSearchPanel extends JPanel {
 
         pnlTop.setBackground(CustomUI.blue);
 
-        pnlTop.setPreferredSize(new Dimension(0, 40));
-        pnlTop.setMinimumSize(new Dimension(0, 40));
-        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        pnlTop.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
+        pnlTop.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
 
         ImageIcon undoIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/undo.png")));
         undoIcon = new ImageIcon(undoIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH));
@@ -516,7 +516,7 @@ public class PreReservationSearchPanel extends JPanel {
             setOpaque(true);
 
             // Check-in button
-            btnCheckIn = new JButton("Check-in");
+            btnCheckIn = new JButton("Nhận phòng");
             btnCheckIn.setFont(CustomUI.verySmallFont);
             btnCheckIn.setBackground(CustomUI.darkGreen);
             btnCheckIn.setForeground(Color.WHITE);
@@ -527,7 +527,7 @@ public class PreReservationSearchPanel extends JPanel {
             // Change room button
             btnChangeRoom = new JButton("Đổi phòng");
             btnChangeRoom.setFont(CustomUI.verySmallFont);
-            btnChangeRoom.setBackground(CustomUI.lightBlue);
+            btnChangeRoom.setBackground(CustomUI.blue);
             btnChangeRoom.setForeground(Color.WHITE);
             btnChangeRoom.setPreferredSize(new Dimension(120, 30));
             btnChangeRoom.setFocusPainted(false);

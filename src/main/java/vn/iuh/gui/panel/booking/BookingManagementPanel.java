@@ -121,18 +121,19 @@ public class BookingManagementPanel extends JPanel {
     }
 
     private void createTopPanel() {
-        JPanel pnlTop = new JPanel();
+        JPanel pnlTop = new JPanel(new BorderLayout());
         JLabel lblTop = new JLabel("QUẢN LÝ ĐẶT PHÒNG", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
         lblTop.setFont(CustomUI.bigFont);
 
         pnlTop.setBackground(CustomUI.blue);
-        pnlTop.add(lblTop);
+        pnlTop.add(lblTop, BorderLayout.CENTER);
 
-        pnlTop.setPreferredSize(new Dimension(0, 40));
-        pnlTop.setMinimumSize(new Dimension(0, 40));
-        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        pnlTop.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
+        pnlTop.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        pnlTop.add(lblTop, BorderLayout.CENTER);
 
         add(pnlTop);
     }
@@ -611,7 +612,6 @@ public class BookingManagementPanel extends JPanel {
 
         Date now = new Date();
         Date checkInDate = (Date) spnCheckInDate.getValue();
-        System.out.println("Check-in date changed to: " + checkInDate);
         Date currentCheckOutDate = (Date) spnCheckOutDate.getValue();
 
         // Handle past check-in date
@@ -743,14 +743,6 @@ public class BookingManagementPanel extends JPanel {
             toggleMultiBookingMode();
         }
 
-        if (roomFilter.checkInDate == null) {
-            roomFilter.checkInDate = (Date) spnCheckInDate.getValue();
-        }
-
-        if (roomFilter.checkOutDate == null) {
-            roomFilter.checkOutDate = (Date) spnCheckOutDate.getValue();
-        }
-
         filteredRooms = new ArrayList<>();
         // Search all empty room if both dates are set
         if (roomFilter.checkInDate != null && roomFilter.checkOutDate != null) {
@@ -816,7 +808,6 @@ public class BookingManagementPanel extends JPanel {
                 return false;
             }
         }
-
         // Accept cleaning room only when room status filter is set to cleaning
         if (roomFilter.roomStatus == null ||
             !roomFilter.roomStatus.equals(RoomStatus.ROOM_CLEANING_STATUS.getStatus())) {
