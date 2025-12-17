@@ -438,7 +438,7 @@ public class BookingFormPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         reservationButton.setFont(CustomUI.smallFont);
         reservationButton.setForeground(CustomUI.white);
-        reservationButton.setBackground(CustomUI.purple);
+        reservationButton.setBackground(CustomUI.blue);
 
         // Add calendar icon to reservation button
         ImageIcon calendar = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/calendar.png")));

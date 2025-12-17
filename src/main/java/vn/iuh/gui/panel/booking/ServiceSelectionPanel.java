@@ -283,7 +283,7 @@ public class ServiceSelectionPanel extends JPanel {
         btnConfirm.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
 
         btnOrderHistory = new JButton("Xem Lịch Sử");
-        btnOrderHistory.setBackground(CustomUI.purple);
+        btnOrderHistory.setBackground(CustomUI.lightBlue);
         btnOrderHistory.setForeground(CustomUI.black);
         btnOrderHistory.setFont(CustomUI.normalFont);
         btnOrderHistory.setPreferredSize(new Dimension(200, 35));

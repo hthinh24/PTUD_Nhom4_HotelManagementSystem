@@ -530,7 +530,7 @@ public class MultiRoomBookingFormPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         reservationButton.setFont(CustomUI.smallFont);
         reservationButton.setForeground(CustomUI.white);
-        reservationButton.setBackground(CustomUI.purple);
+        reservationButton.setBackground(CustomUI.blue);
         reservationButton.setEnabled(false);
 
         ImageIcon calendar = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/calendar.png")));
