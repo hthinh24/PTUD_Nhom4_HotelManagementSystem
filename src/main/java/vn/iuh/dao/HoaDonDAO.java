@@ -144,26 +144,6 @@ public class HoaDonDAO {
         }
     }
 
-    public HoaDon findInvoiceForReservation(String reservationId, String invoiceType){
-        String query = "Select top 1 * from HoaDon where ma_don_dat_phong = ? and kieu_hoa_don = ?";
-        try {
-            Connection connection = DatabaseUtil.getConnect();
-            PreparedStatement ps = connection.prepareStatement(query);
-
-            ps.setString(1, reservationId);
-            ps.setString(2, invoiceType);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return chuyenKetQuaThanhHoaDon(rs);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (TableEntityMismatch et) {
-            System.out.println(et.getMessage());
-        }
-        return null;
-    }
-
     public List<HoaDon> layDanhSachHoaDon(){
         List<HoaDon> list = new ArrayList<>();
         String query = "select * from HoaDon";
