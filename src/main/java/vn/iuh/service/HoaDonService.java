@@ -1,5 +1,6 @@
 package vn.iuh.service;
 
+import vn.iuh.constraint.InvoiceType;
 import vn.iuh.dto.event.create.InvoiceCreationEvent;
 import vn.iuh.dto.response.InvoiceResponse;
 import vn.iuh.entity.ChiTietHoaDon;
@@ -12,4 +13,5 @@ public interface HoaDonService {
     InvoiceResponse createInvoice(InvoiceResponse event);
     HoaDon getLatestInvoice();
     List<ChiTietHoaDon> insertListChiTietHoaDon(List<ChiTietHoaDon> chiTietHoaDonList);
+    public InvoiceResponse showInvoiceDetails(String reservationId, InvoiceType invoiceType);
 }

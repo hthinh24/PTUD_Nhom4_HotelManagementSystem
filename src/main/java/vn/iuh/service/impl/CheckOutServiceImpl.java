@@ -58,7 +58,7 @@ public class CheckOutServiceImpl implements CheckOutService {
 
     public DonDatPhong validateDonDatPhong(String maDonDatPhong){
         var reservation = datPhongDAO.getDonDatPhongById(maDonDatPhong);
-        var existingInvoice = hoaDonDAO.findInvoiceForReservation(maDonDatPhong, InvoiceType.PAYMENT_INVOICE.getStatus());
+        var existingInvoice = hoaDonDAO.timHoaTheoMaDonDatPhong(maDonDatPhong, InvoiceType.PAYMENT_INVOICE.getStatus());
         if(reservation == null){
             throw new BusinessException("Không tìm thấy đơn đặt phòng");
         }

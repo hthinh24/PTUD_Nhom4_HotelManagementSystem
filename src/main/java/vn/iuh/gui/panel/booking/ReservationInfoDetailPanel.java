@@ -1,10 +1,14 @@
 package vn.iuh.gui.panel.booking;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import vn.iuh.constraint.Fee;
+import vn.iuh.constraint.InvoiceType;
 import vn.iuh.constraint.PanelName;
 import vn.iuh.constraint.ReservationStatus;
 import vn.iuh.dto.repository.BookThemGioInfo;
+import vn.iuh.dto.repository.ThongTinPhuPhi;
 import vn.iuh.dto.response.*;
+import vn.iuh.entity.*;
 import vn.iuh.gui.base.CustomUI;
 import vn.iuh.gui.base.Main;
 import vn.iuh.gui.dialog.BookThemGioDialog;
@@ -15,7 +19,9 @@ import vn.iuh.gui.dialog.InvoiceDialog2;
 import vn.iuh.gui.panel.DoiPhongDiaLog;
 import vn.iuh.service.BookingService;
 import vn.iuh.service.CheckinService;
+import vn.iuh.service.HoaDonService;
 import vn.iuh.service.impl.*;
+import vn.iuh.util.FeeValue;
 import vn.iuh.util.PriceFormat;
 import vn.iuh.util.RefreshManager;
 import vn.iuh.util.RefreshManager;
@@ -46,6 +52,7 @@ public class ReservationInfoDetailPanel extends JPanel {
     private BookingService bookingService;
     private CheckinService checkinService;
     private CheckOutServiceImpl checkOutService;
+    private HoaDonService hoaDonService;
 
     // Customer info components
     private JLabel lblCCCD;
@@ -81,6 +88,7 @@ public class ReservationInfoDetailPanel extends JPanel {
         this.bookingService = new BookingServiceImpl();
         this.checkinService = new CheckinServiceImpl();
         this.checkOutService = new CheckOutServiceImpl();
+        this.hoaDonService = new HoaDonServiceImpl();
 
         setLayout(new BorderLayout());
         init();
@@ -93,6 +101,7 @@ public class ReservationInfoDetailPanel extends JPanel {
         this.bookingService = new BookingServiceImpl();
         this.checkinService = new CheckinServiceImpl();
         this.checkOutService = new CheckOutServiceImpl();
+        this.hoaDonService = new HoaDonServiceImpl();
         this.isDialog = isDialog;
 
         setLayout(new BorderLayout());
@@ -895,15 +904,29 @@ public class ReservationInfoDetailPanel extends JPanel {
 
     // Top Action handlers
     private void handlePrintInvoice(ReservationInfoDetailResponse detail) {
-        JOptionPane.showMessageDialog(this,
-                                      "Chức năng in hóa đơn đặt cọc đang được phát triển",
-                                      "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        if(detail != null){
+            btnPrintInvoice.addActionListener((e) -> {
+                handleShowInvoiceDetail(detail.getMaDonDatPhong(), InvoiceType.DEPOSIT_INVOICE);
+            });
+        }
+        else {
+            JOptionPane.showMessageDialog(this,
+                    "Không tìm thấy hóa đơn đặt cọc cho đơn đặt phòng",
+                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
     private void handlePrintReceipt(ReservationInfoDetailResponse detail) {
-        JOptionPane.showMessageDialog(this,
-                                      "Chức năng in hóa đơn thanh toán đang được phát triển",
-                                      "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        if(detail != null){
+            btnPrintInvoice.addActionListener((e) -> {
+                handleShowInvoiceDetail(detail.getMaDonDatPhong(), InvoiceType.PAYMENT_INVOICE);
+            });
+        }
+        else {
+            JOptionPane.showMessageDialog(this,
+                    "Không tìm thấy hóa đơn thanh toán cho đơn đặt phòng",
+                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
     private void handleCheckoutAndPrintReceipt(ReservationInfoDetailResponse detail) {
@@ -1305,5 +1328,19 @@ public class ReservationInfoDetailPanel extends JPanel {
     }
     public ReservationInfoDetailResponse getReservationInfo() {
         return reservationInfo;
+    }
+
+    private void handleShowInvoiceDetail(String reservationId, InvoiceType invoiceType){
+        InvoiceResponse invoiceResponse = hoaDonService.showInvoiceDetails(reservationId, invoiceType);
+
+        if(invoiceResponse != null){
+            SwingUtilities.invokeLater(() -> {
+                InvoiceDialog2 dialog = new InvoiceDialog2(invoiceResponse);
+                dialog.setVisible(true);
+            });
+        }
+        else {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn cho phòng");
+        }
     }
 }
