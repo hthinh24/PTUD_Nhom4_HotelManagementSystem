@@ -38,6 +38,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
@@ -111,6 +112,8 @@ public class RoomUsageFormPanel extends JPanel {
     private JButton btnClose;
 
     public RoomUsageFormPanel(BookingResponse roomInfo) {
+        RefreshManager.setCurrentRoomUsageFormPanel(this);
+
         this.checkOutService = new CheckOutServiceImpl();
         this.selectedRoom = roomInfo;
         this.bookingService = new BookingServiceImpl();
@@ -127,7 +130,17 @@ public class RoomUsageFormPanel extends JPanel {
             }
 
             selectedRoom = createDefaultValueForBookingInfo(roomInfo);
-            customerInfoWithPayments = new CustomerInfoWithPayments("N/A", "N/A", "N/A", "N/A", "", 0, 0);
+            customerInfoWithPayments = new CustomerInfoWithPayments("N/A",
+                                                                    "N/A",
+                                                                    "N/A",
+                                                                    "N/A",
+                                                                    new Timestamp(System.currentTimeMillis()),
+                                                                    // After 1 days
+                                                                    new Timestamp(System.currentTimeMillis()
+                                                                                      + 24 * 60 * 60 * 1000),
+                                                                    "N/A",
+                                                                    0.0,
+                                                                    0.0);
         }
 
         initializeComponents();
@@ -912,42 +925,6 @@ public class RoomUsageFormPanel extends JPanel {
         }
     }
 
-    // Helper methods for additional room info
-    private String extractFloorFromRoomName() {
-        String roomName = selectedRoom.getRoomName();
-        // Assuming room name format is like "101", "202A", etc.
-        if (roomName.length() >= 3 && Character.isDigit(roomName.charAt(0))) {
-            return String.valueOf(roomName.charAt(0));
-        }
-        return "N/A";
-    }
-
-    private String getAmenitiesForRoom() {
-        // This can be made flexible based on room type or category
-        String roomType = selectedRoom.getRoomType();
-        if (roomType.toLowerCase().contains("vip") || roomType.toLowerCase().contains("deluxe")) {
-            return "Điều hòa, TV, WiFi, Minibar, Jacuzzi";
-        } else
-            if (roomType.toLowerCase().contains("standard")) {
-                return "Điều hòa, TV, WiFi";
-            } else {
-                return "Điều hòa, TV, WiFi, Tủ lạnh";
-            }
-    }
-
-    private String getAreaForRoom() {
-        // This can be made flexible based on room type or actual room data
-        String roomType = selectedRoom.getRoomType();
-        if (roomType.toLowerCase().contains("vip") || roomType.toLowerCase().contains("deluxe")) {
-            return "45m²";
-        } else
-            if (roomType.toLowerCase().contains("standard")) {
-                return "25m²";
-            } else {
-                return "30m²";
-            }
-    }
-
     private String getCurrentTimeString() {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm - dd/MM/yyyy");
         return sdf.format(new Date());
@@ -1010,10 +987,11 @@ public class RoomUsageFormPanel extends JPanel {
     }
 
     private void setDefaultValues() {
-        spnCheckOutDate.setValue(selectedRoom.getTimeOut());
-        spnCheckInDate.setValue(selectedRoom.getTimeIn());
-
         txtInitialPrice.setText(priceFormatter.format(selectedRoom.getDailyPrice()) + " VNĐ");
+
+        spnCheckOutDate.setValue(customerInfoWithPayments.getTimeOut());
+        spnCheckInDate.setValue(customerInfoWithPayments.getTimeIn());
+
 
         txtTotalServicePrice.setText(priceFormatter.format(customerInfoWithPayments.getTotalServiceCost()) + " VNĐ");
         txtDepositPrice.setText(priceFormatter.format(customerInfoWithPayments.getTotalDepositPayment()) + " VNĐ");
@@ -1268,6 +1246,9 @@ public class RoomUsageFormPanel extends JPanel {
             public void onChangeRoom(String oldRoomId, BookingResponse newRoom, boolean applyFee) {
                 dialog.dispose();
                 RefreshManager.refreshAfterTransfer();
+
+                // 9) Đóng dialog và refresh UI khi đổi phòng thành công
+                handleClose();
             }
 
             @Override
@@ -1462,5 +1443,27 @@ public class RoomUsageFormPanel extends JPanel {
                 now,
                 tomorrow
         );
+    }
+
+    public void refreshPanel() {
+        // Clear and re-populate data
+        customerInfoWithPayments = bookingService.getCustomerInfoWithPaymentsBookingId(selectedRoom.getMaChiTietDatPhong());
+        if (customerInfoWithPayments == null) {
+            // Copy from selectedRoom if no data found
+            customerInfoWithPayments = new CustomerInfoWithPayments(
+                    "N/A",
+                    "N/A",
+                    selectedRoom.getCustomerName(),
+                    "N/A",
+                    selectedRoom.getTimeIn(),
+                    selectedRoom.getTimeOut(),
+                    "N/A",
+                    0.0,
+                    0.0
+            );
+        }
+
+        populateRoomInformation();
+        setDefaultValues();
     }
 }

@@ -579,7 +579,7 @@ public class BookingServiceImpl implements BookingService {
     public CustomerInfoWithPayments getCustomerInfoWithPaymentsBookingId(String maChiTietDatPhong) {
 
         // 1. Get Customer Info by ReservationDetail ID
-        CustomerInfo customerInfo = datPhongDAO.timThongTinKhachHangBangMaChiTietDatPhong(maChiTietDatPhong);
+        CustomerWithBookingInfo customerInfo = datPhongDAO.timThongTinKhachHangBangMaChiTietDatPhong(maChiTietDatPhong);
         if (Objects.isNull(customerInfo)) {
             System.out.println("Không tìm thấy thông tin khách hàng cho mã chi tiết đặt phòng: " + maChiTietDatPhong);
             return null;
@@ -612,10 +612,12 @@ public class BookingServiceImpl implements BookingService {
 
         // 4. Create CustomerInfoWithPayments
         return new CustomerInfoWithPayments(
-                customerInfo.getMaKhachHang(),
+                customerInfo.getCustomerId(),
                 customerInfo.getCCCD(),
-                customerInfo.getTenKhachHang(),
-                customerInfo.getSoDienThoai(),
+                customerInfo.getCustomerName(),
+                customerInfo.getCustomerPhone(),
+                customerInfo.getTimeIn(),
+                customerInfo.getTimeOut(),
                 customerPayments.getCustomerNote() != null ? customerPayments.getCustomerNote() : "",
                 customerPayments.getTotalServiceCost().toBigInteger().doubleValue(),
                 customerPayments.getAdvancePayment().toBigInteger().doubleValue()

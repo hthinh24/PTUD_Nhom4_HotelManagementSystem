@@ -436,7 +436,7 @@ public class PreReservationSearchPanel extends JPanel {
                                               "Thành công", JOptionPane.INFORMATION_MESSAGE);
 
                 // Làm mới UI
-                RefreshManager.refreshAfterCancelReservation();
+                RefreshManager.refreshAfterCheckIn();
             } else {
                 // Lấy lỗi từ service nếu có
                 String err = null;
@@ -575,7 +575,7 @@ public class PreReservationSearchPanel extends JPanel {
             panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 3));
 
             // Check-in button
-            btnCheckIn = new JButton("Check-in");
+            btnCheckIn = new JButton("Nhận phòng");
             btnCheckIn.setFont(CustomUI.verySmallFont);
             btnCheckIn.setBackground(CustomUI.darkGreen);
             btnCheckIn.setForeground(Color.WHITE);
@@ -600,7 +600,7 @@ public class PreReservationSearchPanel extends JPanel {
             // Change room button
             btnChangeRoom = new JButton("Đổi phòng");
             btnChangeRoom.setFont(CustomUI.verySmallFont);
-            btnChangeRoom.setBackground(CustomUI.lightBlue);
+            btnChangeRoom.setBackground(CustomUI.blue);
             btnChangeRoom.setForeground(Color.WHITE);
             btnChangeRoom.setPreferredSize(new Dimension(120, 30));
             btnChangeRoom.setFocusPainted(false);
@@ -621,7 +621,7 @@ public class PreReservationSearchPanel extends JPanel {
             });
 
             // Cancel button (small square with trash icon)
-            ImageIcon trashIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/error.png")));
+            ImageIcon trashIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/bin.png")));
             trashIcon = new ImageIcon(trashIcon.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH));
             btnCancel = new JButton(trashIcon);
             btnCancel.setBackground(CustomUI.red);

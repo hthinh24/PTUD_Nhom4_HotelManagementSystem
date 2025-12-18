@@ -1100,6 +1100,8 @@ public class BookingFormPanel extends JPanel {
                                               selectedRoom.getCleaningEndTime().toLocalDateTime().format(TimeFormat.getFormatter()),
                                               "Lỗi thời gian",
                                               JOptionPane.WARNING_MESSAGE);
+
+                // Auto set check-in to 1 hour after cleaning end time
                 spnCheckInDate.setValue(Date.from(selectedRoom.getCleaningEndTime().toInstant().plus(1, ChronoUnit.HOURS)));
                 return false;
             }

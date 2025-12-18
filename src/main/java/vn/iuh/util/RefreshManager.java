@@ -1,14 +1,12 @@
 package vn.iuh.util;
 
-import vn.iuh.gui.panel.booking.PreReservationManagementPanel;
-import vn.iuh.gui.panel.booking.PreReservationSearchPanel;
-import vn.iuh.gui.panel.booking.BookingManagementPanel;
-import vn.iuh.gui.panel.booking.ReservationManagementPanel;
+import vn.iuh.gui.panel.booking.*;
 
 public class RefreshManager {
     private static BookingManagementPanel bookingManagementPanel;
     private static ReservationManagementPanel reservationManagementPanel;
     private static PreReservationSearchPanel preReservationSearchPanel;
+    private static RoomUsageFormPanel currentRoomUsageFormPanel;
 
     // Registration methods
     public static void setBookingManagementPanel(BookingManagementPanel panel) {
@@ -30,6 +28,11 @@ public class RefreshManager {
         System.out.println("RefreshManager: PreReservationSearchPanel registered");
     }
 
+    public static void setCurrentRoomUsageFormPanel(RoomUsageFormPanel panel) {
+        currentRoomUsageFormPanel = panel;
+        System.out.println("RefreshManager: CurrentRoomUsageFormPanel registered");
+    }
+
     // Individual refresh methods
     public static void refreshBookingManagementPanel() {
         if (bookingManagementPanel != null)
@@ -46,12 +49,18 @@ public class RefreshManager {
             preReservationSearchPanel.refreshPanel();
     }
 
+    public static void refreshCurrentRoomUsageFormPanel() {
+        if (currentRoomUsageFormPanel != null)
+            currentRoomUsageFormPanel.refreshPanel();
+    }
+
     // Comprehensive refresh method
     public static void refreshAll() {
         System.out.println("RefreshManager: Refreshing all panels...");
         refreshBookingManagementPanel();
         refreshReservationManagementPanel();
         refreshPreReservationSearchPanel();
+        refreshCurrentRoomUsageFormPanel();
     }
 
     // Method specifically for after booking operations
@@ -60,6 +69,7 @@ public class RefreshManager {
         refreshBookingManagementPanel();
         refreshReservationManagementPanel();
         refreshPreReservationSearchPanel();
+        refreshCurrentRoomUsageFormPanel();
     }
 
     public static void refreshAfterCancelReservation() {
@@ -67,6 +77,7 @@ public class RefreshManager {
         refreshBookingManagementPanel();
         refreshReservationManagementPanel();
         refreshPreReservationSearchPanel();
+        refreshCurrentRoomUsageFormPanel();
     }
 
     public static void refreshAfterCheckIn() {
@@ -74,6 +85,7 @@ public class RefreshManager {
         refreshBookingManagementPanel();
         refreshReservationManagementPanel();
         refreshPreReservationSearchPanel();
+        refreshCurrentRoomUsageFormPanel();
     }
 
     public static void refreshAfterTransfer() {
@@ -81,6 +93,7 @@ public class RefreshManager {
         refreshBookingManagementPanel();
         refreshReservationManagementPanel();
         refreshPreReservationSearchPanel();
+        refreshCurrentRoomUsageFormPanel();
     }
 
     public static void refreshAfterCheckout() {
@@ -88,6 +101,7 @@ public class RefreshManager {
         refreshBookingManagementPanel();
         refreshReservationManagementPanel();
         refreshPreReservationSearchPanel();
+        refreshCurrentRoomUsageFormPanel();
     }
 
     public static void refreshAfterCleaning() {

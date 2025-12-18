@@ -237,8 +237,8 @@ public class DatPhongDAO {
     }
 
 
-    public CustomerInfo timThongTinKhachHangBangMaChiTietDatPhong(String maChiTietDatPhong) {
-        String query = "SELECT kh.ma_khach_hang, kh.CCCD, kh.ten_khach_hang, kh.so_dien_thoai" +
+    public CustomerWithBookingInfo timThongTinKhachHangBangMaChiTietDatPhong(String maChiTietDatPhong) {
+        String query = "SELECT kh.ma_khach_hang, kh.CCCD, kh.ten_khach_hang, kh.so_dien_thoai, ctdp.tg_nhan_phong, ctdp.tg_tra_phong, ctdp.ghi_chu" +
                        " FROM ChiTietDatPhong ctdp" +
                        " JOIN DonDatPhong ddp ON ddp.ma_don_dat_phong = ctdp.ma_don_dat_phong" +
                        " JOIN KhachHang kh ON kh.ma_khach_hang = ddp.ma_khach_hang" +
@@ -251,11 +251,14 @@ public class DatPhongDAO {
 
             var rs = ps.executeQuery();
             if (rs.next())
-                return new CustomerInfo(
+                return new CustomerWithBookingInfo(
                         rs.getString("ma_khach_hang"),
                         rs.getString("CCCD"),
                         rs.getString("ten_khach_hang"),
-                        rs.getString("so_dien_thoai")
+                        rs.getString("so_dien_thoai"),
+                        rs.getTimestamp("tg_nhan_phong"),
+                        rs.getTimestamp("tg_tra_phong"),
+                        rs.getString("ghi_chu")
                 );
             else
                 return null;
