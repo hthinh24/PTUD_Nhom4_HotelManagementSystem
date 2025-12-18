@@ -13,10 +13,13 @@ import java.util.Objects;
 public class GridRoomPanel extends JPanel implements Serializable {
     private List<RoomItem> roomItems;
     private Map<String, RoomItem> roomItemMap;
+    private boolean isLocking;
+
     private void init(List<RoomItem> rooms){
         setLayout(new GridLayout(0,3, 10,10));
         roomItems = rooms;
         roomItemMap = new HashMap<>();
+        isLocking = false;
         for(RoomItem room : rooms){
             if(!Objects.isNull(room.getRoomId())){
                 roomItemMap.put(room.getRoomId(), room);
@@ -26,6 +29,10 @@ public class GridRoomPanel extends JPanel implements Serializable {
     }
 
     public void updateRoomItemStatus(List<BookingResponse> updatedRoomItems) {
+        if (isLocking) {
+            return;
+        }
+
         for (BookingResponse res : updatedRoomItems) {
             RoomItem roomItem = roomItemMap.get(res.getRoomId());
             RoomItem newItem = new RoomItem(res);
@@ -56,5 +63,13 @@ public class GridRoomPanel extends JPanel implements Serializable {
         }
         revalidate();
         repaint();
+    }
+
+    public boolean isLocking() {
+        return isLocking;
+    }
+
+    public void setLocking(boolean locking) {
+        isLocking = locking;
     }
 }

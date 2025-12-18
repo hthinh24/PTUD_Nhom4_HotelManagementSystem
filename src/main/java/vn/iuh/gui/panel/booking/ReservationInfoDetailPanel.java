@@ -905,9 +905,7 @@ public class ReservationInfoDetailPanel extends JPanel {
     // Top Action handlers
     private void handlePrintInvoice(ReservationInfoDetailResponse detail) {
         if(detail != null){
-            btnPrintInvoice.addActionListener((e) -> {
-                handleShowInvoiceDetail(detail.getMaDonDatPhong(), InvoiceType.DEPOSIT_INVOICE);
-            });
+            handleShowInvoiceDetail(detail.getMaDonDatPhong(), InvoiceType.DEPOSIT_INVOICE);
         }
         else {
             JOptionPane.showMessageDialog(this,
@@ -918,9 +916,7 @@ public class ReservationInfoDetailPanel extends JPanel {
 
     private void handlePrintReceipt(ReservationInfoDetailResponse detail) {
         if(detail != null){
-            btnPrintInvoice.addActionListener((e) -> {
-                handleShowInvoiceDetail(detail.getMaDonDatPhong(), InvoiceType.PAYMENT_INVOICE);
-            });
+            handleShowInvoiceDetail(detail.getMaDonDatPhong(), InvoiceType.PAYMENT_INVOICE);
         }
         else {
             JOptionPane.showMessageDialog(this,
