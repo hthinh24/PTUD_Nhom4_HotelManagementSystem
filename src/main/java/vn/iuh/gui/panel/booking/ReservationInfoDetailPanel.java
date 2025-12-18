@@ -665,12 +665,7 @@ public class ReservationInfoDetailPanel extends JPanel {
         lblCustomerName.setText(reservationInfo.getCustomerName());
         lblReservationCode.setText(reservationInfo.getMaDonDatPhong());
         lblStatus.setText(reservationInfo.getStatus());
-
-        // Determine type based on number of details
-        String type = (reservationInfo.getDetails() != null && reservationInfo.getDetails().size() > 1)
-            ? "Đặt nhiều" : "Đặt đơn";
-        lblType.setText(type);
-
+        lblType.setText(reservationInfo.getType());
         lblAdvance.setText(reservationInfo.isAdvance() ? "Có" : "Không");
 
         // Load room details

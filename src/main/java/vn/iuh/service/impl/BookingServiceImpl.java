@@ -1247,6 +1247,7 @@ public class BookingServiceImpl implements BookingService {
                 donDatPhong.getMaDonDatPhong(),
                 status,
                 donDatPhong.isDaDatTruoc(),
+                donDatPhong.getLoai(),
                 reservationDetailResponses,
                 roomUsageServiceResponses,
                 movingHistoryResponses
