@@ -1,20 +1,27 @@
 package vn.iuh.gui.panel.booking;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import vn.iuh.constraint.Fee;
+import vn.iuh.constraint.InvoiceType;
 import vn.iuh.constraint.PanelName;
 import vn.iuh.constraint.ReservationStatus;
 import vn.iuh.dto.repository.BookThemGioInfo;
+import vn.iuh.dto.repository.ThongTinPhuPhi;
 import vn.iuh.dto.response.*;
+import vn.iuh.entity.*;
 import vn.iuh.gui.base.CustomUI;
 import vn.iuh.gui.base.Main;
 import vn.iuh.gui.dialog.BookThemGioDialog;
 import vn.iuh.gui.dialog.DepositInvoiceDialog;
+import vn.iuh.gui.dialog.LichSuDoiPhongDialog;
 import vn.iuh.gui.panel.DoiPhongDiaLog;
 import vn.iuh.gui.dialog.InvoiceDialog2;
 import vn.iuh.gui.panel.DoiPhongDiaLog;
 import vn.iuh.service.BookingService;
 import vn.iuh.service.CheckinService;
+import vn.iuh.service.HoaDonService;
 import vn.iuh.service.impl.*;
+import vn.iuh.util.FeeValue;
 import vn.iuh.util.PriceFormat;
 import vn.iuh.util.RefreshManager;
 import vn.iuh.util.RefreshManager;
@@ -45,6 +52,7 @@ public class ReservationInfoDetailPanel extends JPanel {
     private BookingService bookingService;
     private CheckinService checkinService;
     private CheckOutServiceImpl checkOutService;
+    private HoaDonService hoaDonService;
 
     // Customer info components
     private JLabel lblCCCD;
@@ -71,6 +79,7 @@ public class ReservationInfoDetailPanel extends JPanel {
 
     private DecimalFormat priceFormatter = PriceFormat.getPriceFormatter();
     private SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+    private boolean isDialog;
 
     public ReservationInfoDetailPanel(ReservationInfoDetailResponse reservationInfo, ReservationManagementPanel parentPanel) {
         this.reservationInfo = reservationInfo;
@@ -79,6 +88,21 @@ public class ReservationInfoDetailPanel extends JPanel {
         this.bookingService = new BookingServiceImpl();
         this.checkinService = new CheckinServiceImpl();
         this.checkOutService = new CheckOutServiceImpl();
+        this.hoaDonService = new HoaDonServiceImpl();
+
+        setLayout(new BorderLayout());
+        init();
+        loadData();
+    }
+
+    public ReservationInfoDetailPanel(ReservationInfoDetailResponse reservationInfo, boolean isDialog) {
+        this.reservationInfo = reservationInfo;
+
+        this.bookingService = new BookingServiceImpl();
+        this.checkinService = new CheckinServiceImpl();
+        this.checkOutService = new CheckOutServiceImpl();
+        this.hoaDonService = new HoaDonServiceImpl();
+        this.isDialog = isDialog;
 
         setLayout(new BorderLayout());
         init();
@@ -87,6 +111,7 @@ public class ReservationInfoDetailPanel extends JPanel {
 
     private void init() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         createTopPanel();
         createCustomerInfoPanel();
         createRoomDetailsTable();
@@ -97,9 +122,9 @@ public class ReservationInfoDetailPanel extends JPanel {
     private void createTopPanel() {
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(CustomUI.blue);
-        topPanel.setPreferredSize(new Dimension(0, 50));
-        topPanel.setMinimumSize(new Dimension(0, 50));
-        topPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        topPanel.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        topPanel.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        topPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
         topPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
 
         // Title
@@ -117,13 +142,13 @@ public class ReservationInfoDetailPanel extends JPanel {
         JPanel infoPanel = new JPanel(new GridBagLayout());
         infoPanel.setBackground(CustomUI.white);
         infoPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(CustomUI.lightBlue, 2),
+            BorderFactory.createLineBorder(CustomUI.gray, 2),
             BorderFactory.createEmptyBorder(5, 15, 5, 15)
         ));
 
         infoPanel.setMinimumSize(new Dimension(0, 150));
         infoPanel.setPreferredSize(new Dimension(0, 150));
-        infoPanel.setMaximumSize(new Dimension(0, 200));
+        infoPanel.setMaximumSize(new Dimension(0, 150));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 10, 5, 10);
@@ -193,12 +218,9 @@ public class ReservationInfoDetailPanel extends JPanel {
             infoPanel.add(btnCheckoutAndPrintReceipt, gbc);
         }
 
-        // Button 3 - Row 2
-//        gbc.gridy = 2
-
+        // Add wrapper for padding top & buttom
         JPanel wrapper = new JPanel(new BorderLayout());
-
-        wrapper.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        wrapper.setBorder(BorderFactory.createEmptyBorder(10, 0, 5, 0));
         wrapper.add(infoPanel, BorderLayout.CENTER);
 
         add(wrapper);
@@ -248,7 +270,7 @@ public class ReservationInfoDetailPanel extends JPanel {
     private void createRoomDetailsTable() {
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBackground(CustomUI.white);
-        tablePanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        tablePanel.setBorder(BorderFactory.createLineBorder(CustomUI.gray, 2));
 
         // Create collapsible title panel
         JPanel titlePanel = createCollapsibleTitlePanel("Chi tiết phòng");
@@ -257,7 +279,9 @@ public class ReservationInfoDetailPanel extends JPanel {
         // Create table base on reservation status
         String[] columnNames;
         if (Objects.equals(reservationInfo.getStatus(), ReservationStatus.COMPLETED.getStatus())
-            || Objects.equals(reservationInfo.getStatus(), ReservationStatus.CANCELLED.getStatus())) {
+            || Objects.equals(reservationInfo.getStatus(), ReservationStatus.CANCELLED.getStatus())
+            || Objects.equals(reservationInfo.getStatus(), ReservationStatus.CHECKOUT_LATE.getStatus())
+        ) {
             columnNames = new String[]{"Mã chi tiết", "Phòng", "Checkin", "Checkout", "Trạng thái"};
         } else {
             columnNames = new String[]{"Mã chi tiết", "Phòng", "Checkin", "Checkout", "Trạng thái", "Thao tác"};
@@ -274,7 +298,9 @@ public class ReservationInfoDetailPanel extends JPanel {
 
         // Set dynamic column widths
         if (Objects.equals(reservationInfo.getStatus(), ReservationStatus.COMPLETED.getStatus())
-            || Objects.equals(reservationInfo.getStatus(), ReservationStatus.CANCELLED.getStatus())) {
+            || Objects.equals(reservationInfo.getStatus(), ReservationStatus.CANCELLED.getStatus())
+            || Objects.equals(reservationInfo.getStatus(), ReservationStatus.CHECKOUT_LATE.getStatus())
+        ) {
             tblRoomDetails.addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentResized(ComponentEvent e) {
@@ -314,7 +340,12 @@ public class ReservationInfoDetailPanel extends JPanel {
         tablePanel.add(titlePanel, BorderLayout.NORTH);
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-        add(tablePanel);
+        // Add wrapper for padding top & buttom
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+        wrapper.add(tablePanel, BorderLayout.CENTER);
+
+        add(wrapper);
     }
 
     // Action Buttons for reservation
@@ -343,7 +374,7 @@ public class ReservationInfoDetailPanel extends JPanel {
         // Print Receipt button
         JButton btnPrintReceipt = new JButton("Xem hóa đơn thanh toán");
         btnPrintReceipt.setFont(CustomUI.smallFont);
-        btnPrintReceipt.setBackground(CustomUI.darkGreen);
+        btnPrintReceipt.setBackground(CustomUI.blue);
         btnPrintReceipt.setForeground(CustomUI.white);
         btnPrintReceipt.setPreferredSize(new Dimension(220, 35));
         btnPrintReceipt.setFocusPainted(false);
@@ -361,7 +392,7 @@ public class ReservationInfoDetailPanel extends JPanel {
         btnTransferRoomHistoryBtn.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
 
         if (canCheckChangeRoomHistory(reservationInfo.getStatus())) {
-            btnTransferRoomHistoryBtn.setBackground(CustomUI.orange);
+            btnTransferRoomHistoryBtn.setBackground(CustomUI.blue);
             btnTransferRoomHistoryBtn.setForeground(CustomUI.white);
             btnTransferRoomHistoryBtn.addActionListener(e -> handleCheckTranferRoomHistory(reservationInfo));
         } else {
@@ -384,15 +415,21 @@ public class ReservationInfoDetailPanel extends JPanel {
         if (canExtendTime(reservationInfo.getStatus())) {
             btnExtendTime.setBackground(CustomUI.orange);
             btnExtendTime.setForeground(CustomUI.white);
-            btnExtendTime.addActionListener(e -> handleExtendTime(reservationInfo.getDetails().get(0)));
+            btnExtendTime.addActionListener(e -> {
+                ReservationDetailResponse detailToExtend = pickDetailForExtend();
+                if (detailToExtend == null) {
+                    JOptionPane.showMessageDialog(this,
+                            "Không tìm thấy chi tiết phù hợp để gia hạn.",
+                            "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+                handleExtendTime(detailToExtend);
+            });
         } else {
             btnExtendTime.setBackground(CustomUI.gray);
             btnExtendTime.setForeground(CustomUI.white);
             btnExtendTime.setEnabled(false);
         }
-
-        // TODO: Change this line to pass Reservation instead of Detail
-        btnExtendTime.addActionListener(e -> handleExtendTime(reservationInfo.getDetails().get(0)));
 
         return btnExtendTime;
     }
@@ -480,7 +517,7 @@ public class ReservationInfoDetailPanel extends JPanel {
     private void createServicesTable() {
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBackground(CustomUI.white);
-        tablePanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        tablePanel.setBorder(BorderFactory.createLineBorder(CustomUI.gray, 2));
 
         // Create collapsible title panel
         JPanel titlePanel = createCollapsibleTitlePanel("Đơn gọi dịch vụ");
@@ -518,13 +555,18 @@ public class ReservationInfoDetailPanel extends JPanel {
         tablePanel.add(titlePanel, BorderLayout.NORTH);
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-        add(tablePanel);
+        // Add wrapper for padding top & buttom
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+        wrapper.add(tablePanel, BorderLayout.CENTER);
+
+        add(wrapper);
     }
 
     private void createMovingHistoryTable() {
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBackground(CustomUI.white);
-        tablePanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        tablePanel.setBorder(BorderFactory.createLineBorder(CustomUI.gray, 2));
 
         // Create collapsible title panel
         JPanel titlePanel = createCollapsibleTitlePanel("Lịch sử ra - vào");
@@ -561,7 +603,12 @@ public class ReservationInfoDetailPanel extends JPanel {
         tablePanel.add(titlePanel, BorderLayout.NORTH);
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-        add(tablePanel);
+        // Add wrapper for padding top & buttom
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+        wrapper.add(tablePanel, BorderLayout.CENTER);
+
+        add(wrapper);
     }
 
     private JTable createStyledTable(DefaultTableModel model) {
@@ -636,12 +683,7 @@ public class ReservationInfoDetailPanel extends JPanel {
         lblCustomerName.setText(reservationInfo.getCustomerName());
         lblReservationCode.setText(reservationInfo.getMaDonDatPhong());
         lblStatus.setText(reservationInfo.getStatus());
-
-        // Determine type based on number of details
-        String type = (reservationInfo.getDetails() != null && reservationInfo.getDetails().size() > 1)
-            ? "Đặt nhiều" : "Đặt đơn";
-        lblType.setText(type);
-
+        lblType.setText(reservationInfo.getType());
         lblAdvance.setText(reservationInfo.isAdvance() ? "Có" : "Không");
 
         // Load room details
@@ -721,7 +763,6 @@ public class ReservationInfoDetailPanel extends JPanel {
     }
 
     public void attachButtons(JPanel panel, String status, ReservationDetailResponse detail) {
-        System.out.println("Visualizing buttons for status: " + status);
         panel.removeAll();
 
         if (status == null) {
@@ -789,7 +830,7 @@ public class ReservationInfoDetailPanel extends JPanel {
 
         public RoomActionButtonEditor() {
             super(new JCheckBox());
-            panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 3));
+            panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 2));
             setClickCountToStart(1); // Make it respond to single click
         }
 
@@ -872,22 +913,34 @@ public class ReservationInfoDetailPanel extends JPanel {
 
     // Top Action handlers
     private void handlePrintInvoice(ReservationInfoDetailResponse detail) {
-        JOptionPane.showMessageDialog(this,
-                                      "Chức năng in hóa đơn đặt cọc đang được phát triển",
-                                      "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        if(detail != null){
+            handleShowInvoiceDetail(detail.getMaDonDatPhong(), InvoiceType.DEPOSIT_INVOICE);
+        }
+        else {
+            JOptionPane.showMessageDialog(this,
+                    "Không tìm thấy hóa đơn đặt cọc cho đơn đặt phòng",
+                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
     private void handlePrintReceipt(ReservationInfoDetailResponse detail) {
-        JOptionPane.showMessageDialog(this,
-                                      "Chức năng in hóa đơn thanh toán đang được phát triển",
-                                      "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        if(detail != null){
+            handleShowInvoiceDetail(detail.getMaDonDatPhong(), InvoiceType.PAYMENT_INVOICE);
+        }
+        else {
+            JOptionPane.showMessageDialog(this,
+                    "Không tìm thấy hóa đơn thanh toán cho đơn đặt phòng",
+                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
     private void handleCheckoutAndPrintReceipt(ReservationInfoDetailResponse detail) {
-        int result = JOptionPane.showConfirmDialog(null,
-                "Xác nhận trả đơn đặt phòng " + detail.getMaDonDatPhong() + "?",
-                "Trả phòng", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-
+        int result = 0;
+        if(!this.isDialog){
+            result = JOptionPane.showConfirmDialog(null,
+                    "Xác nhận trả đơn đặt phòng " + detail.getMaDonDatPhong() + "?",
+                    "Trả phòng", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+        }
         if (result == JOptionPane.YES_OPTION) {
             InvoiceResponse invoiceResponse = checkOutService.checkOutReservation(detail.getMaDonDatPhong());
             if (invoiceResponse != null) {
@@ -906,9 +959,46 @@ public class ReservationInfoDetailPanel extends JPanel {
     }
 
     private void handleCheckTranferRoomHistory(ReservationInfoDetailResponse detail) {
-        JOptionPane.showMessageDialog(this,
-                                      "Chức năng xem lịch sử đổi phòng đang được phát triển",
-                                      "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        if (detail == null) return;
+
+        try {
+            String maDon = detail.getMaDonDatPhong();
+            if (maDon == null || maDon.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Không xác định được mã đơn để xem lịch sử đổi phòng.",
+                        "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Lấy owner window (an toàn với cả frame/dialog)
+            Window owner = SwingUtilities.getWindowAncestor(this);
+            Frame frameOwner = owner instanceof Frame ? (Frame) owner : null;
+
+            // Mở dialog (modal). LichSuDoiPhongDialog.showDialog sẽ block cho đến khi đóng.
+            LichSuDoiPhongDialog.showDialog(frameOwner, maDon);
+
+            // Sau khi đóng dialog, refresh dữ liệu hiển thị (nếu cần)
+            try {
+                if (reservationInfo != null && reservationInfo.getMaDonDatPhong() != null) {
+                    ReservationInfoDetailResponse updated = bookingService.getReservationDetailInfo(reservationInfo.getMaDonDatPhong());
+                    if (updated != null) {
+                        reservationInfo = updated;
+                    }
+                }
+            } catch (Exception ex) {
+                // nếu load lại thất bại thì bỏ qua (không phá flow)
+                ex.printStackTrace();
+            }
+            // reload UI
+            loadData();
+            refreshPanel();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Lỗi khi mở lịch sử đổi phòng: " + (ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage()),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     // Action handlers for reservation details
@@ -1240,5 +1330,49 @@ public class ReservationInfoDetailPanel extends JPanel {
         setLayout(new BorderLayout());
         init();
         loadData();
+    }
+    public ReservationInfoDetailResponse getReservationInfo() {
+        return reservationInfo;
+    }
+
+    private void handleShowInvoiceDetail(String reservationId, InvoiceType invoiceType){
+        InvoiceResponse invoiceResponse = hoaDonService.showInvoiceDetails(reservationId, invoiceType);
+
+        if(invoiceResponse != null){
+            SwingUtilities.invokeLater(() -> {
+                InvoiceDialog2 dialog = new InvoiceDialog2(invoiceResponse);
+                dialog.setVisible(true);
+            });
+        }
+        else {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn cho phòng");
+        }
+    }
+
+    // Hàm chọn chi tiết đặt phòng để gia hạn thời gian
+    private ReservationDetailResponse pickDetailForExtend() {
+        if (reservationInfo == null || reservationInfo.getDetails() == null || reservationInfo.getDetails().isEmpty())
+            return null;
+
+        List<ReservationDetailResponse> details = reservationInfo.getDetails();
+
+        // 1) Ưu tiên các chi tiết đang sử dụng
+        for (ReservationDetailResponse d : details) {
+            if (d != null && ReservationStatus.USING.getStatus().equals(d.getStatus())) return d;
+        }
+        // 2) ưu tiên các chi tiết chờ nhậnn phòng
+        for (ReservationDetailResponse d : details) {
+            if (d != null && ReservationStatus.CHECKED_IN.getStatus().equals(d.getStatus())) return d;
+        }
+        // 3) Ưu tiên các chi tiết đang kiểm tra
+        for (ReservationDetailResponse d : details) {
+            if (d != null && ReservationStatus.CHECKING.getStatus().equals(d.getStatus())) return d;
+        }
+        // 4) nếu vẫn không có, trả về chi tiết có roomId
+        for (ReservationDetailResponse d : details) {
+            if (d != null && d.getRoomId() != null && !d.getRoomId().isEmpty()) return d;
+        }
+        // 5) nỗ lực cuối cùng: lấy chi chi tiết cuối cùng :(
+        return details.get(details.size() - 1);
     }
 }

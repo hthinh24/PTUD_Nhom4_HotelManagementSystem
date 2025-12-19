@@ -2,13 +2,20 @@ package vn.iuh.gui.panel.booking;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import vn.iuh.constraint.PanelName;
+import vn.iuh.constraint.ReservationStatus;
+import vn.iuh.constraint.ReservationType;
 import vn.iuh.constraint.RoomStatus;
 import vn.iuh.dto.event.create.DonGoiDichVu;
 import vn.iuh.dto.repository.BookThemGioInfo;
 import vn.iuh.dto.repository.RoomFurnitureItem;
+import vn.iuh.dto.repository.ThongTinDonDep;
 import vn.iuh.dto.response.BookingResponse;
 import vn.iuh.dto.response.CustomerInfoWithPayments;
 import vn.iuh.dto.response.InvoiceResponse;
+import vn.iuh.dto.response.*;
+import vn.iuh.entity.DonDatPhong;
+import vn.iuh.entity.LoaiPhong;
+import vn.iuh.entity.Phong;
 import vn.iuh.gui.base.CustomUI;
 import vn.iuh.gui.base.Main;
 import vn.iuh.gui.dialog.InvoiceDialog2;
@@ -28,11 +35,10 @@ import vn.iuh.util.RefreshManager;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
@@ -82,13 +88,13 @@ public class RoomUsageFormPanel extends JPanel {
 
     // Action Buttons
     private JButton btnCancel;
-    private JButton btnCalculatePrice;
 
     JButton btnEntering;
     JButton btnLeaving;
 
     // Main content components
     private JPanel mainContentPanel;
+    private JPanel parentContainer;
 
     // Dropdown panel states
     private boolean isRoomInfoCollapsed = false;
@@ -106,6 +112,8 @@ public class RoomUsageFormPanel extends JPanel {
     private JButton btnClose;
 
     public RoomUsageFormPanel(BookingResponse roomInfo) {
+        RefreshManager.setCurrentRoomUsageFormPanel(this);
+
         this.checkOutService = new CheckOutServiceImpl();
         this.selectedRoom = roomInfo;
         this.bookingService = new BookingServiceImpl();
@@ -122,7 +130,17 @@ public class RoomUsageFormPanel extends JPanel {
             }
 
             selectedRoom = createDefaultValueForBookingInfo(roomInfo);
-            customerInfoWithPayments = new CustomerInfoWithPayments("N/A", "N/A", "N/A", "N/A", 0, 0);
+            customerInfoWithPayments = new CustomerInfoWithPayments("N/A",
+                                                                    "N/A",
+                                                                    "N/A",
+                                                                    "N/A",
+                                                                    new Timestamp(System.currentTimeMillis()),
+                                                                    // After 1 days
+                                                                    new Timestamp(System.currentTimeMillis()
+                                                                                      + 24 * 60 * 60 * 1000),
+                                                                    "N/A",
+                                                                    0.0,
+                                                                    0.0);
         }
 
         initializeComponents();
@@ -189,11 +207,9 @@ public class RoomUsageFormPanel extends JPanel {
 
         // Buttons
         btnCancel = new JButton("Hủy");
-        btnCalculatePrice = new JButton("Tính giá");
 
         // Style buttons
         styleButton(btnCancel, CustomUI.red);
-        styleButton(btnCalculatePrice, CustomUI.lightBlue);
     }
 
     private void styleButton(JButton button, Color backgroundColor) {
@@ -208,12 +224,14 @@ public class RoomUsageFormPanel extends JPanel {
     private void setupLayout() {
         // Header panel
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setPreferredSize(new Dimension(0, 40));
-        headerPanel.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
         headerPanel.setBackground(CustomUI.blue);
+        headerPanel.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
 
         // Title Panel
-        JPanel titlePanel = new JPanel();
+        JPanel titlePanel = new JPanel(new BorderLayout());
         titlePanel.setOpaque(false);
 
         // Title with room name
@@ -231,18 +249,35 @@ public class RoomUsageFormPanel extends JPanel {
         checkoutIcon = new ImageIcon(checkoutIcon.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH));
         btnLeaving = new JButton(checkoutIcon);
 
-        boolean isExisted = movingHistoryService.isExisted(selectedRoom.getMaChiTietDatPhong());
-        if (isExisted) {
-            btnEntering.setEnabled(true);
+        if (selectedRoom.getRoomStatus().equalsIgnoreCase(RoomStatus.ROOM_CLEANING_STATUS.getStatus())
+            || selectedRoom.getRoomStatus().equalsIgnoreCase(RoomStatus.ROOM_BOOKED_STATUS.getStatus())
+        ) {
+            btnEntering.setEnabled(false);
             btnLeaving.setEnabled(false);
         } else {
-            btnEntering.setEnabled(false);
-            btnLeaving.setEnabled(true);
+            boolean isExisted = movingHistoryService.isExisted(selectedRoom.getMaChiTietDatPhong());
+            if (isExisted) {
+                btnEntering.setEnabled(true);
+                btnLeaving.setEnabled(false);
+            } else {
+                btnEntering.setEnabled(false);
+                btnLeaving.setEnabled(true);
+            }
         }
 
-        titlePanel.add(btnEntering);
-        titlePanel.add(titleLabel);
-        titlePanel.add(btnLeaving);
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        leftPanel.setOpaque(false);
+        leftPanel.setBorder(BorderFactory.createEmptyBorder(5, 150, 5, 0));
+        leftPanel.add(btnEntering);
+
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        rightPanel.setOpaque(false);
+        rightPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 150));
+        rightPanel.add(btnLeaving);
+
+        titlePanel.add(leftPanel, BorderLayout.WEST);
+        titlePanel.add(titleLabel, BorderLayout.CENTER);
+        titlePanel.add(rightPanel, BorderLayout.EAST);
 
         btnClose = new JButton("x");
         btnClose.setFont(CustomUI.bigFont);
@@ -346,7 +381,7 @@ public class RoomUsageFormPanel extends JPanel {
 
         // Create collapsible header
         JPanel headerPanel = createCollapsibleHeader(customerIcon, "THÔNG TIN KHÁCH HÀNG",
-                                                     new Color(70, 130, 180), CustomUI.white, () -> {
+                                                     CustomUI.darkBlue, CustomUI.white, () -> {
                     isCustomerInfoCollapsed = !isCustomerInfoCollapsed;
                     togglePanelVisibility(customerInfoContent, isCustomerInfoCollapsed);
                 });
@@ -355,7 +390,7 @@ public class RoomUsageFormPanel extends JPanel {
         customerInfoContent = new JPanel(new GridBagLayout());
         customerInfoContent.setBackground(CustomUI.white);
         customerInfoContent.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(70, 130, 180), 2),
+                BorderFactory.createLineBorder(CustomUI.darkBlue, 2),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
 
@@ -386,7 +421,7 @@ public class RoomUsageFormPanel extends JPanel {
 
         // Create collapsible header
         JPanel headerPanel = createCollapsibleHeader(menuIcon, "BẢNG THAO TÁC",
-                                                     new Color(70, 130, 180), CustomUI.white, () -> {
+                                                     CustomUI.darkBlue, CustomUI.white, () -> {
                     isActionMenuCollapsed = !isActionMenuCollapsed;
                     togglePanelVisibility(actionMenuContent, isActionMenuCollapsed);
                 });
@@ -395,7 +430,7 @@ public class RoomUsageFormPanel extends JPanel {
         actionMenuContent = new JPanel();
         actionMenuContent.setBackground(CustomUI.white);
         actionMenuContent.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(70, 130, 180), 2),
+                BorderFactory.createLineBorder(CustomUI.darkBlue, 2),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
 
@@ -416,7 +451,7 @@ public class RoomUsageFormPanel extends JPanel {
         bookingIcon = new ImageIcon(bookingIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH));
         // Create collapsible header
         JPanel headerPanel = createCollapsibleHeader(bookingIcon, "THÔNG TIN ĐẶT PHÒNG",
-                                                     CustomUI.darkGreen, CustomUI.white, () -> {
+                                                     CustomUI.darkBlue, CustomUI.white, () -> {
                     isBookingInfoCollapsed = !isBookingInfoCollapsed;
                     togglePanelVisibility(bookingInfoContent, isBookingInfoCollapsed);
                 });
@@ -425,7 +460,7 @@ public class RoomUsageFormPanel extends JPanel {
         bookingInfoContent = new JPanel(new GridBagLayout());
         bookingInfoContent.setBackground(CustomUI.white);
         bookingInfoContent.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(CustomUI.darkGreen, 2),
+                BorderFactory.createLineBorder(CustomUI.darkBlue, 2),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
 
@@ -480,7 +515,7 @@ public class RoomUsageFormPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         reservationButton.setFont(CustomUI.smallFont);
         reservationButton.setForeground(CustomUI.white);
-        reservationButton.setBackground(CustomUI.purple);
+        reservationButton.setBackground(CustomUI.blue);
 
         // Add calendar icon to reservation button
         ImageIcon calendar = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/calendar.png")));
@@ -500,7 +535,6 @@ public class RoomUsageFormPanel extends JPanel {
         gbc.gridy = 7;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 1.0;
-        JTextArea txtNote = new JTextArea();
         txtNote.setPreferredSize(new Dimension(300, 100));
         txtNote.setBorder(BorderFactory.createLineBorder(CustomUI.gray, 1));
         txtNote.setEditable(false);
@@ -518,12 +552,12 @@ public class RoomUsageFormPanel extends JPanel {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(CustomUI.white);
 
-        ImageIcon roomIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/room.png")));
+        ImageIcon roomIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/bed.png")));
         roomIcon = new ImageIcon(roomIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH));
 
         // Create collapsible header
         JPanel headerPanel = createCollapsibleHeader(roomIcon, "CHI TIẾT PHÒNG",
-                                                     CustomUI.orange, CustomUI.white, () -> {
+                                                     CustomUI.darkBlue, CustomUI.white, () -> {
                     isRoomInfoCollapsed = !isRoomInfoCollapsed;
                     togglePanelVisibility(roomInfoContent, isRoomInfoCollapsed);
                 });
@@ -532,7 +566,7 @@ public class RoomUsageFormPanel extends JPanel {
         roomInfoContent = new JPanel(new GridBagLayout());
         roomInfoContent.setBackground(CustomUI.white);
         roomInfoContent.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(CustomUI.orange, 2),
+                BorderFactory.createLineBorder(CustomUI.darkBlue, 2),
                 BorderFactory.createEmptyBorder(10, 15, 10, 15)
         ));
 
@@ -616,7 +650,7 @@ public class RoomUsageFormPanel extends JPanel {
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
         button.setFocusPainted(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
 
         // Icon label - now using ImageIcon instead of emoji string
         JLabel iconLabel = new JLabel(item.getIcon(), SwingConstants.CENTER);
@@ -632,23 +666,28 @@ public class RoomUsageFormPanel extends JPanel {
         button.add(textLabel, BorderLayout.SOUTH);
 
         // Add hover effects
-        button.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                button.setBackground(item.getBackgroundColor().brighter());
-            }
+        if (item.isActive()) {
+            button.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    button.setBackground(item.getBackgroundColor().darker());
+                }
 
-            @Override
-            public void mouseExited(MouseEvent e) {
-                button.setBackground(item.getBackgroundColor());
-            }
-        });
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    button.setBackground(item.getBackgroundColor());
+                }
+            });
 
-        // Add click action
-        button.addActionListener(e -> {
-            if (item.getAction() != null)
-                item.getAction().run();
-        });
+            // Add click action
+            button.addActionListener(e -> {
+                if (item.getAction() != null)
+                    item.getAction().run();
+            });
+        } else {
+//            button.setEnabled(false);
+            button.setBackground(CustomUI.gray);
+        }
 
         return button;
     }
@@ -681,23 +720,23 @@ public class RoomUsageFormPanel extends JPanel {
         List<ActionItem> items = new ArrayList<>();
 
         ActionItem callServiceItem = new ActionItem("Gọi Dịch Vụ", IconUtil.createServiceIcon(), CustomUI.bluePurple,
-                                                    this::handleCallService);
+                                                    true, this::handleCallService);
         ActionItem checkOutItem =
-                new ActionItem("Trả Phòng", IconUtil.createCheckOutIcon(), CustomUI.bluePurple, this::handleCheckOut);
+                new ActionItem("Trả Phòng", IconUtil.createCheckOutIcon(), CustomUI.bluePurple, true, this::handleCheckOut);
         ActionItem transferRoomItem = new ActionItem("Chuyển Phòng", IconUtil.createTransferIcon(), CustomUI.bluePurple,
-                                                     this::handleTransferRoom);
+                                                     true, this::handleTransferRoom);
         ActionItem extendBookingItem = new ActionItem("Book Thêm Giờ", IconUtil.createExtendIcon(), CustomUI.bluePurple,
-                                                      this::handleExtendBooking);
+                                                      true, this::handleExtendBooking);
 
         ActionItem extendCheckoutBookingItem = new ActionItem("Gia Hạn Trễ", IconUtil.createExtendCheckoutIcon(), CustomUI.bluePurple,
-                                                      this::handleExtendCheckoutBooking);
+                                                      true, this::handleExtendCheckoutBooking);
 
 
         ActionItem checkInItem =
-                new ActionItem("Nhận Phòng", IconUtil.createCheckInIcon(), CustomUI.bluePurple, this::handleCheckIn);
+                new ActionItem("Nhận Phòng", IconUtil.createCheckInIcon(), CustomUI.bluePurple, true, this::handleCheckIn);
 
         ActionItem completeItem = new ActionItem("Hoàn tất dọn dẹp", IconUtil.createCompleteIcon(), CustomUI.bluePurple,
-                                                     this::handleCompleteCleaning);
+                                                     true, this::handleCompleteCleaning);
 
         if (roomStatus.equals(RoomStatus.ROOM_BOOKED_STATUS.getStatus())) {
             items.add(callServiceItem);
@@ -714,9 +753,12 @@ public class RoomUsageFormPanel extends JPanel {
             } else
                 if (roomStatus.equals(RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus())) {
                     callServiceItem.setBackgroundColor(CustomUI.gray);
+                    callServiceItem.setActive(false);
                     callServiceItem.setAction(null);
                     transferRoomItem.setBackgroundColor(CustomUI.gray);
+                    transferRoomItem.setActive(false);
                     transferRoomItem.setAction(null);
+
 
                     items.add(callServiceItem);
                     items.add(checkOutItem);
@@ -725,10 +767,13 @@ public class RoomUsageFormPanel extends JPanel {
                 } else
                     if (roomStatus.equals(RoomStatus.ROOM_CLEANING_STATUS.getStatus())) {
                         callServiceItem.setBackgroundColor(CustomUI.gray);
+                        callServiceItem.setActive(false);
                         callServiceItem.setAction(null);
                         transferRoomItem.setBackgroundColor(CustomUI.gray);
+                        transferRoomItem.setActive(false);
                         transferRoomItem.setAction(null);
                         extendBookingItem.setBackgroundColor(CustomUI.gray);
+                        extendBookingItem.setActive(false);
                         extendBookingItem.setAction(null);
 
                         items.add(callServiceItem);
@@ -880,42 +925,6 @@ public class RoomUsageFormPanel extends JPanel {
         }
     }
 
-    // Helper methods for additional room info
-    private String extractFloorFromRoomName() {
-        String roomName = selectedRoom.getRoomName();
-        // Assuming room name format is like "101", "202A", etc.
-        if (roomName.length() >= 3 && Character.isDigit(roomName.charAt(0))) {
-            return String.valueOf(roomName.charAt(0));
-        }
-        return "N/A";
-    }
-
-    private String getAmenitiesForRoom() {
-        // This can be made flexible based on room type or category
-        String roomType = selectedRoom.getRoomType();
-        if (roomType.toLowerCase().contains("vip") || roomType.toLowerCase().contains("deluxe")) {
-            return "Điều hòa, TV, WiFi, Minibar, Jacuzzi";
-        } else
-            if (roomType.toLowerCase().contains("standard")) {
-                return "Điều hòa, TV, WiFi";
-            } else {
-                return "Điều hòa, TV, WiFi, Tủ lạnh";
-            }
-    }
-
-    private String getAreaForRoom() {
-        // This can be made flexible based on room type or actual room data
-        String roomType = selectedRoom.getRoomType();
-        if (roomType.toLowerCase().contains("vip") || roomType.toLowerCase().contains("deluxe")) {
-            return "45m²";
-        } else
-            if (roomType.toLowerCase().contains("standard")) {
-                return "25m²";
-            } else {
-                return "30m²";
-            }
-    }
-
     private String getCurrentTimeString() {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm - dd/MM/yyyy");
         return sdf.format(new Date());
@@ -978,10 +987,11 @@ public class RoomUsageFormPanel extends JPanel {
     }
 
     private void setDefaultValues() {
-        spnCheckOutDate.setValue(selectedRoom.getTimeOut());
-        spnCheckInDate.setValue(selectedRoom.getTimeIn());
-
         txtInitialPrice.setText(priceFormatter.format(selectedRoom.getDailyPrice()) + " VNĐ");
+
+        spnCheckOutDate.setValue(customerInfoWithPayments.getTimeOut());
+        spnCheckInDate.setValue(customerInfoWithPayments.getTimeIn());
+
 
         txtTotalServicePrice.setText(priceFormatter.format(customerInfoWithPayments.getTotalServiceCost()) + " VNĐ");
         txtDepositPrice.setText(priceFormatter.format(customerInfoWithPayments.getTotalDepositPayment()) + " VNĐ");
@@ -989,6 +999,8 @@ public class RoomUsageFormPanel extends JPanel {
         txtCustomerName.setText(customerInfoWithPayments.getCustomerName());
         txtPhoneNumber.setText(customerInfoWithPayments.getCustomerPhone());
         txtCCCD.setText(customerInfoWithPayments.getCCCD());
+
+        txtNote.setText(customerInfoWithPayments.getCustomerNote());
     }
 
     // Method to update total service price from ServiceSelectionPanel
@@ -1002,7 +1014,7 @@ public class RoomUsageFormPanel extends JPanel {
     // Setup event handlers for buttons
     private void setupEventHandlers() {
         btnCancel.addActionListener(e -> handleCancel());
-        btnClose.addActionListener(e -> Main.showCard(PanelName.BOOKING_MANAGEMENT.getName()));
+        btnClose.addActionListener(e -> handleClose());
         btnCreateReservationForm.addActionListener(e -> handleCreateReservationForm());
         reservationButton.addActionListener(e -> handleShowReservationManagement());
         btnEntering.addActionListener(e -> handleEntering());
@@ -1025,6 +1037,11 @@ public class RoomUsageFormPanel extends JPanel {
         }
 
         RefreshManager.refreshAfterCheckIn();
+    }
+
+    private void handleClose() {
+        RefreshManager.refreshAll();
+        Main.showCard(PanelName.BOOKING_MANAGEMENT.getName());
     }
 
     private void handleLeaving() {
@@ -1062,19 +1079,97 @@ public class RoomUsageFormPanel extends JPanel {
                 "Trả phòng", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
 
         if (result == JOptionPane.YES_OPTION) {
-            InvoiceResponse invoiceResponse = checkOutService.checkOutByReservationDetail(selectedRoom.getMaChiTietDatPhong());
-            if (invoiceResponse != null) {
-                SwingUtilities.invokeLater(() -> {
-                    InvoiceDialog2 dialog = new InvoiceDialog2(invoiceResponse);
-                    dialog.setVisible(true);
-                    RefreshManager.refreshAfterCheckout();
-                    Main.showCard(PanelName.BOOKING_MANAGEMENT.getName());
-                });
-            } else {
-                JOptionPane.showMessageDialog(this,
-                        "Trả phòng thất bại cho " + selectedRoom.getRoomName(),
-                        "Thất bại", JOptionPane.ERROR_MESSAGE);
+            DonDatPhong reservation = checkOutService.checkReservation(selectedRoom.getMaChiTietDatPhong());
+            if(ReservationType.SINGLE.getType().equalsIgnoreCase(reservation.getLoai())){
+                InvoiceResponse invoiceResponse = checkOutService.checkOutByReservationDetail(selectedRoom.getMaChiTietDatPhong());
+                if (invoiceResponse != null) {
+                    SwingUtilities.invokeLater(() -> {
+                        InvoiceDialog2 dialog = new InvoiceDialog2(invoiceResponse);
+                        dialog.setVisible(true);
+                        RefreshManager.refreshAfterCheckout();
+                        Main.showCard(PanelName.BOOKING_MANAGEMENT.getName());
+                    });
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Trả phòng thất bại cho " + selectedRoom.getRoomName(),
+                            "Thất bại", JOptionPane.ERROR_MESSAGE);
+                }
             }
+            else {
+                handleViewDetail(reservation.getMaDonDatPhong());
+            }
+        }
+    }
+
+    private void handleViewDetail(String reservationId) {
+        if (reservationId == null) return;
+
+        try {
+            // Fetch detailed reservation information from service
+            ReservationInfoDetailResponse detailInfo = bookingService.getReservationDetailInfo(reservationId);
+
+            if (detailInfo == null) {
+                JOptionPane.showMessageDialog(this,
+                        "Không thể tải thông tin chi tiết đơn đặt phòng.",
+                        "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Create detail panel
+            ReservationInfoDetailPanel detailPanel = new ReservationInfoDetailPanel(detailInfo, true);
+
+            // Navigate to detail panel using CardLayout
+            if (parentContainer != null) {
+                // Check if detail panel already exists, if so remove it
+                Component[] components = parentContainer.getComponents();
+                for (Component comp : components) {
+                    if (comp instanceof ReservationInfoDetailPanel) {
+                        parentContainer.remove(comp);
+                        break;
+                    }
+                }
+
+                // Add new detail panel
+                String subPanelName = PanelName.RESERVATION_INFO_DETAIL.getName() + "_" + reservationId;
+                parentContainer.add(detailPanel, subPanelName);
+
+                // Show detail panel
+                CardLayout layout = (CardLayout) parentContainer.getLayout();
+                layout.show(parentContainer, subPanelName);
+            } else {
+                // Fallback: Open in dialog if parent container is not set
+                JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Đơn " + reservationId, true);
+
+                // Wrap detail panel in a scroll pane
+                JScrollPane scrollPane = new JScrollPane(detailPanel);
+                scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+                scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+                dialog.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent e) {
+                        var infoResult = detailPanel.getReservationInfo();
+                        if(ReservationStatus.COMPLETED.getStatus().equalsIgnoreCase(infoResult.getStatus())){
+                            Main.showCenterCard("Quản lý đặt phòng");
+                            RefreshManager.refreshAfterCheckout();
+                        }
+                    }
+                });
+
+                dialog.setContentPane(scrollPane);
+                dialog.setSize(1000, 700); // Reduced width from 1200 to 1000
+                dialog.setLocationRelativeTo(null); // Center on screen
+                dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                dialog.setResizable(false);
+                dialog.setVisible(true);
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Có lỗi xảy ra khi tải thông tin chi tiết: " + e.getMessage(),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1151,6 +1246,9 @@ public class RoomUsageFormPanel extends JPanel {
             public void onChangeRoom(String oldRoomId, BookingResponse newRoom, boolean applyFee) {
                 dialog.dispose();
                 RefreshManager.refreshAfterTransfer();
+
+                // 9) Đóng dialog và refresh UI khi đổi phòng thành công
+                handleClose();
             }
 
             @Override
@@ -1264,8 +1362,12 @@ public class RoomUsageFormPanel extends JPanel {
             btnEntering.setEnabled(false);
             btnLeaving.setEnabled(true);
 
-            // Refesh sau khi checkin
+            // Refresh dữ liệu liên quan
             RefreshManager.refreshAfterCheckIn();
+
+            // Quay về giao diện quản lý đặt phòng
+            // đảm bảo chạy trên EDT
+            SwingUtilities.invokeLater(() -> Main.showCard(PanelName.BOOKING_MANAGEMENT.getName()));
         } else {
             // Hiện thông báo lỗi chung
             JOptionPane.showMessageDialog(this,
@@ -1273,6 +1375,7 @@ public class RoomUsageFormPanel extends JPanel {
                     "Thất bại", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
 
     private void handleCompleteCleaning() {
@@ -1296,22 +1399,24 @@ public class RoomUsageFormPanel extends JPanel {
     }
 
     private void handleCreateReservationForm() {
-        BookingResponse bookingResponse = new BookingResponse(
-                selectedRoom.getRoomId(),
-                selectedRoom.getRoomName(),
-                selectedRoom.isActive(),
-                RoomStatus.ROOM_EMPTY_STATUS.getStatus(),
-                selectedRoom.getRoomType(),
-                selectedRoom.getNumberOfCustomers(),
-                selectedRoom.getDailyPrice(),
-                selectedRoom.getHourlyPrice(),
-                selectedRoom.getCustomerName(),
-                null,
-                selectedRoom.getTimeIn(),
-                selectedRoom.getTimeOut()
-        );
+        // Handle special case for cleaning status
+        if (selectedRoom.getRoomStatus().equalsIgnoreCase(RoomStatus.ROOM_CLEANING_STATUS.getStatus())) {
+            ThongTinDonDep thongTinDonDep = roomService.getCleaningInfoById(selectedRoom.getRoomId());
+            BookingResponse cleaningDefaultBookingInfo = createDefaultValueForBookingInfo(selectedRoom);
+            cleaningDefaultBookingInfo.updateCleaningInfo(
+                    thongTinDonDep.getThoiGianBatDau(),
+                    thongTinDonDep.getThoiGianKetThuc()
+            );
 
-        BookingFormPanel bookingFormPanel = new BookingFormPanel(bookingResponse, PanelName.ROOM_USING.getName());
+            BookingFormPanel bookingFormPanel = new BookingFormPanel(cleaningDefaultBookingInfo, PanelName.ROOM_USING.getName());
+            String panelName = PanelName.BOOKING.getName();
+            Main.addCard(bookingFormPanel, panelName);
+            Main.showCard(panelName);
+
+            return;
+        }
+
+        BookingFormPanel bookingFormPanel = new BookingFormPanel(selectedRoom, PanelName.ROOM_USING.getName());
         String panelName = PanelName.BOOKING.getName();
         Main.addCard(bookingFormPanel, panelName);
         Main.showCard(panelName);
@@ -1338,5 +1443,27 @@ public class RoomUsageFormPanel extends JPanel {
                 now,
                 tomorrow
         );
+    }
+
+    public void refreshPanel() {
+        // Clear and re-populate data
+        customerInfoWithPayments = bookingService.getCustomerInfoWithPaymentsBookingId(selectedRoom.getMaChiTietDatPhong());
+        if (customerInfoWithPayments == null) {
+            // Copy from selectedRoom if no data found
+            customerInfoWithPayments = new CustomerInfoWithPayments(
+                    "N/A",
+                    "N/A",
+                    selectedRoom.getCustomerName(),
+                    "N/A",
+                    selectedRoom.getTimeIn(),
+                    selectedRoom.getTimeOut(),
+                    "N/A",
+                    0.0,
+                    0.0
+            );
+        }
+
+        populateRoomInformation();
+        setDefaultValues();
     }
 }

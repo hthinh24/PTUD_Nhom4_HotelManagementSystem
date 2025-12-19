@@ -1,6 +1,7 @@
 package vn.iuh.dao;
 
 import vn.iuh.constraint.InvoiceType;
+import vn.iuh.constraint.PaymentStatus;
 import vn.iuh.dto.repository.CustomerPayments;
 import vn.iuh.entity.HoaDon;
 import vn.iuh.exception.TableEntityMismatch;
@@ -12,21 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HoaDonDAO {
-    private final Connection connection;
-
-    public HoaDonDAO() {
-        this.connection = DatabaseUtil.getConnect();
-    }
-
-    public HoaDonDAO(Connection connection) {
-        this.connection = connection;
-    }
-
     public HoaDon timHoaDon(String id) {
         String query = "SELECT * FROM HoaDon WHERE ma_hoa_don = ?";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, id);
 
             ResultSet rs = ps.executeQuery();
@@ -46,6 +39,7 @@ public class HoaDonDAO {
         String sql = "Insert into HoaDon (ma_hoa_don, phuong_thuc_thanh_toan, kieu_hoa_don, tinh_trang_thanh_toan, ma_phien_dang_nhap, ma_don_dat_phong, ma_khach_hang, tong_tien, tien_thue, tong_hoa_don) " +
                 "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, hoaDon.getMaHoaDon());
             ps.setString(2, hoaDon.getPhuongThucThanhToan());
@@ -71,6 +65,7 @@ public class HoaDonDAO {
     public boolean updateTinhTrangThanhToan(HoaDon hoaDon){
         String sql = "Update HoaDon set phuong_thuc_thanh_toan = ? , tinh_trang_thanh_toan = ? where ma_hoa_don = ?";
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, hoaDon.getPhuongThucThanhToan());
             ps.setString(2, hoaDon.getTinhTrangThanhToan());
@@ -89,7 +84,9 @@ public class HoaDonDAO {
         String query = "SELECT TOP 1 * FROM HoaDon ORDER BY ma_hoa_don DESC";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -107,7 +104,9 @@ public class HoaDonDAO {
     public HoaDon timHoaTheoMaDonDatPhong(String maDonDatPhong, String kieuHoaDon){
         String query = "SELECT TOP 1 * FROM HoaDon where ma_don_dat_phong = ? and kieu_hoa_don = ?";
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maDonDatPhong);
             ps.setString(2, kieuHoaDon);
             ResultSet rs = ps.executeQuery();
@@ -145,30 +144,13 @@ public class HoaDonDAO {
         }
     }
 
-    public HoaDon findInvoiceForReservation(String reservationId, String invoiceType){
-        String query = "Select top 1 * from HoaDon where ma_don_dat_phong = ? and kieu_hoa_don = ?";
-        try {
-            PreparedStatement ps = connection.prepareStatement(query);
-            ps.setString(1, reservationId);
-            ps.setString(2, invoiceType);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return chuyenKetQuaThanhHoaDon(rs);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (TableEntityMismatch et) {
-            System.out.println(et.getMessage());
-        }
-        return null;
-    }
-
     public List<HoaDon> layDanhSachHoaDon(){
         List<HoaDon> list = new ArrayList<>();
         String query = "select * from HoaDon";
-        try (PreparedStatement ps = connection.prepareStatement(query);
-
-             var rs = ps.executeQuery()) {
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+            var rs = ps.executeQuery();
             while (rs.next()) {
 
                 HoaDon hoaDon = chuyenKetQuaThanhHoaDon(rs);
@@ -193,8 +175,9 @@ public class HoaDonDAO {
 
         List<HoaDon> danhSachHoaDon = new ArrayList<>();
 
-        try (PreparedStatement ps = connection.prepareStatement(query)) {
-
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
             ps.setTimestamp(1, from);
             ps.setTimestamp(2, to);
 
@@ -220,7 +203,8 @@ public class HoaDonDAO {
         String query =
                 "SELECT DISTINCT hd.kieu_hoa_don," +
                 " hd.tong_tien as tong_tien_dat_coc," +
-                " (SELECT SUM(pddv.tong_tien) FROM PhongDungDichVu pddv where pddv.ma_chi_tiet_dat_phong = ?) AS tong_tien_dich_vu" +
+                " (SELECT SUM(pddv.tong_tien) FROM PhongDungDichVu pddv where pddv.ma_chi_tiet_dat_phong = ?) AS tong_tien_dich_vu," +
+                " ddp.mo_ta" +
                 " FROM ChiTietDatPhong ctdp" +
                 " JOIN DonDatPhong ddp ON ctdp.ma_don_dat_phong = ddp.ma_don_dat_phong" +
                 " LEFT JOIN HoaDon hd ON ddp.ma_don_dat_phong = hd.ma_don_dat_phong" +
@@ -228,7 +212,9 @@ public class HoaDonDAO {
                 ;
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maChiTietDatPhong);
             ps.setString(2, maChiTietDatPhong);
 
@@ -237,6 +223,7 @@ public class HoaDonDAO {
                 String kieuHoaDon = rs.getString("kieu_hoa_don");
                 BigDecimal tongTienDatCoc = rs.getBigDecimal("tong_tien_dat_coc");
                 BigDecimal tongTienDichVu = rs.getBigDecimal("tong_tien_dich_vu");
+                String note = rs.getString("mo_ta");
 
                 if (kieuHoaDon == null || !kieuHoaDon.equalsIgnoreCase(InvoiceType.DEPOSIT_INVOICE.getStatus())) {
                     tongTienDatCoc = BigDecimal.ZERO;
@@ -244,7 +231,8 @@ public class HoaDonDAO {
 
                 return new CustomerPayments(
                         tongTienDatCoc,
-                        tongTienDichVu
+                        tongTienDichVu,
+                        note
                 );
             }
             else
@@ -267,6 +255,7 @@ public class HoaDonDAO {
 
         List<HoaDon> danhSachHoaDon = new ArrayList<>();
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setTimestamp(1,tgBatDau);
             ps.setTimestamp(2,tgKetThuc);
@@ -283,5 +272,27 @@ public class HoaDonDAO {
             System.out.println(et.getMessage());
         }
         return danhSachHoaDon;
+    }
+
+    public BigDecimal getTotalReceiptPaidInvoiceByWorkingHistory(String workingHistoryId){
+        String sql = "select sum(tong_hoa_don) from HoaDon\n" +
+                        "where tinh_trang_thanh_toan = ?\n" +
+                        "and ma_phien_dang_nhap = ?\n";
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, PaymentStatus.PAID.getStatus());
+            ps.setString(2, workingHistoryId);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getBigDecimal(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (TableEntityMismatch et) {
+            System.out.println(et.getMessage());
+        }
+        return BigDecimal.ZERO;
     }
 }

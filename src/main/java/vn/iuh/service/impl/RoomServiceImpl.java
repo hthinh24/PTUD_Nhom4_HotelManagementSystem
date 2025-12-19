@@ -7,6 +7,7 @@ import vn.iuh.dao.*;
 import vn.iuh.dto.event.create.RoomCreationEvent;
 import vn.iuh.dto.event.update.RoomModificationEvent;
 import vn.iuh.dto.repository.RoomFurnitureItem;
+import vn.iuh.dto.repository.ThongTinDonDep;
 import vn.iuh.entity.CongViec;
 import vn.iuh.entity.LichSuThaoTac;
 import vn.iuh.entity.LoaiPhong;
@@ -106,7 +107,7 @@ public class RoomServiceImpl implements RoomService {
                 LichSuThaoTac wh = new LichSuThaoTac();
                 wh.setMaLichSuThaoTac(newId);
 
-                wh.setTenThaoTac(ActionType.EDIT_ROOM.getActionName());
+                wh.setTenThaoTac(ActionType.UPDATE_ROOM.getActionName());
                 List<String> changes = new ArrayList<>();
 
                 if (!Objects.equals(origName, updated.getTenPhong())) {
@@ -439,4 +440,115 @@ public class RoomServiceImpl implements RoomService {
         }
     }
 
+    @Override
+    public boolean scheduleMaintenance(String maPhong, int days) {
+        if (maPhong == null || maPhong.isBlank() || days <= 0) return false;
+        try {
+            // Lấy phòng hiện tại
+            Phong phong = phongDAO.timPhong(maPhong);
+            if (phong == null) {
+                System.out.println("Không tìm thấy phòng: " + maPhong);
+                return false;
+            }
+
+            // Tính thời gian bắt đầu và kết thúc dự kiến (dùng để ghi mô tả lịch sử)
+            long nowMs = System.currentTimeMillis();
+            Timestamp now = new Timestamp(nowMs);
+            Timestamp end = new Timestamp(nowMs + days * 24L * 3600L * 1000L);
+
+            // Set phòng về không hoạt động (bảo trì)
+            phong.setDangHoatDong(false);
+            Phong updated = phongDAO.capNhatPhong(phong);
+            if (updated == null) {
+                System.out.println("Không thể cập nhật trạng thái bảo trì cho phòng: " + maPhong);
+                return false;
+            }
+
+            // Ghi lịch sử thao tác
+            try {
+                LichSuThaoTacDAO whDao = new LichSuThaoTacDAO();
+                var lastWh = whDao.timLichSuThaoTacMoiNhat();
+                String lastWhId = lastWh != null ? lastWh.getMaLichSuThaoTac() : null;
+                String newWhId = EntityUtil.increaseEntityID(
+                        lastWhId,
+                        EntityIDSymbol.WORKING_HISTORY_PREFIX.getPrefix(),
+                        EntityIDSymbol.WORKING_HISTORY_PREFIX.getLength()
+                );
+
+                LichSuThaoTac wh = new LichSuThaoTac();
+                wh.setMaLichSuThaoTac(newWhId);
+                wh.setTenThaoTac(ActionType.UPDATE_ROOM.getActionName());
+                wh.setMoTa(String.format("Đặt phòng %s vào trạng thái BẢO TRÌ",
+                        maPhong));
+                wh.setMaPhienDangNhap(Main.getCurrentLoginSession());
+                wh.setThoiGianTao(new Timestamp(System.currentTimeMillis()));
+                whDao.themLichSuThaoTac(wh);
+            } catch (Exception ex) {
+                // Không block nếu ghi lịch sử lỗi
+                ex.printStackTrace();
+            }
+
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean endMaintenance(String maPhong) {
+        if (maPhong == null || maPhong.isBlank()) return false;
+        try {
+            // Lấy phòng hiện tại
+            Phong phong = phongDAO.timPhong(maPhong);
+            if (phong == null) {
+                System.out.println("Không tìm thấy phòng: " + maPhong);
+                return false;
+            }
+
+            // Set phòng về hoạt động trở lại
+            phong.setDangHoatDong(true);
+            Phong updated = phongDAO.capNhatPhong(phong);
+            if (updated == null) {
+                System.out.println("Không thể kết thúc bảo trì cho phòng: " + maPhong);
+                return false;
+            }
+
+            // Ghi lịch sử thao tác
+            try {
+                LichSuThaoTacDAO whDao = new LichSuThaoTacDAO();
+                var lastWh = whDao.timLichSuThaoTacMoiNhat();
+                String lastWhId = lastWh != null ? lastWh.getMaLichSuThaoTac() : null;
+                String newWhId = EntityUtil.increaseEntityID(
+                        lastWhId,
+                        EntityIDSymbol.WORKING_HISTORY_PREFIX.getPrefix(),
+                        EntityIDSymbol.WORKING_HISTORY_PREFIX.getLength()
+                );
+
+                LichSuThaoTac wh = new LichSuThaoTac();
+                wh.setMaLichSuThaoTac(newWhId);
+                wh.setTenThaoTac(ActionType.UPDATE_ROOM.getActionName());
+                wh.setMoTa(String.format("Kết thúc bảo trì cho phòng %s", maPhong));
+                wh.setMaPhienDangNhap(Main.getCurrentLoginSession());
+                wh.setThoiGianTao(new Timestamp(System.currentTimeMillis()));
+                whDao.themLichSuThaoTac(wh);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    public ThongTinDonDep getCleaningInfoById(String roomId) {
+        try {
+            return phongDAO.getCleaningInfoById(roomId);
+        } catch (Exception e) {
+            System.out.println("RoomServiceImpl.getCleaningInfoById error: " + e.getMessage());
+            return null;
+        }
+    }
 }
