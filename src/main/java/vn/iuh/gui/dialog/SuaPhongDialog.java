@@ -167,10 +167,10 @@ public class SuaPhongDialog extends JDialog {
         // Lưu
         btnSave.addActionListener(e -> onSave());
 
-        // Đặt bảo trì (3 ngày)
+        // Đặt bảo trì
         btnStartMaintenance.addActionListener(e -> {
             int ans = JOptionPane.showConfirmDialog(SuaPhongDialog.this,
-                    "Bạn có chắc chắn muốn đặt trạng thái phòng thành BẢO TRÌ trong 3 ngày?",
+                    "Bạn có chắc chắn muốn đặt trạng thái phòng thành BẢO TRÌ cho phòng này?",
                     "Xác nhận đặt bảo trì", JOptionPane.YES_NO_OPTION);
             if (ans != JOptionPane.YES_OPTION) return;
 
@@ -181,7 +181,6 @@ public class SuaPhongDialog extends JDialog {
                 @Override
                 protected Boolean doInBackground() {
                     try {
-                        // gọi service để tạo công việc bảo trì 3 ngày
                         return roomService.scheduleMaintenance(phong.getMaPhong(), 3);
                     } catch (Throwable ex) {
                         throw new RuntimeException(ex);
