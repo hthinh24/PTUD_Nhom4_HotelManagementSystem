@@ -415,7 +415,16 @@ public class ReservationInfoDetailPanel extends JPanel {
         if (canExtendTime(reservationInfo.getStatus())) {
             btnExtendTime.setBackground(CustomUI.orange);
             btnExtendTime.setForeground(CustomUI.white);
-            btnExtendTime.addActionListener(e -> handleExtendTime(reservationInfo.getDetails().get(0)));
+            btnExtendTime.addActionListener(e -> {
+                ReservationDetailResponse detailToExtend = pickDetailForExtend();
+                if (detailToExtend == null) {
+                    JOptionPane.showMessageDialog(this,
+                            "Không tìm thấy chi tiết phù hợp để gia hạn.",
+                            "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+                handleExtendTime(detailToExtend);
+            });
         } else {
             btnExtendTime.setBackground(CustomUI.gray);
             btnExtendTime.setForeground(CustomUI.white);
@@ -1338,5 +1347,32 @@ public class ReservationInfoDetailPanel extends JPanel {
         else {
             JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn cho phòng");
         }
+    }
+
+    // Hàm chọn chi tiết đặt phòng để gia hạn thời gian
+    private ReservationDetailResponse pickDetailForExtend() {
+        if (reservationInfo == null || reservationInfo.getDetails() == null || reservationInfo.getDetails().isEmpty())
+            return null;
+
+        List<ReservationDetailResponse> details = reservationInfo.getDetails();
+
+        // 1) Ưu tiên các chi tiết đang sử dụng
+        for (ReservationDetailResponse d : details) {
+            if (d != null && ReservationStatus.USING.getStatus().equals(d.getStatus())) return d;
+        }
+        // 2) ưu tiên các chi tiết chờ nhậnn phòng
+        for (ReservationDetailResponse d : details) {
+            if (d != null && ReservationStatus.CHECKED_IN.getStatus().equals(d.getStatus())) return d;
+        }
+        // 3) Ưu tiên các chi tiết đang kiểm tra
+        for (ReservationDetailResponse d : details) {
+            if (d != null && ReservationStatus.CHECKING.getStatus().equals(d.getStatus())) return d;
+        }
+        // 4) nếu vẫn không có, trả về chi tiết có roomId
+        for (ReservationDetailResponse d : details) {
+            if (d != null && d.getRoomId() != null && !d.getRoomId().isEmpty()) return d;
+        }
+        // 5) nỗ lực cuối cùng: lấy chi chi tiết cuối cùng :(
+        return details.get(details.size() - 1);
     }
 }

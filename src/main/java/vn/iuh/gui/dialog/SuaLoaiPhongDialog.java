@@ -33,7 +33,7 @@ public class SuaLoaiPhongDialog extends JDialog {
     private final JTextField txtMa = new JTextField();
     private final JTextField txtTen = new JTextField();
     private final JSpinner spnSoNguoi = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
-    private final JComboBox<String> cboPhanLoai = new JComboBox<>(new String[] {"Thường", "VIP"});
+    private final JComboBox<String> cboPhanLoai = new JComboBox<>(new String[] {"Thường", "Vip"});
 
     private final JTextField txtGiaGio = new JTextField();
     private final JTextField txtGiaNgay = new JTextField();
@@ -214,7 +214,7 @@ public class SuaLoaiPhongDialog extends JDialog {
             txtMa.setText(current.getMaLoaiPhong());
             txtTen.setText(current.getTenLoaiPhong());
             spnSoNguoi.setValue(current.getSoLuongKhach());
-            if ("VIP".equalsIgnoreCase(current.getPhanLoai())) cboPhanLoai.setSelectedItem("VIP");
+            if ("Vip".equalsIgnoreCase(current.getPhanLoai())) cboPhanLoai.setSelectedItem("Vip");
             else cboPhanLoai.setSelectedItem("Thường");
         }
 

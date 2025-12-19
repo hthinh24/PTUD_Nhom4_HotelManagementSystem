@@ -36,7 +36,7 @@ public class ThemLoaiPhongDialog extends JDialog {
     private final JTextField txtMa = new JTextField();
     private final JTextField txtTen = new JTextField();
     private final JSpinner spnSoNguoi = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
-    private final JComboBox<String> cboPhanLoai = new JComboBox<>(new String[] {"Thường", "VIP"});
+    private final JComboBox<String> cboPhanLoai = new JComboBox<>(new String[] {"Thường", "Vip"});
 
     // new price fields
     private final JFormattedTextField txtGiaNgay;
