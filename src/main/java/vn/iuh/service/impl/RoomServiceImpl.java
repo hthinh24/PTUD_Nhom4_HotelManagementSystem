@@ -107,7 +107,7 @@ public class RoomServiceImpl implements RoomService {
                 LichSuThaoTac wh = new LichSuThaoTac();
                 wh.setMaLichSuThaoTac(newId);
 
-                wh.setTenThaoTac(ActionType.EDIT_ROOM.getActionName());
+                wh.setTenThaoTac(ActionType.UPDATE_ROOM.getActionName());
                 List<String> changes = new ArrayList<>();
 
                 if (!Objects.equals(origName, updated.getTenPhong())) {
@@ -477,9 +477,9 @@ public class RoomServiceImpl implements RoomService {
 
                 LichSuThaoTac wh = new LichSuThaoTac();
                 wh.setMaLichSuThaoTac(newWhId);
-                wh.setTenThaoTac(RoomStatus.ROOM_MAINTENANCE_STATUS.getStatus());
-                wh.setMoTa(String.format("Đặt phòng %s vào trạng thái BẢO TRÌ (dự kiến từ %s đến %s)",
-                        maPhong, now, end));
+                wh.setTenThaoTac(ActionType.UPDATE_ROOM.getActionName());
+                wh.setMoTa(String.format("Đặt phòng %s vào trạng thái BẢO TRÌ",
+                        maPhong));
                 wh.setMaPhienDangNhap(Main.getCurrentLoginSession());
                 wh.setThoiGianTao(new Timestamp(System.currentTimeMillis()));
                 whDao.themLichSuThaoTac(wh);
@@ -527,7 +527,7 @@ public class RoomServiceImpl implements RoomService {
 
                 LichSuThaoTac wh = new LichSuThaoTac();
                 wh.setMaLichSuThaoTac(newWhId);
-                wh.setTenThaoTac("KẾT THÚC BẢO TRÌ");
+                wh.setTenThaoTac(ActionType.UPDATE_ROOM.getActionName());
                 wh.setMoTa(String.format("Kết thúc bảo trì cho phòng %s", maPhong));
                 wh.setMaPhienDangNhap(Main.getCurrentLoginSession());
                 wh.setThoiGianTao(new Timestamp(System.currentTimeMillis()));
