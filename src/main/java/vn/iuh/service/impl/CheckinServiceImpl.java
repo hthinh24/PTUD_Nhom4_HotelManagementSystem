@@ -45,7 +45,6 @@ public class CheckinServiceImpl implements CheckinService {
 
         String maPhienDangNhap = Main.getCurrentLoginSession();
 
-        DatPhongDAO datPhongDAO = new DatPhongDAO();
         try {
             // 1) Bắt đầu transaction
             DatabaseUtil.khoiTaoGiaoTac();

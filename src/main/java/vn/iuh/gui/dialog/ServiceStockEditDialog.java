@@ -31,6 +31,9 @@ public class ServiceStockEditDialog extends JDialog {
         pack();
         setLocationRelativeTo(owner);
         setResizable(false);
+
+        // đảm bảo đóng cửa sổ đúng cách khi bấm X
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
 
     private void initComponents() {
@@ -57,11 +60,48 @@ public class ServiceStockEditDialog extends JDialog {
         gc.gridx = 0; gc.gridy = 2; gc.weightx = 0;
         form.add(new JLabel("Tồn kho hiện tại:"), gc);
         gc.gridx = 1; gc.gridy = 2; gc.weightx = 1;
-        spnQty = new JSpinner(new SpinnerNumberModel(this.currentQty, 0, Integer.MAX_VALUE, 1));
+
+        // IMPORTANT: set min = null so spinner won't auto-correct negative values silently
+        spnQty = new JSpinner(new SpinnerNumberModel(this.currentQty, /*min*/ null, /*max*/ Integer.MAX_VALUE, 1));
         // make the spinner's editor accept only integers visually
         JComponent editor = spnQty.getEditor();
         if (editor instanceof JSpinner.DefaultEditor) {
-            ((JSpinner.DefaultEditor) editor).getTextField().setColumns(10);
+            JTextField tf = ((JSpinner.DefaultEditor) editor).getTextField();
+            tf.setColumns(10);
+
+            // InputVerifier: khi focus rời khỏi text field, verify giá trị
+            tf.setInputVerifier(new InputVerifier() {
+                @Override
+                public boolean verify(JComponent input) {
+                    String text = tf.getText();
+                    if (text == null || text.trim().isEmpty()) {
+                        JOptionPane.showMessageDialog(ServiceStockEditDialog.this,
+                                "Giá trị tồn kho không hợp lệ. Vui lòng nhập số nguyên >= 0.",
+                                "Lỗi",
+                                JOptionPane.ERROR_MESSAGE);
+                        return false;
+                    }
+                    try {
+                        // parse as integer (cho phép dấu - nếu người dùng nhập)
+                        int val = Integer.parseInt(text.trim());
+                        if (val < 0) {
+                            // Nếu âm: hiện thông báo và chặn focus rời đi
+                            JOptionPane.showMessageDialog(ServiceStockEditDialog.this,
+                                    "Tồn kho không được âm. Vui lòng nhập số >= 0.",
+                                    "Lỗi",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return false;
+                        }
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(ServiceStockEditDialog.this,
+                                "Giá trị tồn kho không hợp lệ. Vui lòng nhập số nguyên >= 0.",
+                                "Lỗi",
+                                JOptionPane.ERROR_MESSAGE);
+                        return false;
+                    }
+                    return true; // hợp lệ -> cho phép rời khỏi
+                }
+            });
         }
         form.add(spnQty, gc);
 
@@ -70,6 +110,10 @@ public class ServiceStockEditDialog extends JDialog {
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton btnCancel = new JButton("Hủy");
         JButton btnSave = new JButton("Lưu");
+
+        btnCancel.setFocusable(false);
+        btnCancel.setRequestFocusEnabled(false);
+
         bottom.add(btnCancel);
         bottom.add(btnSave);
         p.add(bottom, BorderLayout.SOUTH);
@@ -84,8 +128,18 @@ public class ServiceStockEditDialog extends JDialog {
         Object val = spnQty.getValue();
         int newQty;
         try {
-            if (val instanceof Number) newQty = ((Number) val).intValue();
-            else newQty = Integer.parseInt(String.valueOf(val));
+            if (val instanceof Number) {
+                newQty = ((Number) val).intValue();
+            } else {
+                // fallback: try parse the editor text directly
+                JComponent editor = spnQty.getEditor();
+                if (editor instanceof JSpinner.DefaultEditor) {
+                    String text = ((JSpinner.DefaultEditor) editor).getTextField().getText();
+                    newQty = Integer.parseInt(text.trim());
+                } else {
+                    newQty = Integer.parseInt(String.valueOf(val));
+                }
+            }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Giá trị tồn kho không hợp lệ. Vui lòng nhập số nguyên >= 0.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;

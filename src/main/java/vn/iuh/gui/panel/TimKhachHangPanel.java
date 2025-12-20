@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class QuanLyKhachHangPanel extends JPanel {
+public class TimKhachHangPanel extends JPanel {
 
     // Chuẩn hoá chiều cao cho các control tìm kiếm
     private static final int SEARCH_CONTROL_HEIGHT = 40; // chiều cao cố định cho combo, textfield, button
@@ -58,7 +58,7 @@ public class QuanLyKhachHangPanel extends JPanel {
     private final List<CustomerData> fullDataset = new ArrayList<>();
 
     private final CustomerServiceImpl customerService = new CustomerServiceImpl();
-    public QuanLyKhachHangPanel() {
+    public TimKhachHangPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(CustomUI.white);
         init();
@@ -227,7 +227,7 @@ public class QuanLyKhachHangPanel extends JPanel {
 
     private void createTopPanel() {
         JPanel pnlTop = new JPanel(new BorderLayout());
-        JLabel lblTop = new JLabel("QUẢN LÝ KHÁCH HÀNG", SwingConstants.CENTER);
+        JLabel lblTop = new JLabel("TÌM KHÁCH HÀNG", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
         lblTop.setFont(CustomUI.bigFont);
 
@@ -253,8 +253,8 @@ public class QuanLyKhachHangPanel extends JPanel {
         searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.Y_AXIS));
         searchPanel.setBackground(CustomUI.white);
         searchPanel.setBorder(new FlatLineBorder(new Insets(12,12,12,12), Color.decode("#CED4DA"), 2, 25));
-        searchPanel.setPreferredSize(new Dimension(0, 200));
-        searchPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 240));
+        searchPanel.setPreferredSize(new Dimension(0, 100));
+        searchPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
         // search type combo (Tên khách hàng / CCCD)
         String[] searchOptions = {"Tên khách hàng", "CCCD"};
@@ -284,22 +284,7 @@ public class QuanLyKhachHangPanel extends JPanel {
         searchButton.setAlignmentY(Component.CENTER_ALIGNMENT);
         row1.add(searchButton);
 
-        searchPanel.add(Box.createVerticalStrut(8));
         searchPanel.add(row1);
-        searchPanel.add(Box.createVerticalStrut(12));
-
-        // Row 2: action buttons centered
-        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 8));
-        row2.setBackground(CustomUI.white);
-        addButton.setPreferredSize(ACTION_BUTTON_SIZE);
-        editButton.setPreferredSize(ACTION_BUTTON_SIZE);
-        deleteButton.setPreferredSize(ACTION_BUTTON_SIZE);
-        row2.add(addButton);
-        row2.add(editButton);
-        row2.add(deleteButton);
-
-        searchPanel.add(row2);
-        searchPanel.add(Box.createVerticalStrut(8));
 
         container.add(searchPanel);
         add(container);

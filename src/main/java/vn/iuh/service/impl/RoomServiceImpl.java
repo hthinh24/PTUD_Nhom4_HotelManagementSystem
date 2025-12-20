@@ -107,7 +107,7 @@ public class RoomServiceImpl implements RoomService {
                 LichSuThaoTac wh = new LichSuThaoTac();
                 wh.setMaLichSuThaoTac(newId);
 
-                wh.setTenThaoTac(ActionType.EDIT_ROOM.getActionName());
+                wh.setTenThaoTac(ActionType.UPDATE_ROOM.getActionName());
                 List<String> changes = new ArrayList<>();
 
                 if (!Objects.equals(origName, updated.getTenPhong())) {
@@ -444,40 +444,47 @@ public class RoomServiceImpl implements RoomService {
     public boolean scheduleMaintenance(String maPhong, int days) {
         if (maPhong == null || maPhong.isBlank() || days <= 0) return false;
         try {
-            // tạo id cho công việc mới
-            var last = congViecDAO.timCongViecMoiNhat();
-            String lastId = last != null ? last.getMaCongViec() : null;
-            String newId = EntityUtil.increaseEntityID(lastId, EntityIDSymbol.JOB_PREFIX.getPrefix(), EntityIDSymbol.JOB_PREFIX.getLength());
+            // Lấy phòng hiện tại
+            Phong phong = phongDAO.timPhong(maPhong);
+            if (phong == null) {
+                System.out.println("Không tìm thấy phòng: " + maPhong);
+                return false;
+            }
 
+            // Tính thời gian bắt đầu và kết thúc dự kiến (dùng để ghi mô tả lịch sử)
             long nowMs = System.currentTimeMillis();
             Timestamp now = new Timestamp(nowMs);
             Timestamp end = new Timestamp(nowMs + days * 24L * 3600L * 1000L);
 
-            vn.iuh.entity.CongViec cv = new vn.iuh.entity.CongViec(newId,
-                    RoomStatus.ROOM_MAINTENANCE_STATUS.getStatus(),
-                    now, end, maPhong, now);
+            // Set phòng về không hoạt động (bảo trì)
+            phong.setDangHoatDong(false);
+            Phong updated = phongDAO.capNhatPhong(phong);
+            if (updated == null) {
+                System.out.println("Không thể cập nhật trạng thái bảo trì cho phòng: " + maPhong);
+                return false;
+            }
 
-            // lưu công việc
-            congViecDAO.themCongViec(cv);
-
-            // ghi lịch sử thao tác (tuỳ project — giữ nhất quán)
+            // Ghi lịch sử thao tác
             try {
                 LichSuThaoTacDAO whDao = new LichSuThaoTacDAO();
                 var lastWh = whDao.timLichSuThaoTacMoiNhat();
                 String lastWhId = lastWh != null ? lastWh.getMaLichSuThaoTac() : null;
-                String newWhId = EntityUtil.increaseEntityID(lastWhId,
+                String newWhId = EntityUtil.increaseEntityID(
+                        lastWhId,
                         EntityIDSymbol.WORKING_HISTORY_PREFIX.getPrefix(),
-                        EntityIDSymbol.WORKING_HISTORY_PREFIX.getLength());
+                        EntityIDSymbol.WORKING_HISTORY_PREFIX.getLength()
+                );
 
                 LichSuThaoTac wh = new LichSuThaoTac();
                 wh.setMaLichSuThaoTac(newWhId);
-                wh.setTenThaoTac(RoomStatus.ROOM_MAINTENANCE_STATUS.getStatus());
-                wh.setMoTa(String.format("Đặt phòng %s vào trạng thái BẢO TRÌ từ %s đến %s", maPhong, now, end));
+                wh.setTenThaoTac(ActionType.UPDATE_ROOM.getActionName());
+                wh.setMoTa(String.format("Đặt phòng %s vào trạng thái BẢO TRÌ",
+                        maPhong));
                 wh.setMaPhienDangNhap(Main.getCurrentLoginSession());
                 wh.setThoiGianTao(new Timestamp(System.currentTimeMillis()));
                 whDao.themLichSuThaoTac(wh);
             } catch (Exception ex) {
-                // không block nếu ghi lịch sử lỗi
+                // Không block nếu ghi lịch sử lỗi
                 ex.printStackTrace();
             }
 
@@ -492,35 +499,44 @@ public class RoomServiceImpl implements RoomService {
     public boolean endMaintenance(String maPhong) {
         if (maPhong == null || maPhong.isBlank()) return false;
         try {
-            // tìm công việc bảo trì gần nhất cho phòng
-            vn.iuh.entity.CongViec cv = congViecDAO.findLatestMaintenanceJobForRoom(maPhong);
-            if (cv == null) return false;
+            // Lấy phòng hiện tại
+            Phong phong = phongDAO.timPhong(maPhong);
+            if (phong == null) {
+                System.out.println("Không tìm thấy phòng: " + maPhong);
+                return false;
+            }
 
-            boolean removed = congViecDAO.removeJob(cv.getMaCongViec());
+            // Set phòng về hoạt động trở lại
+            phong.setDangHoatDong(true);
+            Phong updated = phongDAO.capNhatPhong(phong);
+            if (updated == null) {
+                System.out.println("Không thể kết thúc bảo trì cho phòng: " + maPhong);
+                return false;
+            }
 
-            // ghi lịch sử thao tác (tuỳ project)
+            // Ghi lịch sử thao tác
             try {
-                if (removed) {
-                    LichSuThaoTacDAO whDao = new LichSuThaoTacDAO();
-                    var lastWh = whDao.timLichSuThaoTacMoiNhat();
-                    String lastWhId = lastWh != null ? lastWh.getMaLichSuThaoTac() : null;
-                    String newWhId = EntityUtil.increaseEntityID(lastWhId,
-                            EntityIDSymbol.WORKING_HISTORY_PREFIX.getPrefix(),
-                            EntityIDSymbol.WORKING_HISTORY_PREFIX.getLength());
+                LichSuThaoTacDAO whDao = new LichSuThaoTacDAO();
+                var lastWh = whDao.timLichSuThaoTacMoiNhat();
+                String lastWhId = lastWh != null ? lastWh.getMaLichSuThaoTac() : null;
+                String newWhId = EntityUtil.increaseEntityID(
+                        lastWhId,
+                        EntityIDSymbol.WORKING_HISTORY_PREFIX.getPrefix(),
+                        EntityIDSymbol.WORKING_HISTORY_PREFIX.getLength()
+                );
 
-                    LichSuThaoTac wh = new LichSuThaoTac();
-                    wh.setMaLichSuThaoTac(newWhId);
-                    wh.setTenThaoTac("KẾT THÚC BẢO TRÌ");
-                    wh.setMoTa(String.format("Kết thúc bảo trì cho phòng %s (job %s)", maPhong, cv.getMaCongViec()));
-                    wh.setMaPhienDangNhap(Main.getCurrentLoginSession());
-                    wh.setThoiGianTao(new Timestamp(System.currentTimeMillis()));
-                    whDao.themLichSuThaoTac(wh);
-                }
+                LichSuThaoTac wh = new LichSuThaoTac();
+                wh.setMaLichSuThaoTac(newWhId);
+                wh.setTenThaoTac(ActionType.UPDATE_ROOM.getActionName());
+                wh.setMoTa(String.format("Kết thúc bảo trì cho phòng %s", maPhong));
+                wh.setMaPhienDangNhap(Main.getCurrentLoginSession());
+                wh.setThoiGianTao(new Timestamp(System.currentTimeMillis()));
+                whDao.themLichSuThaoTac(wh);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
 
-            return removed;
+            return true;
         } catch (Exception ex) {
             ex.printStackTrace();
             return false;

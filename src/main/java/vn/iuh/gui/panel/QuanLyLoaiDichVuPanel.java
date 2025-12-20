@@ -180,15 +180,18 @@ public class QuanLyLoaiDichVuPanel extends JPanel {
 
     private void createTopPanel() {
         JPanel pnlTop = new JPanel(new BorderLayout());
-        JLabel lblTop = new JLabel("Quản lý loại dịch vụ", SwingConstants.CENTER);
-        lblTop.setForeground(Color.WHITE);
-        lblTop.setFont(FONT_TITLE);
+        JLabel lblTop = new JLabel("QUẢN LÝ LOẠI DỊCH VỤ", SwingConstants.CENTER);
+        lblTop.setForeground(CustomUI.white);
+        lblTop.setFont(CustomUI.bigFont);
 
-        pnlTop.setBackground(new Color(59,130,246));
+        pnlTop.setBackground(CustomUI.blue);
         pnlTop.add(lblTop, BorderLayout.CENTER);
-        pnlTop.setPreferredSize(new Dimension(0, TOP_PANEL_HEIGHT));
-        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, TOP_PANEL_HEIGHT));
+
+        pnlTop.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
         pnlTop.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        pnlTop.add(lblTop, BorderLayout.CENTER);
 
         add(pnlTop);
     }

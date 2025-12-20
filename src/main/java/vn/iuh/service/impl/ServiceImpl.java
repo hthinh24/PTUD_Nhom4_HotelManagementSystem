@@ -348,9 +348,67 @@ public class ServiceImpl implements ServiceService {
         if (maDichVu == null || maDichVu.isBlank()) throw new IllegalArgumentException("maDichVu rỗng");
         if (tonKho < 0) throw new IllegalArgumentException("tonKho < 0");
 
-        DichVuDAO dao = new DichVuDAO();
-        // bạn có thể thêm transaction / log ở đây nếu muốn
-        return dao.capNhatTonKho(maDichVu, tonKho);
+        try {
+            // Bắt đầu transaction
+            DatabaseUtil.khoiTaoGiaoTac();
+
+            // DAO dùng connection trong transaction
+            DichVuDAO dao = new DichVuDAO();
+            LichSuThaoTacDAO lichSuDao = new LichSuThaoTacDAO();
+
+            // Lấy thông tin hiện tại để so sánh (lấy tồn kho cũ)
+            var existing = dao.timDichVuV2(maDichVu);
+            if (existing == null) {
+                // không tìm thấy dịch vụ -> rollback và trả về false (hoặc ném ngoại lệ tuỳ ý)
+                DatabaseUtil.hoanTacGiaoTac();
+                throw new IllegalArgumentException("Không tìm thấy dịch vụ với mã: " + maDichVu);
+            }
+
+            int oldQty = existing.getTonKho();
+
+            // Nếu không thực sự thay đổi thì không cần cập nhật hay ghi lịch sử
+            if (oldQty == tonKho) {
+                DatabaseUtil.hoanTacGiaoTac();
+                return true;
+            }
+
+            // Cập nhật tồn kho
+            boolean ok = dao.capNhatTonKho(maDichVu, tonKho);
+            if (!ok) {
+                DatabaseUtil.hoanTacGiaoTac();
+                return false;
+            }
+
+            // Ghi lịch sử thao tác: tạo LichSuThaoTac mới
+            try {
+                var last = lichSuDao.timLichSuThaoTacMoiNhat();
+                String lastId = last != null ? last.getMaLichSuThaoTac() : null;
+                String newId = EntityUtil.increaseEntityID(
+                        lastId,
+                        EntityIDSymbol.WORKING_HISTORY_PREFIX.getPrefix(),
+                        EntityIDSymbol.WORKING_HISTORY_PREFIX.getLength()
+                );
+
+                LichSuThaoTac ls = new LichSuThaoTac();
+                ls.setMaLichSuThaoTac(newId);
+                ls.setTenThaoTac(ActionType.EDIT_SERVICE_STOCK.getActionName());
+                ls.setMoTa(String.format("Chỉnh sửa tồn kho dịch vụ %s: %d -> %d", existing.getTenDichVu(), oldQty, tonKho));
+                ls.setMaPhienDangNhap(Main.getCurrentLoginSession());
+                ls.setThoiGianTao(new java.sql.Timestamp(System.currentTimeMillis()));
+
+                lichSuDao.themLichSuThaoTac(ls);
+            } catch (Exception ex) {
+                DatabaseUtil.hoanTacGiaoTac();
+                throw ex;
+            }
+
+            // Commit transaction
+            DatabaseUtil.thucHienGiaoTac();
+            return true;
+        } catch (Exception ex) {
+            try { DatabaseUtil.hoanTacGiaoTac(); } catch (Exception ignore) {}
+            throw ex;
+        }
     }
 
 }
