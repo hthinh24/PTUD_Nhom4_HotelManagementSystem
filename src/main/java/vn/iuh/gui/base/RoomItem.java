@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -655,10 +656,10 @@ public class RoomItem extends JPanel {
         Date now = new Date();
         String checkInTime = bookingResponse.getTimeIn() != null
                 ? bookingResponse.getTimeIn().toLocalDateTime().format(formatter)
-                : now.toString();
+                : new Timestamp(now.getTime()).toLocalDateTime().format(formatter);
         String checkOutTime = bookingResponse.getTimeOut() != null
                 ? bookingResponse.getTimeOut().toLocalDateTime().format(formatter)
-                : Date.from(now.toInstant().plus(1, ChronoUnit.DAYS)).toString();
+                : new Timestamp(now.getTime()).toLocalDateTime().format(formatter);
 
         // Check-in row
         gbc.gridx = 0;

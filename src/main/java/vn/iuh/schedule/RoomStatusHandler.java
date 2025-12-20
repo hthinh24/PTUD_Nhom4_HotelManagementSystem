@@ -15,12 +15,11 @@ import vn.iuh.entity.CongViec;
 import vn.iuh.entity.Phong;
 import vn.iuh.gui.base.GridRoomPanel;
 import vn.iuh.gui.base.RoomItem;
-import vn.iuh.service.BookingService;
 import vn.iuh.service.CheckOutService;
 import vn.iuh.service.CongViecService;
-import vn.iuh.service.impl.BookingServiceImpl;
 import vn.iuh.service.impl.CheckOutServiceImpl;
 import vn.iuh.service.impl.CongViecServiceImpl;
+import vn.iuh.util.RefreshManager;
 import vn.iuh.util.SchedulerUtil;
 
 import java.sql.Timestamp;
@@ -56,7 +55,7 @@ public class RoomStatusHandler implements Job {
         List<String> congViecCanKetThuc = new ArrayList<>();
         List<String> maCTDPCapNhat = new ArrayList<>();
 
-        Timestamp pivot = new Timestamp(System.currentTimeMillis() + 35_000);
+        Timestamp pivot = new Timestamp(System.currentTimeMillis());
         String maCongViecMoiNhat = congViecService.taoMaCongViecMoi(null);
 
         // dùng để lấy danh sách phòng trễ checkout
@@ -222,7 +221,9 @@ public class RoomStatusHandler implements Job {
         }
 
         // Cập nhật giao diện
-        gridRoomPanel.updateRoomItemStatus(updatedBookingResponse);
+//        gridRoomPanel.updateRoomItemStatus(updatedBookingResponse);
+        RefreshManager.refreshAll();
+
         System.out.printf("Đã thêm %d công việc mới, xóa %d công việc cũ%n",
                 congViecCanThem.size(), congViecCanKetThuc.size());
     }

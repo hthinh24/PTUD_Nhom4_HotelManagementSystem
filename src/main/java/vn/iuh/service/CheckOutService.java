@@ -11,4 +11,7 @@ public interface CheckOutService {
     List<String> createHoaDonForAutoCheckout(String reservationDetail);
     DonDatPhong checkReservation(String reservationDetailId);
     void handleSimpleAutoCheckOut(WarningReservation wr);
+    boolean canExtendCheckoutLate(String maChiTietDatPhong);
+    long getMaxExtendCheckoutLateMillis(String maChiTietDatPhong);
+    boolean extendCheckoutLate(String maChiTietDatPhong, long maxExtendMillis);
 }

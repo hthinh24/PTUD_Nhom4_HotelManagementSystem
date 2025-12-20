@@ -340,7 +340,7 @@ public class DatPhongDAO {
             PreparedStatement ps = connection.prepareStatement(query.toString());
 
             int i = 1;
-            ps.setInt(i, WorkTimeCost.CHECKOUT_LATE_MIN.getMinutes());
+            ps.setInt(i, WorkTimeCost.CHECKOUT_LATE_MAX.getMinutes());
             i++;
             ps.setString(i, RoomStatus.ROOM_CLEANING_STATUS.getStatus());
             i++;
@@ -433,7 +433,7 @@ public class DatPhongDAO {
             Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
 
             ps.setString(1, RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus());
-            ps.setInt(2, WorkTimeCost.CHECKOUT_LATE_MAX.getMinutes());
+            ps.setInt(2, WorkTimeCost.CLEANING_TIME.getMinutes());
             ps.setTimestamp(3, timeIn);
             ps.setTimestamp(4, timeIn);
             ps.setTimestamp(5, timeIn);
