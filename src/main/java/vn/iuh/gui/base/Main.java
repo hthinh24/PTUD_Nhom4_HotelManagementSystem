@@ -72,6 +72,10 @@ public class Main extends JFrame {
     private WarningReservationService warningReservationService;
 
     private QuanLyNhanVienPanel pnlQuanLyNhanVien;
+    private QuanLyPhongPanel pnlQuanLyPhong;
+    private QuanLyDichVuPanel pnlQuanLyDichVu;
+    private QuanLyLoaiPhongPanel pnlQuanLyLoaiPhong;
+    private QuanLyLoaiDichVuPanel pnlQuanLyLoaiDichVu;
 
     public void init() {
         FlatRobotoFont.install();
@@ -238,6 +242,25 @@ public class Main extends JFrame {
             pnlQuanLyNhanVien.checkRoleAndLoadData();
         }
 
+        if (pnlQuanLyPhong != null) {
+            pnlQuanLyPhong.checkRoleAndLoadData();
+        }
+
+        if (pnlQuanLyDichVu != null) {
+            pnlQuanLyDichVu.checkRoleAndLoadData();
+        }
+
+        if (pnlQuanLyLoaiPhong != null) {
+            pnlQuanLyLoaiPhong.checkRoleAndLoadData();
+        }
+
+        if (pnlQuanLyLoaiDichVu != null) {
+            pnlQuanLyLoaiDichVu.checkRoleAndLoadData();
+        }
+
+        if (pnlThietLapHeThong != null) {
+            pnlThietLapHeThong.checkRoleAndLoadData();
+        }
     }
 
     private String convertMaChucVuToTen(String maChucVu) {
@@ -261,7 +284,6 @@ public class Main extends JFrame {
         pnlCenterWrapper = new JPanel();
         pnlCenterWrapper.add(lblSystemName);
         pnlCenterWrapper.setBackground(CustomUI.darkBlue);
-
 
         pnlTopRight = new JPanel();
         pnlTopRight.setBackground(pnlTop.getBackground());
@@ -336,11 +358,12 @@ public class Main extends JFrame {
         pnlQuanLyNhanVien = new QuanLyNhanVienPanel();
         pnlQuanLyTaiKhoan = new QuanLyTaiKhoanPanel();
         pnlQuanLyPhuPhi = new QuanLyPhuPhiPanel();
-        QuanLyPhongPanel pnlQuanLyPhong = new QuanLyPhongPanel();
+        pnlQuanLyPhong = new QuanLyPhongPanel();
         QuanLyKhachHangPanel pnlQuanLyKhachHang = new QuanLyKhachHangPanel();
-        QuanLyLoaiPhongPanel pnlQuanLyLoaiPhong = new QuanLyLoaiPhongPanel();
-        QuanLyDichVuPanel pnlQuanLyDichVu = new QuanLyDichVuPanel();
-        QuanLyLoaiDichVuPanel pnlQuanLyLoaiDichVu = new QuanLyLoaiDichVuPanel(pnlQuanLyDichVu);
+        pnlQuanLyLoaiPhong = new QuanLyLoaiPhongPanel();
+        pnlQuanLyDichVu = new QuanLyDichVuPanel();
+        pnlQuanLyLoaiDichVu = new QuanLyLoaiDichVuPanel(pnlQuanLyDichVu);
+        TroGiupPanel pnlTG = new TroGiupPanel();
         pnlThietLapHeThong =  new SystemConfigPanel();
         pnlRoomProductivity = new RoomProductivityPanel();
         pnlCenter.add(pnlQuanLyPhong, "Quản lý phòng");
@@ -358,6 +381,7 @@ public class Main extends JFrame {
         pnlCenter.add(pnlRoomProductivity, "Thống kê hiệu suất");
         pnlCenter.add(pnlQuanLyPhuPhi, "Quản lý phụ phí");
         pnlCenter.add(pnlThietLapHeThong, "Thiết lập hệ thống");
+        pnlCenter.add(pnlTG, "Trợ giúp");
 //        showCard("Quản lý đặt phòng");
 
         showCenterCard("Quản lý đặt phòng");

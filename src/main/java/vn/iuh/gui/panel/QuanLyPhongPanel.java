@@ -5,6 +5,7 @@ import com.formdev.flatlaf.ui.FlatLineBorder;
 import vn.iuh.entity.CongViec;
 import vn.iuh.entity.LoaiPhong;
 import vn.iuh.entity.Phong;
+import vn.iuh.gui.base.RoleChecking;
 import vn.iuh.gui.dialog.PhongDialog;
 import vn.iuh.gui.dialog.SuaPhongDialog;
 import vn.iuh.gui.dialog.ThemPhongDialog;
@@ -15,6 +16,7 @@ import vn.iuh.service.impl.LoaiPhongServiceImpl;
 import vn.iuh.service.impl.RoomServiceImpl;
 import vn.iuh.util.AppEventBus;
 
+import javax.management.relation.Role;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -29,7 +31,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class QuanLyPhongPanel extends JPanel {
+public class QuanLyPhongPanel extends RoleChecking {
 
     // matched to QuanLyKhachHangPanel sizing
     private static final int SEARCH_CONTROL_HEIGHT = 40;
@@ -77,6 +79,12 @@ public class QuanLyPhongPanel extends JPanel {
 
     // Constructor
     public QuanLyPhongPanel() {
+        super();
+        checkRoleAndLoadData();
+    }
+
+    @Override
+    protected void buildAdminUI() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(CustomUI.white);
         init();

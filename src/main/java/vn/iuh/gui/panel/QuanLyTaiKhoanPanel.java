@@ -17,12 +17,15 @@ import vn.iuh.util.EntityUtil;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
+import java.security.DigestException;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -30,10 +33,10 @@ import java.util.function.Consumer;
 public class QuanLyTaiKhoanPanel extends RoleChecking {
 
     // --- Kích thước ---
-    private static final Dimension SEARCH_TEXT_SIZE = new Dimension(150, 45);
+    private static final Dimension SEARCH_TEXT_SIZE = new Dimension(350, 45);
     private static final Dimension SEARCH_BUTTON_SIZE = new Dimension(90, 40);
-    private static final Dimension ACTION_BUTTON_SIZE = new Dimension(190, 50);
-    private static final Dimension CATEGORY_BUTTON_SIZE = new Dimension(130, 52);
+    private static final Dimension ACTION_BUTTON_SIZE = new Dimension(230, 50);
+    private static final Dimension CATEGORY_BUTTON_SIZE = new Dimension(110, 40);
 
     // --- Fonts ---
     private static final Font FONT_LABEL = new Font("Arial", Font.BOLD, 15);
@@ -75,6 +78,30 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
         setLayout(new BorderLayout());
         this.nhanVienDAO = new NhanVienDAO();
         this.taiKhoanDAO = new TaiKhoanDAO();
+        this.addAncestorListener(new AncestorListener()
+        {
+            @Override
+            public void ancestorAdded(AncestorEvent event) {
+                refreshData();
+            }
+
+            @Override
+            public void ancestorRemoved(AncestorEvent event) {
+
+            }
+
+            @Override
+            public void ancestorMoved(AncestorEvent event) {
+
+            }
+        });
+    }
+
+    public void refreshData() {
+        loadTaiKhoanData();
+        loadNhanVienData();
+        modelTaiKhoan.fireTableDataChanged();
+        modelNhanVien.fireTableDataChanged();
     }
 
     @Override
@@ -97,8 +124,8 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
     private void initButtons() {
         configureSearchButton(searchButton, SEARCH_BUTTON_SIZE);
 
-        addButton = createActionButtonAsync("Thêm",  ACTION_BUTTON_SIZE, "#16A34A", "#86EFAC");
-        editButton = createActionButtonAsync("Sửa",  ACTION_BUTTON_SIZE, "#2563EB", "#93C5FD");
+        addButton = createActionButtonAsync("Thêm tài khoản",  ACTION_BUTTON_SIZE, "#16A34A", "#86EFAC");
+        editButton = createActionButtonAsync("Sửa tài khoản",  ACTION_BUTTON_SIZE, "#2563EB", "#93C5FD");
         leTanButton = createCategoryButton("Lễ tân", "#34D399", CATEGORY_BUTTON_SIZE);
         quanLyButton = createCategoryButton("Quản lý", "#FB923C", CATEGORY_BUTTON_SIZE);
         adminButton = createCategoryButton("Admin", "#A78BFA", CATEGORY_BUTTON_SIZE);
@@ -107,11 +134,9 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
         addButton.addActionListener(e -> {
 
             // 1. Kiểm tra xem tab "Nhân viên" có đang được kích hoạt không
-            // Chúng ta kiểm tra màu của nhãn, nếu là MÀU XANH (active)
             boolean isNhanVienTabActive = lblTabNhanVien.getForeground().equals(CustomUI.blue);
 
             if (!isNhanVienTabActive) {
-                // Tải lại danh sách nhân viên CHƯA có tài khoản
                 loadNhanVienData();
 
                 tableCardLayout.show(tableCardPanel, "NHAN_VIEN");
@@ -130,7 +155,6 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
 
             int modelRow = tblNhanVien.convertRowIndexToModel(selectedRow);
             String maNhanVien = (String) modelNhanVien.getValueAt(modelRow, 0);
-            // tạo tên đăng nhập bằng tên nhân viên
             String tennv = (nhanVienDAO.timNhanVien(maNhanVien)).getTenNhanVien();
 
             try {
@@ -155,10 +179,8 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
                     boolean success = taiKhoanDAO.themTaiKhoan(newTaiKhoan);
                     if (success) {
                         JOptionPane.showMessageDialog(this, "Tạo tài khoản thành công.");
-
-                        loadTaiKhoanData(); // Bảng TK có thêm 1 người
-                        loadNhanVienData(); // Bảng NV mất 1 người (vì đã có TK)
-
+                        loadTaiKhoanData();
+                        loadNhanVienData();
                         tableCardLayout.show(tableCardPanel, "TAI_KHOAN");
                         styleTabLabel(lblTabTaiKhoan, true);
                         styleTabLabel(lblTabNhanVien, false);
@@ -232,19 +254,20 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
     private JPanel createSearchPanel() {
         JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.Y_AXIS));
-        searchPanel.setPreferredSize(new Dimension(550, 200));
+        searchPanel.setPreferredSize(new Dimension(600, 210));
         searchPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
+        searchPanel.setMinimumSize(new Dimension(300, 210));
         searchPanel.setBackground(CustomUI.white);
         searchPanel.setBorder(new FlatLineBorder(new Insets(12, 12, 12, 12), Color.decode("#CED4DA"), 2, 30));
 
         JPanel row1 = new JPanel();
         row1.setLayout(new BoxLayout(row1, BoxLayout.X_AXIS));
         row1.setBackground(CustomUI.white);
+        row1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
-        // 1. ComboBox chọn loại tìm kiếm
         String[] searchOptions = {"Tên đăng nhập", "Mã tài khoản"};
         cmbTimKiem = new JComboBox<>(searchOptions);
-        Dimension comboSize = new Dimension(180, 45);
+        Dimension comboSize = new Dimension(150, 45);
         cmbTimKiem.setPreferredSize(comboSize);
         cmbTimKiem.setMaximumSize(comboSize);
         cmbTimKiem.setMinimumSize(comboSize);
@@ -257,26 +280,23 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
         pnlTimKiemCards.setBackground(CustomUI.white);
         pnlTimKiemCards.setAlignmentY(Component.CENTER_ALIGNMENT);
 
-        int newTextWidth = 300;
+        int newTextWidth = SEARCH_TEXT_SIZE.width;
         int textHeight = comboSize.height;
         Dimension textPanelSize = new Dimension(newTextWidth, textHeight);
 
-        pnlTimKiemCards.setPreferredSize(textPanelSize);
-        pnlTimKiemCards.setMaximumSize(textPanelSize);
+        pnlTimKiemCards.setPreferredSize(new Dimension(100, 45));
+        pnlTimKiemCards.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         pnlTimKiemCards.setMinimumSize(textPanelSize);
 
-        // 3. Tạo các ô nhập liệu với placeholder
         txtTimTenDN = new JTextField();
-        configureSearchTextField(txtTimTenDN, SEARCH_TEXT_SIZE, "Nhập tên đăng nhập...");
+        configureSearchTextField(txtTimTenDN, new Dimension(Integer.MAX_VALUE, 45), "Nhập tên đăng nhập...");
 
         txtTimMaTK = new JTextField();
-        configureSearchTextField(txtTimMaTK, SEARCH_TEXT_SIZE, "Nhập mã tài khoản...");
+        configureSearchTextField(txtTimMaTK, new Dimension(Integer.MAX_VALUE, 45), "Nhập mã tài khoản...");
 
-        // Thêm các ô nhập vào CardLayout
         pnlTimKiemCards.add(txtTimTenDN, "Tên đăng nhập");
         pnlTimKiemCards.add(txtTimMaTK, "Mã tài khoản");
 
-        // 4. Thêm sự kiện cho ComboBox để chuyển Card
         cmbTimKiem.addActionListener(e -> {
             String selected = (String) cmbTimKiem.getSelectedItem();
             cardLayoutTimKiem.show(pnlTimKiemCards, selected);
@@ -287,17 +307,18 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
         row1.add(pnlTimKiemCards);
         row1.add(Box.createHorizontalStrut(10));
         row1.add(searchButton);
+        searchPanel.add(Box.createVerticalStrut(15));
         searchPanel.add(row1);
         searchPanel.add(Box.createVerticalGlue());
 
 
-        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
         row2.setBackground(CustomUI.white);
         row2.add(addButton);
         row2.add(editButton);
 
         searchPanel.add(row2);
-        searchPanel.add(Box.createVerticalStrut(10));
+        searchPanel.add(Box.createVerticalStrut(15));
 
         searchButton.addActionListener(e ->{
             handleSearch();
@@ -356,12 +377,16 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
 
     private JPanel createCategoryPanel() {
         JPanel categoryPanel = new JPanel();
-        categoryPanel.setLayout(new GridLayout(2, 2, 15, 15));
+        categoryPanel.setLayout(new GridLayout(2, 2, 10, 10));
         categoryPanel.setBackground(CustomUI.white);
-        categoryPanel.setPreferredSize(new Dimension(400, 200));
-        categoryPanel.setMaximumSize(new Dimension(400, 200));
-        categoryPanel.setBorder(new FlatLineBorder(new Insets(12, 12, 12, 12), Color.decode("#CED4DA"), 2, 30));
 
+        Dimension panelSize = new Dimension(280, 210);
+        categoryPanel.setPreferredSize(panelSize);
+        categoryPanel.setMaximumSize(panelSize);
+        categoryPanel.setMinimumSize(panelSize);
+
+        // Insets(Top, Left, Bottom, Right) -> Tăng Left/Right lên 50-80px để nút co lại
+        categoryPanel.setBorder(new FlatLineBorder(new Insets(12, 12, 12, 12), Color.decode("#CED4DA"), 2, 30));
         categoryPanel.add(allCategoryButton);
         categoryPanel.add(leTanButton);
         categoryPanel.add(quanLyButton);
@@ -383,6 +408,7 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
 
         searchAndCategoryPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
         searchAndCategoryPanel.add(createSearchPanel());
+        searchAndCategoryPanel.add(Box.createHorizontalStrut(10));
         searchAndCategoryPanel.add(createCategoryPanel());
         add(searchAndCategoryPanel);
     }
@@ -472,13 +498,8 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
 
     private JScrollPane createTaiKhoanTable() {
         String[] columns = {"Mã tài khoản", "Tên đăng nhập", "Chức vụ", "Mã nhân viên"};
-        modelTaiKhoan = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        tblTaiKhoan = new JTable(modelTaiKhoan);
+        modelTaiKhoan = new DefaultTableModel(columns, 0);
+        tblTaiKhoan = createCustomTable(modelTaiKhoan);
 
         sorterTaiKhoan = new TableRowSorter<>(modelTaiKhoan);
         tblTaiKhoan.setRowSorter(sorterTaiKhoan);
@@ -487,16 +508,12 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
         roleComboBox = new JComboBox<>(roles);
         roleComboBox.setFont(FONT_TABLE_CELL);
 
-        TableColumn roleColumn = tblTaiKhoan.getColumnModel().getColumn(2); // Cột "Chức vụ"
-        roleColumn.setCellEditor(new DefaultCellEditor(roleComboBox));
-
         configureTable(tblTaiKhoan);
 
         JScrollPane scrollPane = new JScrollPane(tblTaiKhoan);
         configureScrollPane(scrollPane);
         return scrollPane;
     }
-
     private void filterTaiKhoanTable(String role) {
         loadTaiKhoanData();
 
@@ -512,7 +529,7 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
 
         RowFilter<DefaultTableModel, Object> rf;
         if (role == null || role.equals("Tất cả")) {
-            rf = null; // Xóa bộ lọc
+            rf = null;
         } else {
             // Lọc chính xác theo chuỗi ở cột 2 (Chức vụ)
             // Dùng regex "^" + role + "$" để đảm bảo khớp chính xác
@@ -532,7 +549,7 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
                 return false;
             }
         };
-        tblNhanVien = new JTable(modelNhanVien);
+        tblNhanVien = createCustomTable(modelNhanVien);
 
         configureTable(tblNhanVien);
 
@@ -589,31 +606,35 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
 
 
     private void configureTable(JTable table) {
-        table.setRowHeight(40);
-        table.setFont(FONT_TABLE_CELL);
-        table.setShowGrid(false);
-        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setRowHeight(48);
+        table.setFont(CustomUI.TABLE_FONT);
+
+        table.setShowGrid(true);
+        table.setGridColor(CustomUI.tableBorder);
+        table.setIntercellSpacing(new Dimension(1, 1));
+
         table.setFillsViewportHeight(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setBackground(CustomUI.white);
+        table.setSelectionBackground(CustomUI.ROW_SELECTED_COLOR);
 
         JTableHeader header = table.getTableHeader();
-        header.setPreferredSize(new Dimension(header.getPreferredSize().width, 45));
+        header.setPreferredSize(new Dimension(header.getPreferredSize().width, 42)); // Chiều cao header
         header.setBackground(CustomUI.blue);
         header.setForeground(CustomUI.white);
-        header.setFont(FONT_TABLE_HEADER);
+        header.setFont(CustomUI.HEADER_FONT);
         header.setReorderingAllowed(false);
 
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-
-        DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
-        leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
-        leftRenderer.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
-
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
+
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                table.repaint();
+            }
+        });
     }
 
     private void configureScrollPane(JScrollPane scrollPane) {
@@ -688,5 +709,36 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
         button.putClientProperty(FlatClientProperties.STYLE, "arc: 20; borderWidth: 2; borderColor:" + borderHex);
 
         return button;
+    }
+
+    private JTable createCustomTable(DefaultTableModel model) {
+        return new JTable(model) {
+            @Override
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                c.setFont(CustomUI.TABLE_FONT);
+
+                // Xử lý màu nền khi chọn dòng hoặc xen kẽ chẵn lẻ
+                if (isRowSelected(row)) {
+                    c.setBackground(CustomUI.ROW_SELECTED_COLOR);
+                    c.setForeground(CustomUI.black);
+                } else {
+                    if (row % 2 == 0) {
+                        c.setBackground(CustomUI.ROW_EVEN != null ? CustomUI.ROW_EVEN : Color.WHITE);
+                    } else {
+                        c.setBackground(CustomUI.ROW_ODD != null ? CustomUI.ROW_ODD : new Color(0xF7F9FB));
+                    }
+                    c.setForeground(CustomUI.black);
+                }
+
+                if (c instanceof JLabel) {
+                    ((JLabel) c).setHorizontalAlignment(JLabel.CENTER);
+                }
+
+                ((JComponent) c).setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, CustomUI.tableBorder));
+
+                return c;
+            }
+        };
     }
 }

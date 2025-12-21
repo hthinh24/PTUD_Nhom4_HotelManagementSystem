@@ -33,7 +33,7 @@ public class QuanLyNhanVienPanel extends RoleChecking {
     private static final Dimension ACTION_BUTTON_SIZE = new Dimension(220, 50);
     private static final int TOP_PANEL_HEIGHT = 40;
 
-    private static final Font FONT_LABEL = new Font("Arial", Font.BOLD, 14);
+    private static final Font FONT_LABEL = new Font("Arial", Font.PLAIN, 14);
     private static final Font FONT_ACTION = new Font("Arial", Font.BOLD, 18);
     private static final Font TABLE_FONT = FONT_LABEL;
     private static final Font HEADER_FONT = new Font("Arial", Font.BOLD, 15);
@@ -44,11 +44,11 @@ public class QuanLyNhanVienPanel extends RoleChecking {
     private JButton addButton;
     private JButton deleteButton;
     private JButton editButton;
-    private JButton refreshButton; // Nút mới
+    private JButton refreshButton;
 
     private JTable table;
     private DefaultTableModel tableModel;
-    private NhanVienDAO nhanVienDao; // DAO
+    private NhanVienDAO nhanVienDao;
     private EmployeeService employeeService;
     private NhanVien nhanVien;
     private JComboBox<String> searchTypeComboBox;
@@ -468,10 +468,9 @@ public class QuanLyNhanVienPanel extends RoleChecking {
         table.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
 
         DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
-        leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+        leftRenderer.setHorizontalAlignment(SwingConstants.CENTER);
         leftRenderer.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
         table.getColumnModel().getColumn(1).setCellRenderer(leftRenderer);
-
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(null);

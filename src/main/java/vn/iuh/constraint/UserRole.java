@@ -2,7 +2,7 @@ package vn.iuh.constraint;
 
 public enum UserRole {
     QUAN_LY("CV002"),
-    NHAN_VIEN("CV001"),
+    LE_TAN("CV001"),
     ADMIN("CV003"),
     KHONG_XAC_DINH("CV004");
     public final String maChucVu;
@@ -18,4 +18,6 @@ public enum UserRole {
         }
         return null;
     }
+
+
 }
