@@ -9,19 +9,11 @@ import vn.iuh.util.AccountUtil;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * JDialog để thêm hoặc chỉnh sửa thông tin TaiKhoan.
- * Kế thừa phong cách từ EmployeeDialog.
- */
 public class AccountDialog extends JDialog {
 
-    // --- Định nghĩa Style (Sao chép từ EmployeeDialog) ---
     private static final Font FONT_LABEL = new Font("Arial", Font.BOLD, 14);
     private static final Font FONT_FIELD = new Font("Arial", Font.PLAIN, 14);
     private static final Font FONT_BUTTON = new Font("Arial", Font.BOLD, 15);
-
-    private static final Dimension FIELD_SIZE = new Dimension(350, 40);
-    private static final Dimension LABEL_SIZE = new Dimension(120, FIELD_SIZE.height);
 
     private JTextField txtMaTK, txtMaNV, txtTenDangNhap;
     private JPasswordField txtMatKhau;
@@ -197,76 +189,53 @@ public class AccountDialog extends JDialog {
         txtMatKhau.setText("");
         txtMatKhau.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "******");
 
-        // Chuyển đổi mã CV (CV001) sang tên (Lễ tân)
         cmbChucVu.setSelectedItem(convertMaChucVuToTen(tk.getMaChucVu()));
 
-        // --- Mã không được chỉnh sửa ===
         txtMaTK.setEnabled(false);
         txtMaNV.setEnabled(false);
         txtMaTK.setBackground(Color.decode("#E5E7EB"));
         txtMaNV.setBackground(Color.decode("#E5E7EB"));
     }
 
-    /**
-     * Gán sự kiện cho các nút
-     */
     private void initEvents() {
         btnSave.addActionListener(e -> onSave());
         btnCancel.addActionListener(e -> onCancel());
     }
 
-    /**
-     * Xử lý khi nhấn Hủy
-     */
     private void onCancel() {
         isSaved = false;
         dispose();
     }
 
-    /**
-     * Xử lý khi nhấn Lưu
-     */
     private void onSave() {
         if (!validateInput()) {
-            return; // Dừng lại nếu dữ liệu không hợp lệ
+            return;
         }
 
-        // Nếu là chế độ "Thêm", tạo đối tượng mới
         if (!isEditMode) {
             this.taiKhoan = new TaiKhoan();
             this.taiKhoan.setMaTaiKhoan(txtMaTK.getText());
             this.taiKhoan.setMaNhanVien(txtMaNV.getText());
         }
-
-        // Cập nhật thông tin từ form vào đối tượng taiKhoan
         this.taiKhoan.setTenDangNhap(txtTenDangNhap.getText().trim());
-        // Lấy mật khẩu từ JPasswordField
         this.taiKhoan.setMatKhau(new String(txtMatKhau.getPassword()));
 
         // Chuyển đổi tên Ví d như (Lễ tân) về mã (CV001)
         String selectedRole = (String) cmbChucVu.getSelectedItem();
         this.taiKhoan.setMaChucVu(convertTenToMaChucVu(selectedRole));
-
         String matKhauMoi = new String(txtMatKhau.getPassword()).trim();
-
         if (!matKhauMoi.isEmpty()) {
-
             String matKhauDaMaHoa = SecurityConfig.hashPassword(matKhauMoi);
-
             this.taiKhoan.setMatKhau(matKhauDaMaHoa);
         }
 
         isSaved = true;
-        dispose(); // Đóng dialog
+        dispose();
     }
 
-    /**
-     * Kiểm tra tính hợp lệ của dữ liệu
-     */
     private boolean validateInput() {
         String tenDN = txtTenDangNhap.getText().trim();
         String matKhau = new String(txtMatKhau.getPassword()).trim();
-
         if (tenDN.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Tên đăng nhập không được để trống.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             txtTenDangNhap.requestFocus();
@@ -305,7 +274,7 @@ public class AccountDialog extends JDialog {
         return true;
     }
     private String convertMaChucVuToTen(String maChucVu) {
-        if (maChucVu == null) return "Lễ tân"; // Mặc định
+        if (maChucVu == null) return "Lễ tân";
         return switch (maChucVu.trim().toUpperCase()) {
             case "CV001" -> "Lễ tân";
             case "CV002" -> "Quản lý";
@@ -315,7 +284,7 @@ public class AccountDialog extends JDialog {
     }
 
     private String convertTenToMaChucVu(String tenChucVu) {
-        if (tenChucVu == null) return "CV001"; // Mặc định
+        if (tenChucVu == null) return "CV001";
         return switch (tenChucVu) {
             case "Lễ tân" -> "CV001";
             case "Quản lý" -> "CV002";
@@ -324,18 +293,10 @@ public class AccountDialog extends JDialog {
         };
     }
 
-    // --- Các phương thức Public để Panel chính gọi ---
-
-    /**
-     * Lấy đối tượng TaiKhoan sau khi nhấn "Lưu"
-     */
     public TaiKhoan getTaiKhoan() {
         return this.taiKhoan;
     }
 
-    /**
-     * Kiểm tra xem người dùng đã nhấn "Lưu" hay "Hủy"
-     */
     public boolean isSaved() {
         return this.isSaved;
     }

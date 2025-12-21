@@ -82,7 +82,7 @@ public class NhanVienDAO {
     }
 
     public List<NhanVien> dsNhanVienChuaCoTaiKhoan() {
-        String query = "select * from NhanVien nv left join TaiKhoan tk on nv.ma_nhan_vien = tk.ma_nhan_vien where tk.ma_tai_khoan is null";
+        String query = "select * from NhanVien nv left join TaiKhoan tk on nv.ma_nhan_vien = tk.ma_nhan_vien where tk.ma_tai_khoan is null and nv.da_xoa = 0";
         List<NhanVien> dsNhanVienChuaCoTaiKhoan = new ArrayList<>();
 
         try {

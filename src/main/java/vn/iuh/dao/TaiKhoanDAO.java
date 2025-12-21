@@ -1,9 +1,6 @@
 package vn.iuh.dao;
 
-import org.mindrot.jbcrypt.BCrypt;
 import vn.iuh.config.SecurityConfig;
-import vn.iuh.constraint.UserRole;
-import vn.iuh.entity.DonDatPhong;
 import vn.iuh.entity.NhanVien;
 import vn.iuh.entity.TaiKhoan;
 import vn.iuh.exception.TableEntityMismatch;
@@ -90,6 +87,31 @@ public class TaiKhoanDAO {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public boolean xacThucThongTin(NhanVien nhanVien, TaiKhoan taiKhoan) {
+
+        if (nhanVien == null || taiKhoan == null) {
+            return false;
+        }
+
+        String query = "select 1 from NhanVien nv join TaiKhoan tk on nv.ma_nhan_vien = nv.ma_nhan_vien where "
+                    +"nv.ten_nhan_vien = ? and nv.CCCD = ? and nv.so_dien_thoai = ? and tk.ten_dang_nhap = ?";
+
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+            ps.setString(1, nhanVien.getTenNhanVien());
+            ps.setString(2, nhanVien.getCCCD());
+            ps.setString(3, nhanVien.getSoDienThoai());
+            ps.setString(4, taiKhoan.getTenDangNhap());
+
+            var rs = ps.executeQuery();
+            return rs.next();
+        } catch(SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     // tìm xem nhân viên đã có tài khoản hay chưa

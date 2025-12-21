@@ -423,6 +423,90 @@ public class CheckOutServiceImpl implements CheckOutService {
         DatabaseUtil.thucHienGiaoTac();
     }
 
+    @Override
+    public boolean canExtendCheckoutLate(String maChiTietDatPhong) {
+        String reservationFormId = chiTietDatPhongDAO.findFormIDByDetail(maChiTietDatPhong);
+        DonDatPhong donDatPhong = datPhongDAO.timDonDatPhong(reservationFormId);
+        if (donDatPhong == null) {
+            throw new BusinessException("Không tìm thấy đơn đặt phòng");
+        }
+
+        if (donDatPhong.isDaGiaHanTre()) return false;
+
+        return true;
+    }
+
+    @Override
+    public long getMaxExtendCheckoutLateMillis(String maChiTietDatPhong) {
+        String reservationFormId = chiTietDatPhongDAO.findFormIDByDetail(maChiTietDatPhong);
+        List<ThongTinSuDungPhong> danhSachPhong = chiTietDatPhongDAO.layThongTinSuDungPhong(reservationFormId);
+
+        // Get all rooms that are currently in use, kieu_ket_thuc is null
+        List<ThongTinSuDungPhong> danhSachPhongDangSuDung = danhSachPhong.stream()
+                .filter(p -> p.getKieuKetThuc() == null)
+                .toList();
+
+        List<String> danhSachMaPhongDangSuDung = danhSachPhongDangSuDung.stream()
+                .map(ThongTinSuDungPhong::getMaPhong)
+                .toList();
+
+        List<CongViec> danhSachCongViecChoCheckin = congViecDAO.layCacCongViecChoDanhSachMaPhongVoiTrangThai(
+                danhSachMaPhongDangSuDung,
+                RoomStatus.ROOM_BOOKED_STATUS.getStatus()
+        );
+
+        long extendTime =  (WorkTimeCost.CHECKOUT_LATE_MAX.getMinutes()
+                            - WorkTimeCost.CHECKOUT_LATE_MIN.getMinutes())
+                * 60L * 1000L;
+
+        System.out.println("Danh sách công việc chờ checkin: " + danhSachCongViecChoCheckin);
+
+        if (danhSachCongViecChoCheckin.isEmpty()) {
+            return extendTime;
+        }
+
+        // Get min of extend time, cal by checkin of next job - now
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        long minExtendMillis = Long.MAX_VALUE;
+        for (CongViec cv : danhSachCongViecChoCheckin) {
+            long extendMillis = cv.getTgBatDau().getTime() - now.getTime();
+            if (extendMillis < minExtendMillis) {
+                minExtendMillis = extendMillis;
+            }
+        }
+
+        return Math.min(extendTime, minExtendMillis);
+    }
+
+    @Override
+    public boolean extendCheckoutLate(String maChiTietDatPhong, long maxExtendMillis) {
+        String reservationFormId = chiTietDatPhongDAO.findFormIDByDetail(maChiTietDatPhong);
+
+        List<ThongTinSuDungPhong> danhSachThongTinSuDungPhong = chiTietDatPhongDAO.layThongTinSuDungPhong(reservationFormId);
+        List<String> danhSachMaChiTietDatPhong = new ArrayList<>();
+        for (ThongTinSuDungPhong tt : danhSachThongTinSuDungPhong) {
+            if (tt.getKieuKetThuc() == null) {
+                danhSachMaChiTietDatPhong.add(tt.getMaChiTietDatPhong());
+            }
+        }
+
+        List<CongViec> congViecs = congViecDAO.layCacCongViecChoDanhSachMaPhongVoiTrangThai(
+                danhSachMaChiTietDatPhong,
+                RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus()
+        );
+
+        List<String> danhSachMaCongViec = congViecs.stream()
+                .map(CongViec::getMaCongViec)
+                .toList();
+
+        boolean isSuccess = congViecDAO.capNhatThoiGianKetThucChoDanhSachCongViec(danhSachMaCongViec, maxExtendMillis);
+        if (!isSuccess) {
+            return false;
+        }
+
+        return true;
+    }
+
     private void xoaCongViecChoCheckIn(String maDonDatPhong){
         if(maDonDatPhong == null) return;
 

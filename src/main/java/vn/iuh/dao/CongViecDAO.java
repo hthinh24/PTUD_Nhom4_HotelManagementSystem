@@ -133,6 +133,48 @@ public class CongViecDAO {
         return null;
     }
 
+    public List<CongViec> layCacCongViecChoDanhSachMaPhongVoiTrangThai(List<String> danhSachMaPhongDangSuDung, String status) {
+        StringBuilder string = new StringBuilder(
+                "SELECT * FROM CongViec " +
+                "JOIN Phong p ON CongViec.ma_phong = p.ma_phong " +
+                "JOIN ChiTietDatPhong ctdp ON p.ma_phong = ctdp.ma_phong " +
+                "WHERE ctdp.da_xoa = 0 AND ctdp.kieu_ket_thuc IS NULL AND p.da_xoa = 0 AND CongViec.da_xoa = 0 " +
+                "AND ctdp.ma_chi_tiet_dat_phong IN ("
+        );
+        for (int i = 0; i < danhSachMaPhongDangSuDung.size(); i++) {
+            string.append("?");
+            if (i < danhSachMaPhongDangSuDung.size() - 1) {
+                string.append(", ");
+            }
+        }
+        string.append(") AND ten_trang_thai = ?");
+        String query = string.toString();
+
+        List<CongViec> danhSachCongViec = new java.util.ArrayList<>();
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+            for (int i = 0; i < danhSachMaPhongDangSuDung.size(); i++) {
+                ps.setString(i + 1, danhSachMaPhongDangSuDung.get(i));
+            }
+            ps.setString(danhSachMaPhongDangSuDung.size() + 1, status);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                danhSachCongViec.add(chuyenKetQuaThanhCongViec(rs));
+            }
+            return danhSachCongViec;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (TableEntityMismatch et) {
+            System.out.println(et.getMessage());
+        }
+
+        return danhSachCongViec;
+    }
+
     public List<CongViec> layCongViecHienTaiCuaCacPhong(List<String> danhSachMaPhong) {
         StringBuilder string = new StringBuilder(
                 "SELECT * FROM CongViec WHERE ma_phong IN ("
@@ -426,5 +468,41 @@ public class CongViecDAO {
             System.out.println(et.getMessage());
         }
         return null;
+    }
+
+    public boolean capNhatThoiGianKetThucChoDanhSachCongViec(List<String> danhSachMaCongViec, long maxExtendMillis) {
+        if (danhSachMaCongViec == null || danhSachMaCongViec.isEmpty()) {
+            return false;
+        }
+
+        StringBuilder string = new StringBuilder(
+                "UPDATE CongViec SET tg_ket_thuc = DATEADD(MILLISECOND, ?, tg_ket_thuc) WHERE ma_cong_viec IN ("
+        );
+        for (int i = 0; i < danhSachMaCongViec.size(); i++) {
+            string.append("?");
+            if (i < danhSachMaCongViec.size() - 1) {
+                string.append(", ");
+            }
+        }
+
+        string.append(")");
+        String query = string.toString();
+
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+            ps.setLong(1, maxExtendMillis);
+            for (int i = 0; i < danhSachMaCongViec.size(); i++) {
+                ps.setString(i + 2, danhSachMaCongViec.get(i));
+            }
+
+            int rowsAffected = ps.executeUpdate();
+            // Return if all rows were updated
+            return rowsAffected == danhSachMaCongViec.size();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return false;
     }
 }

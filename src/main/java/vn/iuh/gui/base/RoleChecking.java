@@ -17,24 +17,34 @@ public abstract class RoleChecking extends JPanel{
     }
 
     public final void checkRoleAndLoadData() {
-        removeAll();
+        this.removeAll();
+        try {
+            buildAdminUI();
+        } catch (Exception e) {
+            // Bỏ qua lỗi nếu việc build UI có vấn đề, ưu tiên logic check quyền bên dưới
+            e.printStackTrace();
+        }
 
         UserRole vaiTro = getCurrentUserRole();
 
-        if (vaiTro == UserRole.QUAN_LY) {
-            // NẾU LÀ QUẢN LÝ: Xây dựng UI
-            // Hàm này sẽ đặt lại layout (ví dụ: BoxLayout)
-            // và gọi init(), loadData()...
-            buildAdminUI();
+        if (checkAccess(vaiTro)) {
+            // NẾU CÓ QUYỀN:
+            // Giữ nguyên giao diện vừa build ở trên, chỉ cần repaint lại
+            revalidate();
+            repaint();
         } else {
-            // NẾU LÀ LỄ TÂN: Hiển thị thông báo lỗi
-            // Đảm bảo layout là BorderLayout để căn giữa
+            // NẾU KHÔNG CÓ QUYỀN:
+            // Xóa sạch giao diện vừa build (dù biến đã new nhưng sẽ không hiển thị)
+            removeAll();
             setLayout(new BorderLayout());
             add(createAccessDeniedPanel(), BorderLayout.CENTER);
+            revalidate();
+            repaint();
         }
+    }
 
-        revalidate();
-        repaint();
+    protected boolean checkAccess(UserRole vaiTro) {
+        return vaiTro == UserRole.QUAN_LY || vaiTro == UserRole.ADMIN;
     }
 
     private UserRole getCurrentUserRole() {
@@ -55,17 +65,30 @@ public abstract class RoleChecking extends JPanel{
         return UserRole.KHONG_XAC_DINH;
     }
 
+    private String convertVaiTroToTen(UserRole vaiTro) {
+        if (vaiTro == null) return "Lễ tân";
+        return switch (vaiTro) {
+            case LE_TAN -> "Lễ tân";
+            case QUAN_LY -> "Quản lý";
+            case ADMIN -> "Admin";
+            default -> "Lễ tân";
+        };
+    }
 
     private JPanel createAccessDeniedPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
-        JLabel lblThongBao = new JLabel("Lễ tân không có quyền truy cập chức năng này.");
+        UserRole vaiTro = getCurrentUserRole();
+        String vaiTro1 = convertVaiTroToTen(vaiTro);
+        JLabel lblThongBao = new JLabel(vaiTro1 + " không có quyền truy cập chức năng này.");
         lblThongBao.setFont(new Font("Arial", Font.BOLD, 18));
         lblThongBao.setHorizontalAlignment(SwingConstants.CENTER);
         lblThongBao.setForeground(Color.RED);
         panel.add(lblThongBao, BorderLayout.CENTER);
         return panel;
     }
+
+
 
     protected abstract void buildAdminUI();
 }

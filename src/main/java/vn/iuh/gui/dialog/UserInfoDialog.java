@@ -9,12 +9,14 @@ import vn.iuh.entity.NhanVien;
 import vn.iuh.gui.base.CustomUI;
 import vn.iuh.gui.base.Main;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.DateFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Ellipse2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -47,6 +49,7 @@ public class UserInfoDialog extends JDialog {
     private ThongTinNhanVien currentUser;
     private File selectedAvatarFile = null;
     private String maNhanVien;
+    private static final String AVATAR_DIR = "avatars";
 
     public UserInfoDialog(Frame parent, NhanVien nv) {
         super(parent, "Thông tin cá nhân", true);
@@ -193,6 +196,10 @@ public class UserInfoDialog extends JDialog {
         return panel;
     }
 
+    private File getAvatarFile() {
+        return new File(AVATAR_DIR, maNhanVien + ".png");
+    }
+
     private JPanel createButtonPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         panel.setBackground(CustomUI.white);
@@ -273,22 +280,65 @@ public class UserInfoDialog extends JDialog {
 
                 lblChucVu.setText(tenChucVu.toUpperCase());
 
-//                byte[] imageBytes = currentUser.getAnhNhanVien();
-//
-//                if (imageBytes != null && imageBytes.length > 0) {
-//                    // Nếu có ảnh trong DB -> Tải ảnh từ mảng byte[]
-//                    ImageIcon avatarIcon = new ImageIcon(imageBytes);
-//                    pnlAvatar.setImage(avatarIcon.getImage());
-//                } else {
-//                    // Nếu không có ảnh -> Tải ảnh mặc định TỪ RESOURCES
-//                    ImageIcon defaultIcon = new ImageIcon(getClass().getResource("/images/default_icon.png"));
-//                    pnlAvatar.setImage(defaultIcon.getImage());
-//                }
+                File avatarFile = getAvatarFile();
+                if (avatarFile.exists()) {
+                    pnlAvatar.setImage(new ImageIcon(avatarFile.getAbsolutePath()).getImage());
+                }
+
             }
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi khi tải thông tin cá nhân.", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private void onChooseImage(ActionEvent e) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Chọn ảnh đại diện");
+        fileChooser.setFileFilter(new FileNameExtensionFilter(
+                "Hình ảnh (*.png, *.jpg, *.jpeg)", "png", "jpg", "jpeg"
+        ));
+        fileChooser.setAcceptAllFileFilterUsed(false);
+
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            try {
+                File selectedFile = fileChooser.getSelectedFile();
+
+                // Tạo thư mục avatars nếu chưa có
+                Files.createDirectories(new File(AVATAR_DIR).toPath());
+
+                // Lưu avatar theo mã nhân viên
+                File avatarDest = getAvatarFile();
+
+                Image image = new ImageIcon(selectedFile.getAbsolutePath()).getImage();
+                BufferedImage buffered = new BufferedImage(
+                        image.getWidth(null),
+                        image.getHeight(null),
+                        BufferedImage.TYPE_INT_ARGB
+                );
+
+                Graphics2D g2 = buffered.createGraphics();
+                g2.drawImage(image, 0, 0, null);
+                g2.dispose();
+
+                ImageIO.write(buffered, "png", avatarDest);
+
+                // Hiển thị lại avatar
+                pnlAvatar.setImage(image);
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Không thể lưu ảnh đại diện!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }
+        System.out.println("Avatar path: " + getAvatarFile().getAbsolutePath());
+
     }
 
     private String convertMaChucVuToTen(String maChucVu) {
@@ -306,24 +356,9 @@ public class UserInfoDialog extends JDialog {
         btnDoiMatKhau.addActionListener(this::DoiMatKhau);
     }
 
-    private void onChooseImage(ActionEvent e) {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Chọn ảnh đại diện");
-        fileChooser.setFileFilter(new FileNameExtensionFilter("Hình ảnh (*.png, *.jpg, *.jpeg)", "png", "jpg", "jpeg"));
-        fileChooser.setAcceptAllFileFilterUsed(false);
-
-        int result = fileChooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            this.selectedAvatarFile = fileChooser.getSelectedFile();
-            ImageIcon icon = new ImageIcon(selectedAvatarFile.getAbsolutePath());
-            pnlAvatar.setImage(icon.getImage());
-        }
-    }
-
     private void DoiMatKhau(ActionEvent e) {
          PasswordChangeDialog dialog = new PasswordChangeDialog((Frame) SwingUtilities.getWindowAncestor(this), this.maNhanVien);
          dialog.setVisible(true);
-
     }
 
 }

@@ -5,6 +5,7 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import vn.iuh.gui.base.CustomUI;
+import vn.iuh.gui.base.RoleChecking;
 import vn.iuh.gui.dialog.ChiTietLoaiPhongDialog;
 import vn.iuh.gui.dialog.SuaLoaiPhongDialog;
 import vn.iuh.gui.dialog.ThemLoaiPhongDialog;
@@ -40,7 +41,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Supplier;
 
-public class QuanLyLoaiPhongPanel extends JPanel {
+public class QuanLyLoaiPhongPanel extends RoleChecking {
 
     // ADJUSTED sizes: make search components wider and action buttons larger/harmonized
     private static final Dimension SEARCH_TEXT_SIZE = new Dimension(520, 45);
@@ -53,7 +54,6 @@ public class QuanLyLoaiPhongPanel extends JPanel {
 
     private static final Font FONT_MA         = new Font("Arial", Font.PLAIN, 14);
     private static final Font FONT_NAME       = new Font("Arial", Font.BOLD, 22);
-    private static final Font FONT_PEOPLE     = new Font("Arial", Font.BOLD, 18);
     private static final Font FONT_PHANLOAI   = new Font("Arial", Font.BOLD, 18);
 
     private final JTextField searchTextField = new JTextField();
@@ -85,6 +85,11 @@ public class QuanLyLoaiPhongPanel extends JPanel {
     // removed people/category buttons -> no more activePeopleFilter
 
     public QuanLyLoaiPhongPanel() {
+        super();
+    }
+
+    @Override
+    protected void buildAdminUI() {
         // không khởi tạo service ngay tại startup để giảm blocking UI
         this.loaiPhongService = null;
         this.noiThatService = null;

@@ -2,8 +2,10 @@ package vn.iuh.gui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.ui.FlatLineBorder;
+import vn.iuh.constraint.UserRole;
 import vn.iuh.dto.response.ServiceResponse;
 import vn.iuh.gui.base.CustomUI;
+import vn.iuh.gui.base.RoleChecking;
 import vn.iuh.gui.dialog.ChiTietDichVuDialog;
 import vn.iuh.gui.dialog.ServiceStockEditDialog;
 import vn.iuh.gui.dialog.SuaDichVuDialog;
@@ -26,7 +28,7 @@ import java.util.*;
 import java.util.List;
 import java.util.Objects;
 
-public class QuanLyDichVuPanel extends JPanel {
+public class QuanLyDichVuPanel extends RoleChecking {
 
     // Kích thước / font reuse (tương tự QuanLyPhongPanel / QuanLyKhachHangPanel)
     private static final Dimension SEARCH_TEXT_SIZE = new Dimension(520, 45);
@@ -64,6 +66,15 @@ public class QuanLyDichVuPanel extends JPanel {
     private final ServiceService serviceService = new ServiceImpl();
 
     public QuanLyDichVuPanel() {
+        super();
+    }
+    @Override
+    protected boolean checkAccess(UserRole vaiTro) {
+        // Cho phép cả ADMIN và QUẢN LÝ
+        return vaiTro == UserRole.ADMIN || vaiTro == UserRole.QUAN_LY;
+    }
+    @Override
+    protected void buildAdminUI() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(CustomUI.white);
         initSampleData();

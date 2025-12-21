@@ -10,6 +10,7 @@ public class DonDatPhong {
     private double tongTienDuTinh;
     private double tienDatCoc;
     private boolean daDatTruoc;
+    private boolean daGiaHanTre;
     private String loai;
     private String maKhachHang;
     private String maPhienDangNhap;
@@ -29,6 +30,24 @@ public class DonDatPhong {
         this.tongTienDuTinh = tongTienDuTinh;
         this.tienDatCoc = tienDatCoc;
         this.daDatTruoc = daDatTruoc;
+        this.loai = loai;
+        this.maKhachHang = maKhachHang;
+        this.maPhienDangNhap = maPhienDangNhap;
+        this.thoiGianTao = thoiGianTao;
+        this.daXoa = daXoa;
+    }
+
+    public DonDatPhong(String maDonDatPhong, String moTa, Timestamp tgNhanPhong, Timestamp tgTraPhong,
+                       double tongTienDuTinh, double tienDatCoc, boolean daDatTruoc, boolean daGiaHanTre, String loai,
+                       String maKhachHang, String maPhienDangNhap, String thoiGianTao, boolean daXoa) {
+        this.maDonDatPhong = maDonDatPhong;
+        this.moTa = moTa;
+        this.tgNhanPhong = tgNhanPhong;
+        this.tgTraPhong = tgTraPhong;
+        this.tongTienDuTinh = tongTienDuTinh;
+        this.tienDatCoc = tienDatCoc;
+        this.daDatTruoc = daDatTruoc;
+        this.daGiaHanTre = daGiaHanTre;
         this.loai = loai;
         this.maKhachHang = maKhachHang;
         this.maPhienDangNhap = maPhienDangNhap;
@@ -90,6 +109,10 @@ public class DonDatPhong {
 
     public void setDaDatTruoc(boolean daDatTruoc) {
         this.daDatTruoc = daDatTruoc;
+    }
+
+    public boolean isDaGiaHanTre() {
+        return daGiaHanTre;
     }
 
     public String getLoai() {

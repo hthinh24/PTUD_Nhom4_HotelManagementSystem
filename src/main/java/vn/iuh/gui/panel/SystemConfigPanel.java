@@ -2,9 +2,11 @@ package vn.iuh.gui.panel;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import vn.iuh.constraint.Fee;
+import vn.iuh.constraint.UserRole;
 import vn.iuh.dto.repository.ThongTinPhuPhi;
 import vn.iuh.dto.repository.WarningReservation;
 import vn.iuh.gui.base.CustomUI;
+import vn.iuh.gui.base.RoleChecking;
 import vn.iuh.gui.dialog.PhuPhiDialog;
 import vn.iuh.service.WarningReservationService;
 import vn.iuh.service.impl.WarningReservationImpl;
@@ -32,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-public class SystemConfigPanel extends JPanel {
+public class SystemConfigPanel extends RoleChecking {
     private JTextField vatRateField;
     private JTextField backupDirField;
     private JTextField backupNameField;
@@ -72,6 +74,16 @@ public class SystemConfigPanel extends JPanel {
 
 
     public SystemConfigPanel() {
+        super();
+    }
+
+    @Override
+    protected boolean checkAccess(UserRole vaiTro) {
+        return vaiTro == UserRole.ADMIN;
+    }
+
+    @Override
+    protected void buildAdminUI() {
         setLayout(new BorderLayout(10, 10));
         setBackground(Color.WHITE);
 
