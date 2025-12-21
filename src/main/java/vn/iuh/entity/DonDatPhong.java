@@ -14,7 +14,7 @@ public class DonDatPhong {
     private String loai;
     private String maKhachHang;
     private String maPhienDangNhap;
-    private String thoiGianTao;
+    private Timestamp thoiGianTao;
     private boolean daXoa;
 
     public DonDatPhong() {
@@ -22,7 +22,7 @@ public class DonDatPhong {
 
     public DonDatPhong(String maDonDatPhong, String moTa, Timestamp tgNhanPhong, Timestamp tgTraPhong,
                        double tongTienDuTinh, double tienDatCoc, boolean daDatTruoc, String loai, String maKhachHang,
-                       String maPhienDangNhap, String thoiGianTao, boolean daXoa) {
+                       String maPhienDangNhap, Timestamp thoiGianTao, boolean daXoa) {
         this.maDonDatPhong = maDonDatPhong;
         this.moTa = moTa;
         this.tgNhanPhong = tgNhanPhong;
@@ -39,7 +39,7 @@ public class DonDatPhong {
 
     public DonDatPhong(String maDonDatPhong, String moTa, Timestamp tgNhanPhong, Timestamp tgTraPhong,
                        double tongTienDuTinh, double tienDatCoc, boolean daDatTruoc, boolean daGiaHanTre, String loai,
-                       String maKhachHang, String maPhienDangNhap, String thoiGianTao, boolean daXoa) {
+                       String maKhachHang, String maPhienDangNhap, Timestamp thoiGianTao, boolean daXoa) {
         this.maDonDatPhong = maDonDatPhong;
         this.moTa = moTa;
         this.tgNhanPhong = tgNhanPhong;
@@ -135,11 +135,11 @@ public class DonDatPhong {
         this.maPhienDangNhap = maPhienDangNhap;
     }
 
-    public String getThoiGianTao() {
+    public Timestamp getThoiGianTao() {
         return thoiGianTao;
     }
 
-    public void setThoiGianTao(String thoiGianTao) {
+    public void setThoiGianTao(Timestamp thoiGianTao) {
         this.thoiGianTao = thoiGianTao;
     }
 
