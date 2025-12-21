@@ -2,10 +2,8 @@ package vn.iuh.gui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.ui.FlatLineBorder;
-import vn.iuh.constraint.UserRole;
 import vn.iuh.dto.response.ServiceResponse;
 import vn.iuh.gui.base.CustomUI;
-import vn.iuh.gui.base.RoleChecking;
 import vn.iuh.gui.dialog.ChiTietDichVuDialog;
 import vn.iuh.gui.dialog.ServiceStockEditDialog;
 import vn.iuh.gui.dialog.SuaDichVuDialog;
@@ -28,7 +26,7 @@ import java.util.*;
 import java.util.List;
 import java.util.Objects;
 
-public class QuanLyDichVuPanel extends RoleChecking {
+public class TimDichVuPanel extends JPanel {
 
     // Kích thước / font reuse (tương tự QuanLyPhongPanel / QuanLyKhachHangPanel)
     private static final Dimension SEARCH_TEXT_SIZE = new Dimension(520, 45);
@@ -65,16 +63,7 @@ public class QuanLyDichVuPanel extends RoleChecking {
 
     private final ServiceService serviceService = new ServiceImpl();
 
-    public QuanLyDichVuPanel() {
-        super();
-    }
-    @Override
-    protected boolean checkAccess(UserRole vaiTro) {
-        // Cho phép cả ADMIN và QUẢN LÝ
-        return vaiTro == UserRole.ADMIN || vaiTro == UserRole.QUAN_LY;
-    }
-    @Override
-    protected void buildAdminUI() {
+    public TimDichVuPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(CustomUI.white);
         initSampleData();
@@ -261,7 +250,7 @@ public class QuanLyDichVuPanel extends RoleChecking {
 
     private void createTopPanel() {
         JPanel pnlTop = new JPanel(new BorderLayout());
-        JLabel lblTop = new JLabel("QUẢN LÝ DỊCH VỤ", SwingConstants.CENTER);
+        JLabel lblTop = new JLabel("TÌM DỊCH VỤ", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
         lblTop.setFont(CustomUI.bigFont);
 
@@ -277,13 +266,6 @@ public class QuanLyDichVuPanel extends RoleChecking {
         add(pnlTop);
     }
 
-    /**
-     * Tạo panel tìm kiếm + action giống phong cách QuanLyKhachHangPanel:
-     * - Combo chọn kiểu tìm (Tên dịch vụ / Loại dịch vụ)
-     * - Khi "Loại dịch vụ" được chọn -> hiển thị combobox loại để tìm
-     * - TextField (placeholder bold) + nút TÌM
-     * - Hàng nút hành động (Thêm / Sửa / Xóa) căn giữa
-     */
     private void createSearchAndActionPanel() {
         JPanel container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));
@@ -294,8 +276,8 @@ public class QuanLyDichVuPanel extends RoleChecking {
         searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.Y_AXIS));
         searchPanel.setBackground(CustomUI.white);
         searchPanel.setBorder(new FlatLineBorder(new Insets(12,12,12,12), Color.decode("#CED4DA"), 2, 25));
-        searchPanel.setPreferredSize(new Dimension(0, 200));
-        searchPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 240));
+        searchPanel.setPreferredSize(new Dimension(0, 100));
+        searchPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
         // search type combo (Tên dịch vụ / Loại dịch vụ)
         String[] searchOptions = {"Tên dịch vụ", "Loại dịch vụ"};
@@ -346,25 +328,7 @@ public class QuanLyDichVuPanel extends RoleChecking {
         searchButton.setAlignmentY(Component.CENTER_ALIGNMENT);
         row1.add(searchButton);
 
-        searchPanel.add(Box.createVerticalStrut(8));
         searchPanel.add(row1);
-        searchPanel.add(Box.createVerticalStrut(12));
-
-        // Row 2: action buttons centered
-        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 8));
-        row2.setBackground(CustomUI.white);
-        addButton.setPreferredSize(ACTION_BUTTON_SIZE);
-        editButton.setPreferredSize(ACTION_BUTTON_SIZE);
-        deleteButton.setPreferredSize(ACTION_BUTTON_SIZE);
-        adjustStockButton.setPreferredSize(ACTION_BUTTON_SIZE);
-        row2.add(addButton);
-        row2.add(editButton);
-        row2.add(deleteButton);
-        row2.add(adjustStockButton);
-
-
-        searchPanel.add(row2);
-        searchPanel.add(Box.createVerticalStrut(8));
 
         // Behavior: switch input when searchType changed
         searchTypeComboBox.addActionListener(e -> {
@@ -493,7 +457,7 @@ public class QuanLyDichVuPanel extends RoleChecking {
                             sr.setGiaHienTai(d.getGia());
 
                             // Show dialog (this is a Component within a Window)
-                            Window w = SwingUtilities.getWindowAncestor(QuanLyDichVuPanel.this);
+                            Window w = SwingUtilities.getWindowAncestor(TimDichVuPanel.this);
                             ChiTietDichVuDialog dialog = new ChiTietDichVuDialog(w, sr, serviceService);
                             dialog.setVisible(true);
                         }

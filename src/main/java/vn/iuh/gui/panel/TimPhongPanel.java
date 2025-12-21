@@ -5,7 +5,6 @@ import com.formdev.flatlaf.ui.FlatLineBorder;
 import vn.iuh.entity.CongViec;
 import vn.iuh.entity.LoaiPhong;
 import vn.iuh.entity.Phong;
-import vn.iuh.gui.base.RoleChecking;
 import vn.iuh.gui.dialog.PhongDialog;
 import vn.iuh.gui.dialog.SuaPhongDialog;
 import vn.iuh.gui.dialog.ThemPhongDialog;
@@ -16,7 +15,6 @@ import vn.iuh.service.impl.LoaiPhongServiceImpl;
 import vn.iuh.service.impl.RoomServiceImpl;
 import vn.iuh.util.AppEventBus;
 
-import javax.management.relation.Role;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -31,17 +29,14 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class QuanLyPhongPanel extends RoleChecking {
+public class TimPhongPanel extends JPanel {
 
     // matched to QuanLyKhachHangPanel sizing
     private static final int SEARCH_CONTROL_HEIGHT = 40;
     private static final Dimension SEARCH_TEXT_SIZE = new Dimension(520, SEARCH_CONTROL_HEIGHT);
-    private static final Dimension SEARCH_BUTTON_SIZE = new Dimension(110, SEARCH_CONTROL_HEIGHT);
-    private static final Dimension ACTION_BUTTON_SIZE = new Dimension(290, 50);
 
     // Fonts tái sử dụng
     private static final Font FONT_LABEL      = new Font("Arial", Font.BOLD, 14); // bold like customer panel
-    private static final Font FONT_ACTION     = new Font("Arial", Font.BOLD, 18);
     private static final Font FONT_CATEGORY   = new Font("Arial", Font.BOLD, 18);
 
     // Fonts cho thẻ phòng (không dùng nhiều trong phiên bản table nhưng giữ để tương thích)
@@ -51,11 +46,7 @@ public class QuanLyPhongPanel extends RoleChecking {
     // Các thành phần trong panel tìm kiếm (một số biến được promote lên fields để dễ reload)
     private final JTextField searchTextField = new JTextField();
     private final JButton searchButton = new JButton("TÌM");
-    private JButton addButton;
-    private JButton deleteButton;
-    private JButton editButton;
 
-    // Fields mới: để có thể reload search panel (category) từ bên ngoài createSearchPanel
     private JComboBox<String> categoryComboBox;
     private Map<String, String> categoryNameToId = new HashMap<>();
     private JTextField roomCodeField;  // alias tới searchTextField
@@ -78,13 +69,7 @@ public class QuanLyPhongPanel extends RoleChecking {
 
 
     // Constructor
-    public QuanLyPhongPanel() {
-        super();
-        checkRoleAndLoadData();
-    }
-
-    @Override
-    protected void buildAdminUI() {
+    public TimPhongPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(CustomUI.white);
         init();
@@ -92,12 +77,12 @@ public class QuanLyPhongPanel extends RoleChecking {
 
     // Hàm init tập hợp các bước khởi tạo giao diện chính
     private void init() {
-        initButtons(); // khởi tạo và cấu hình các button + input
+        initButtons(); // khởi tạo và cấu hình các button + input (giờ chỉ cấu hình search)
 
         createTopPanel(); // Panel chứa title (Quản lý phòng)
-        add(Box.createVerticalStrut(10));
+        add(Box.createVerticalStrut(6));
         createSearchAndCategoryPanel(); // giờ chỉ thêm search panel (category panel đã bị loại bỏ)
-        add(Box.createVerticalStrut(10));
+        add(Box.createVerticalStrut(6));
 
         // Thay vì createListRoomPanel() gốc, ta tạo bảng danh sách phòng
         createRoomTablePanel();
@@ -109,164 +94,13 @@ public class QuanLyPhongPanel extends RoleChecking {
 
     }
 
-    // Tạo và cấu hình các nút/ô nhập dùng chung
+    // Tạo và cấu hình các nút/ô nhập dùng chung (chỉ cấu hình ô tìm kiếm + nút tìm)
     private void initButtons() {
         // Cấu hình ô tìm kiếm (placeholder, kích thước) - bold giống panel khách hàng
         configureSearchTextField(searchTextField, SEARCH_TEXT_SIZE, "Tìm kiếm...");
 
         // Cấu hình nút tìm (kích thước giống panel khách hàng)
-        configureSearchButton(searchButton, SEARCH_BUTTON_SIZE);
-
-        // Các nút hành động (thêm/sửa/xóa) -> kích thước giống panel khách hàng
-        addButton    = createActionButton("Thêm phòng", ACTION_BUTTON_SIZE, CustomUI.darkGreen, "#86EFAC");
-        editButton   = createActionButton("Sửa phòng", ACTION_BUTTON_SIZE, CustomUI.blue, "#93C5FD");
-        deleteButton = createActionButton("Xóa phòng", ACTION_BUTTON_SIZE, CustomUI.newRed, "#FCA5A5");
-
-        // Sự kiện của nút thêm
-        addButton.addActionListener(e -> {
-            try {
-                Window owner = SwingUtilities.getWindowAncestor(QuanLyPhongPanel.this);
-                ThemPhongDialog dialog = new ThemPhongDialog(owner, true, (RoomServiceImpl) roomService);
-                dialog.setLocationRelativeTo(owner);
-                dialog.setVisible(true);
-                // reload cả danh sách phòng và categories (trong trường hợp thêm loại phòng ảnh hưởng)
-                reloadRoomsAsync(() -> roomService.getAllQuanLyPhongPanel(), this::reloadCategories);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(QuanLyPhongPanel.this,
-                        "Không thể mở dialog thêm phòng: " + ex.getMessage(),
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        // Sửa phòng
-        editButton.addActionListener(e -> {
-            Phong sel = getSelectedPhong();
-            if (sel == null) {
-                JOptionPane.showMessageDialog(QuanLyPhongPanel.this, "Vui lòng chọn 1 phòng để sửa", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-
-            // Lấy trạng thái hiện tại của phòng (theo logic dùng trong populateRoomList)
-            String currentStatus = "CÒN TRỐNG";
-            try {
-                CongViec cv = roomService.getCurrentJobForRoom(sel.getMaPhong());
-                if (cv != null && cv.getTenTrangThai() != null && !cv.getTenTrangThai().isBlank()) {
-                    currentStatus = cv.getTenTrangThai();
-                } else if (!sel.isDangHoatDong()) {
-                    currentStatus = "BẢO TRÌ";
-                }
-            } catch (Exception ex) {
-                if (!sel.isDangHoatDong()) currentStatus = "BẢO TRÌ";
-            }
-
-            // Cho phép sửa nếu phòng đang "Trống" hoặc "Bảo trì"
-            boolean allowedToEdit = "CÒN TRỐNG".equalsIgnoreCase(currentStatus) || "BẢO TRÌ".equalsIgnoreCase(currentStatus);
-
-            if (!allowedToEdit) {
-                JOptionPane.showMessageDialog(
-                        QuanLyPhongPanel.this,
-                        "Không thể sửa phòng vì trạng thái hiện tại: " + currentStatus + ".\nChỉ cho phép sửa khi phòng ở trạng thái 'CÒN TRỐNG' hoặc 'BẢO TRÌ'.",
-                        "Không thể sửa",
-                        JOptionPane.WARNING_MESSAGE
-                );
-                return;
-            }
-
-            // Vẫn không cho sửa nếu có đơn đặt phòng trong tương lai
-            if (hasFutureBookings(sel)) {
-                JOptionPane.showMessageDialog(
-                        QuanLyPhongPanel.this,
-                        "Không thể sửa phòng vì phòng hiện có đơn đặt phòng trong tương lai!",
-                        "Không thể sửa",
-                        JOptionPane.WARNING_MESSAGE
-                );
-                return;
-            }
-
-            // Mở dialog sửa
-            try {
-                Window owner = SwingUtilities.getWindowAncestor(QuanLyPhongPanel.this);
-                SuaPhongDialog dialog = new SuaPhongDialog(owner, sel, roomService);
-                dialog.setVisible(true);
-                if (dialog.isSaved()) {
-                    // reload rooms + categories (categories nếu sửa loại liên quan)
-                    reloadRoomsAsync(() -> roomService.getAllQuanLyPhongPanel(), this::reloadCategories);
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(QuanLyPhongPanel.this, "Lỗi khi mở form sửa: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        // Xóa phòng
-        deleteButton.addActionListener(e -> {
-            Phong sel = getSelectedPhong();
-            if (sel == null) {
-                JOptionPane.showMessageDialog(QuanLyPhongPanel.this, "Vui lòng chọn 1 phòng để xóa", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-
-            boolean canDelete = true;
-            String currentStatus = "Không xác định";
-            try {
-                CongViec cv = roomService.getCurrentJobForRoom(sel.getMaPhong());
-                if (cv != null && cv.getTenTrangThai() != null && !cv.getTenTrangThai().isBlank()) {
-                    canDelete = false;
-                    currentStatus = cv.getTenTrangThai();
-                } else if (!sel.isDangHoatDong()) {
-                    canDelete = false;
-                    currentStatus = "Bảo trì";
-                } else {
-                    currentStatus = "Trống";
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                canDelete = false;
-                currentStatus = "Không xác định (lỗi khi kiểm tra trạng thái)";
-            }
-
-            if (!canDelete) {
-                JOptionPane.showMessageDialog(
-                        QuanLyPhongPanel.this,
-                        "Không thể xóa phòng vì trạng thái hiện tại: " + currentStatus + ".\nChỉ có thể xóa khi phòng đang ở trạng thái 'CÒN TRỐNG'.",
-                        "Không thể xóa",
-                        JOptionPane.WARNING_MESSAGE
-                );
-                return;
-            } else if (hasFutureBookings(sel)) {
-                JOptionPane.showMessageDialog(
-                        QuanLyPhongPanel.this,
-                        "Không thể xóa phòng vì phòng hiện có đơn đặt phòng trong tương lai!",
-                        "Không thể xóa",
-                        JOptionPane.WARNING_MESSAGE
-                );
-                return;
-            }
-
-            int ans = JOptionPane.showConfirmDialog(QuanLyPhongPanel.this, "Bạn có chắc muốn xóa phòng này không?", "Xác nhận", JOptionPane.YES_NO_OPTION);
-            if (ans != JOptionPane.YES_OPTION) return;
-
-            boolean ok = false;
-            try {
-                if (roomService instanceof RoomServiceImpl) {
-                    ok = ((RoomServiceImpl) roomService).deleteRoomWithHistory(sel.getMaPhong());
-                } else {
-                    ok = roomService.deleteRoomByID(sel.getMaPhong()); // fallback
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-
-            if (ok) {
-                JOptionPane.showMessageDialog(QuanLyPhongPanel.this, "Xóa thành công.");
-                // reload rooms + categories (nếu xóa ảnh hưởng)
-                reloadRoomsAsync(() -> roomService.getAllQuanLyPhongPanel(), this::reloadCategories);
-            } else {
-                JOptionPane.showMessageDialog(QuanLyPhongPanel.this, "Xóa thất bại.");
-            }
-        });
+        configureSearchButton(searchButton, new Dimension(110, SEARCH_CONTROL_HEIGHT));
     }
 
     // Cấu hình ô text tìm kiếm với placeholder và style FlatLaf
@@ -304,34 +138,15 @@ public class QuanLyPhongPanel extends RoleChecking {
         btn.setMinimumSize(size);
         btn.setMaximumSize(size);
         btn.setForeground(CustomUI.white);
-        btn.setFont(FONT_LABEL); // bold like customer panel
+        btn.setFont(FONT_LABEL);
         btn.setFocusPainted(false);
         btn.setBackground(Color.decode("#1D4ED8"));
         btn.setMargin(new Insets(6, 10, 6, 10));
     }
 
-    // Tạo các action button (phiên bản tối giản: không tải icon)
-    private JButton createActionButton(String text, Dimension size, Color bgHex, String borderHex) {
-        JButton button = new JButton(text);
-        button.setPreferredSize(size);
-        button.setMinimumSize(size);
-        button.setMaximumSize(size);
-        button.setFont(FONT_ACTION);
-        try {
-            button.setBackground(bgHex);
-        } catch (Exception ignored) {}
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setOpaque(true);
-
-        // Bo góc và viền màu giống các panel khác
-        button.putClientProperty(FlatClientProperties.STYLE, "arc: 20;");
-        return button;
-    }
-
     private void createTopPanel() {
         JPanel pnlTop = new JPanel(new BorderLayout());
-        JLabel lblTop = new JLabel("QUẢN LÝ PHÒNG", SwingConstants.CENTER);
+        JLabel lblTop = new JLabel("TÌM PHÒNG", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
         lblTop.setFont(CustomUI.bigFont);
 
@@ -347,16 +162,16 @@ public class QuanLyPhongPanel extends RoleChecking {
         add(pnlTop);
     }
 
-    // Panel tìm kiếm (đã chỉnh theo kiểu QuanLyKhachHangPanel)
+    // Panel tìm kiếm (đã chỉnh theo kiểu QuanLyKhachHangPanel) - kích thước thu nhỏ để hài hòa
     private JPanel createSearchPanel() {
         JPanel searchPanel = new JPanel();
-        searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.Y_AXIS));
-        searchPanel.setPreferredSize(new Dimension(0, 180));
-        searchPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
+        searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.X_AXIS));
+        searchPanel.setPreferredSize(new Dimension(0, 100)); // thu nhỏ so với trước (180 -> 60) // thu nhỏ so với trước (180 -> 120)
+        searchPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
         searchPanel.setBackground(CustomUI.white);
         searchPanel.setOpaque(true);
         // Đồng bộ border/arc với QuanLyKhachHangPanel (arc:25)
-        searchPanel.setBorder(new FlatLineBorder(new Insets(12,12,12,12), Color.decode("#CED4DA"), 2, 25));
+        searchPanel.setBorder(new FlatLineBorder(new Insets(10,10,10,10), Color.decode("#CED4DA"), 2, 20));
 
         // search type combo (kích thước giống panel khách hàng)
         String[] searchOptions = {"Mã phòng", "Tên phòng", "Loại phòng", "Trạng thái"};
@@ -499,7 +314,7 @@ public class QuanLyPhongPanel extends RoleChecking {
         JPanel row1 = new JPanel();
         row1.setLayout(new BoxLayout(row1, BoxLayout.X_AXIS));
         row1.setBackground(CustomUI.white);
-        row1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        row1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
         row1.add(searchTypeComboBox);
         row1.add(Box.createHorizontalStrut(12));
         // Let inputPanel expand to fill remaining width
@@ -569,21 +384,6 @@ public class QuanLyPhongPanel extends RoleChecking {
         });
 
         searchPanel.add(row1);
-        // tăng khoảng cách để hài hòa với các nút chức năng
-        searchPanel.add(Box.createVerticalStrut(30));
-
-        // Action buttons row (centered) - sizes match customer panel
-        JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 12));
-        actionRow.setBackground(CustomUI.white);
-        addButton.setPreferredSize(ACTION_BUTTON_SIZE);
-        editButton.setPreferredSize(ACTION_BUTTON_SIZE);
-        deleteButton.setPreferredSize(ACTION_BUTTON_SIZE);
-        actionRow.add(addButton);
-        actionRow.add(editButton);
-        actionRow.add(deleteButton);
-
-        searchPanel.add(actionRow);
-        searchPanel.add(Box.createVerticalStrut(8));
 
         // Kick off async load of categories (so panel is responsive)
         reloadCategories();
@@ -595,7 +395,6 @@ public class QuanLyPhongPanel extends RoleChecking {
     private void createSearchAndCategoryPanel() {
         JPanel container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));
-        container.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         container.setBackground(CustomUI.white);
 
         JPanel leftPanel = createSearchPanel();
@@ -669,7 +468,7 @@ public class QuanLyPhongPanel extends RoleChecking {
                         if (val instanceof Phong) {
                             Phong p = (Phong) val;
                             SwingUtilities.invokeLater(() -> {
-                                try { PhongDialog.showDialog(QuanLyPhongPanel.this, p, roomService); }
+                                try { PhongDialog.showDialog(TimPhongPanel.this, p, roomService); }
                                 catch (Exception ex) { ex.printStackTrace(); }
                             });
                         }

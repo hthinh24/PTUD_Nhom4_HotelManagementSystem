@@ -380,14 +380,19 @@ public class QuanLyLoaiPhongPanel extends RoleChecking {
 
     private void createTopPanel() {
         JPanel pnlTop = new JPanel(new BorderLayout());
-        JLabel lblTop = new JLabel("Quản lý loại phòng", SwingConstants.CENTER);
+        JLabel lblTop = new JLabel("QUẢN LÝ LOẠI PHÒNG", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
-        lblTop.setFont(CustomUI.normalFont != null ? CustomUI.normalFont : FONT_NAME);
+        lblTop.setFont(CustomUI.bigFont);
+
         pnlTop.setBackground(CustomUI.blue);
         pnlTop.add(lblTop, BorderLayout.CENTER);
-        pnlTop.setPreferredSize(new Dimension(0, 50));
-        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+
+        pnlTop.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
         pnlTop.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        pnlTop.add(lblTop, BorderLayout.CENTER);
+
         add(pnlTop);
     }
 

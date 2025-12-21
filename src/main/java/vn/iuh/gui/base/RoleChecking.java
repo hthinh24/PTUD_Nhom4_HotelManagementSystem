@@ -17,21 +17,30 @@ public abstract class RoleChecking extends JPanel{
     }
 
     public final void checkRoleAndLoadData() {
-        removeAll();
+        this.removeAll();
+        try {
+            buildAdminUI();
+        } catch (Exception e) {
+            // Bỏ qua lỗi nếu việc build UI có vấn đề, ưu tiên logic check quyền bên dưới
+            e.printStackTrace();
+        }
 
         UserRole vaiTro = getCurrentUserRole();
 
         if (checkAccess(vaiTro)) {
-            // NẾU LÀ QUẢN LÝ: Xây dựng UI
-            buildAdminUI();
+            // NẾU CÓ QUYỀN:
+            // Giữ nguyên giao diện vừa build ở trên, chỉ cần repaint lại
+            revalidate();
+            repaint();
         } else {
-            // NẾU LÀ LỄ TÂN: Hiển thị thông báo lỗi
+            // NẾU KHÔNG CÓ QUYỀN:
+            // Xóa sạch giao diện vừa build (dù biến đã new nhưng sẽ không hiển thị)
+            removeAll();
             setLayout(new BorderLayout());
             add(createAccessDeniedPanel(), BorderLayout.CENTER);
+            revalidate();
+            repaint();
         }
-
-        revalidate();
-        repaint();
     }
 
     protected boolean checkAccess(UserRole vaiTro) {

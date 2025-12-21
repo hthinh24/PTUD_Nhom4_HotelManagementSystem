@@ -758,12 +758,22 @@ public class RoomUsageFormPanel extends JPanel {
                     transferRoomItem.setBackgroundColor(CustomUI.gray);
                     transferRoomItem.setActive(false);
                     transferRoomItem.setAction(null);
+                    extendBookingItem.setBackgroundColor(CustomUI.gray);
+                    extendBookingItem.setActive(false);
+                    extendBookingItem.setAction(null);
 
+                    boolean canExtend = checkOutService.canExtendCheckoutLate(selectedRoom.getMaChiTietDatPhong());
+                    if (!canExtend) {
+                        extendCheckoutBookingItem.setBackgroundColor(CustomUI.gray);
+                        extendCheckoutBookingItem.setActive(false);
+                        extendCheckoutBookingItem.setAction(null);
+                    }
 
                     items.add(callServiceItem);
                     items.add(checkOutItem);
                     items.add(transferRoomItem);
-                    items.add(extendCheckoutBookingItem);
+//                    items.add(extendCheckoutBookingItem);
+                    items.add(extendBookingItem);
                 } else
                     if (roomStatus.equals(RoomStatus.ROOM_CLEANING_STATUS.getStatus())) {
                         callServiceItem.setBackgroundColor(CustomUI.gray);
@@ -1328,9 +1338,38 @@ public class RoomUsageFormPanel extends JPanel {
     }
 
     private void handleExtendCheckoutBooking() {
-        JOptionPane.showMessageDialog(this,
-                "Chức năng gia hạn thời gian trả phòng đang được phát triển.",
-                "Đang phát triển", JOptionPane.INFORMATION_MESSAGE);
+        long maxExtendMillis = checkOutService.getMaxExtendCheckoutLateMillis(selectedRoom.getMaChiTietDatPhong());
+        if (maxExtendMillis <= 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Không thể gia hạn trả phòng trễ vì đã đạt giới hạn tối đa.",
+                    "Không thể gia hạn", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int option = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có muốn gia hạn trả phòng trễ cho " + selectedRoom.getRoomName() + " không?\n" +
+                "Giới hạn tối đa có thể gia hạn: " + (maxExtendMillis / (60 * 60 * 1000)) + " giờ.",
+                "Gia hạn trả phòng trễ",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (option == JOptionPane.YES_OPTION) {
+            boolean success = checkOutService.extendCheckoutLate(selectedRoom.getMaChiTietDatPhong(), maxExtendMillis);
+            if (success) {
+
+                // Max extend: Convert to hours for debugging
+                System.out.println("Đã gia hạn trả phòng trễ thêm: " + (maxExtendMillis / (60 * 60 * 1000)) + " giờ.");
+                JOptionPane.showMessageDialog(this,
+                        "Gia hạn trả phòng trễ thành công cho " + selectedRoom.getRoomName(),
+                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                RefreshManager.refreshAfterCheckout();
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Gia hạn trả phòng trễ thất bại cho " + selectedRoom.getRoomName(),
+                        "Thất bại", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private void handleCheckIn() {
@@ -1416,7 +1455,8 @@ public class RoomUsageFormPanel extends JPanel {
             return;
         }
 
-        BookingFormPanel bookingFormPanel = new BookingFormPanel(selectedRoom, PanelName.ROOM_USING.getName());
+        BookingResponse defaultBookingInfo = createDefaultValueForBookingInfo(selectedRoom);
+        BookingFormPanel bookingFormPanel = new BookingFormPanel(defaultBookingInfo, PanelName.ROOM_USING.getName());
         String panelName = PanelName.BOOKING.getName();
         Main.addCard(bookingFormPanel, panelName);
         Main.showCard(panelName);
@@ -1438,8 +1478,8 @@ public class RoomUsageFormPanel extends JPanel {
                 roomInfo.getNumberOfCustomers(),
                 roomInfo.getDailyPrice(),
                 roomInfo.getHourlyPrice(),
-                "N/A",
-                "N/A",
+                null,
+                null,
                 now,
                 tomorrow
         );

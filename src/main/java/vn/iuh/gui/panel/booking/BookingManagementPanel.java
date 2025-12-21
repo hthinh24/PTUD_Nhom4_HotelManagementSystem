@@ -588,7 +588,6 @@ public class BookingManagementPanel extends JPanel {
     private void handleStatusFilter(String status) {
         if (status == null || status.equals(ALL_STATUS)) {
             roomFilter.roomStatus = null;
-            gridRoomPanels.setLocking(false);
         } else {
             roomFilter.roomStatus = status;
         }
@@ -736,8 +735,6 @@ public class BookingManagementPanel extends JPanel {
     }
 
     private void search() {
-        gridRoomPanels.setLocking(true);
-
         // Toggle off multi-booking mode if active
         boolean wasMultiBookingMode = isMultiBookingMode;
         if (isMultiBookingMode) {

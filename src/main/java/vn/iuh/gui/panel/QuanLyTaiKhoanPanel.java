@@ -560,7 +560,6 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
 
     private void loadTaiKhoanData() {
         modelTaiKhoan.setRowCount(0);
-
         List<TaiKhoan> dsTaiKhoan;
         try {
             dsTaiKhoan = taiKhoanDAO.getAllTaiKhoan();
