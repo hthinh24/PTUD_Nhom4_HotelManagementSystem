@@ -7,10 +7,12 @@ import java.math.BigDecimal;
 public class CustomerPayments {
     private BigDecimal advancePayment;
     private BigDecimal totalServiceCost;
+    private String customerNote;
 
-    public CustomerPayments(BigDecimal advancePayment, BigDecimal totalServiceCost) {
+    public CustomerPayments(BigDecimal advancePayment, BigDecimal totalServiceCost, String customerNote) {
         this.advancePayment = advancePayment;
         this.totalServiceCost = totalServiceCost;
+        this.customerNote = customerNote;
     }
 
     public BigDecimal getAdvancePayment() {
@@ -27,5 +29,13 @@ public class CustomerPayments {
 
     public void setAdvancePayment(BigDecimal advancePayment) {
         this.advancePayment = advancePayment;
+    }
+
+    public String getCustomerNote() {
+        return customerNote;
+    }
+
+    public void setCustomerNote(String customerNote) {
+        this.customerNote = customerNote;
     }
 }

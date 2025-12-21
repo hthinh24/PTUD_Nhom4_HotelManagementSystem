@@ -5,7 +5,11 @@
 
 package vn.iuh.gui.base;
 
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
+import org.quartz.*;
 import vn.iuh.constraint.PanelName;
 import vn.iuh.dao.NhanVienDAO;
 import vn.iuh.dao.TaiKhoanDAO;
@@ -19,6 +23,13 @@ import vn.iuh.gui.panel.booking.BookingManagementPanel;
 import vn.iuh.gui.panel.booking.ReservationManagementPanel;
 import vn.iuh.gui.panel.statistic.RevenueStatisticPanel;
 import vn.iuh.gui.panel.statistic.RoomProductivityPanel;
+import vn.iuh.schedule.AutomaticallyBackupDif;
+import vn.iuh.schedule.AutomaticallyBackupFull;
+import vn.iuh.service.WarningReservationService;
+import vn.iuh.service.impl.WarningReservationImpl;
+import vn.iuh.util.BackupDatabase;
+import vn.iuh.util.IconUtil;
+import vn.iuh.util.SchedulerUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -57,11 +68,19 @@ public class Main extends JFrame {
     private QuanLyTaiKhoanPanel pnlQuanLyTaiKhoan;
     private RevenueStatisticPanel pnlStatistic;
     private RoomProductivityPanel pnlRoomProductivity;
+    private SystemConfigPanel pnlThietLapHeThong;
+    private WarningReservationService warningReservationService;
+
     private QuanLyNhanVienPanel pnlQuanLyNhanVien;
 
     public void init() {
+        FlatRobotoFont.install();
+        UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13)); // Set font mặc định toàn app
+        FlatLightLaf.setup();
+
         this.taiKhoanDAO = new TaiKhoanDAO();
         this.nhanVienDAO = new NhanVienDAO();
+        this.warningReservationService = new WarningReservationImpl();
         //Set hiển thị mặc định toàn màn hình
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
         //Hiển thị chính giữa
@@ -94,6 +113,7 @@ public class Main extends JFrame {
         pnlMainUI.add(createASideBar(), BorderLayout.WEST);
         pnlMainUI.add(createTopCounting(), BorderLayout.NORTH);
         pnlMainUI.add(createCenterPanel(), BorderLayout.CENTER);
+        warningReservationService.excute();
         initializeMainPanels();
         pnlRoot.add(pnlMainUI, "MainUI");
 
@@ -101,6 +121,7 @@ public class Main extends JFrame {
 
         this.pMain.add(pnlRoot, BorderLayout.CENTER);
         this.add(pMain);
+        createAutomaticallyBackupCronjob();
     }
 
     private JPanel createCenterPanel(){
@@ -246,13 +267,15 @@ public class Main extends JFrame {
         pnlTopRight.setBackground(pnlTop.getBackground());
         btnBell = new BellButton();
         btnLogOut  = new JButton("Đăng xuất");
-        btnLogOut.setBackground(CustomUI.red);
+        btnLogOut.setBackground(CustomUI.newRed);
         btnLogOut.setForeground(CustomUI.white);
         btnLogOut.setFont(CustomUI.smallFont);
         btnLogOut.addActionListener(e -> LogOutDialog.handleLogout(this));
         createWoringHistoryButton();
         pnlTopRight.add(btnWorkingHistory);
+        pnlTopRight.add(Box.createHorizontalStrut(40));
         pnlTopRight.add(btnBell);
+        pnlTopRight.add(Box.createHorizontalStrut(40));
 
         JPanel pnlRightButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
         pnlRightButtons.setOpaque(false);
@@ -313,13 +336,24 @@ public class Main extends JFrame {
         pnlQuanLyNhanVien = new QuanLyNhanVienPanel();
         pnlQuanLyTaiKhoan = new QuanLyTaiKhoanPanel();
         pnlQuanLyPhuPhi = new QuanLyPhuPhiPanel();
-//        QuanLyPhongPanel pnlQuanLyPhong = new QuanLyPhongPanel();
-//        QuanLyKhachHangPanel pnlQuanLyKhachHang = new QuanLyKhachHangPanel();
-//        QuanLyLoaiPhongPanel pnlQuanLyLoaiPhong = new QuanLyLoaiPhongPanel();
+        QuanLyPhongPanel pnlQuanLyPhong = new QuanLyPhongPanel();
+        QuanLyKhachHangPanel pnlQuanLyKhachHang = new QuanLyKhachHangPanel();
+        QuanLyLoaiPhongPanel pnlQuanLyLoaiPhong = new QuanLyLoaiPhongPanel();
+        QuanLyDichVuPanel pnlQuanLyDichVu = new QuanLyDichVuPanel();
+        QuanLyLoaiDichVuPanel pnlQuanLyLoaiDichVu = new QuanLyLoaiDichVuPanel(pnlQuanLyDichVu);
+        TimPhongPanel  pnlTimPhong = new TimPhongPanel();
+        TimKhachHangPanel pnlTimKhachHang = new TimKhachHangPanel();
+        TimDichVuPanel pnlTimDichVu = new TimDichVuPanel();
+        pnlThietLapHeThong =  new SystemConfigPanel();
         pnlRoomProductivity = new RoomProductivityPanel();
-//        pnlCenter.add(pnlQuanLyPhong, "Quản lý phòng");
-//        pnlCenter.add(pnlQuanLyLoaiPhong, "Quản lý loại phòng");
-//        pnlCenter.add(pnlQuanLyKhachHang, "Quản lý khách hàng");
+        pnlCenter.add(pnlQuanLyPhong, "Quản lý phòng");
+        pnlCenter.add(pnlQuanLyLoaiPhong, "Quản lý loại phòng");
+        pnlCenter.add(pnlQuanLyKhachHang, "Quản lý khách hàng");
+        pnlCenter.add(pnlTimKhachHang, "Tìm khách hàng");
+        pnlCenter.add(pnlTimPhong, "Tìm phòng");
+        pnlCenter.add(pnlTimDichVu, "Tìm dịch vụ");
+        pnlCenter.add(pnlQuanLyDichVu, "Quản lý dịch vụ");
+        pnlCenter.add(pnlQuanLyLoaiDichVu, "Quản lý loại dịch vụ");
         pnlCenter.add(bookingManagementPanel, PanelName.BOOKING_MANAGEMENT.getName());
         pnlCenter.add(reservationManagementPanel, PanelName.RESERVATION_MANAGEMENT.getName());
 //        pnlCenter.add(preReservationManagementPanel, PanelName.PRE_RESERVATION_MANAGEMENT.getName());
@@ -329,13 +363,14 @@ public class Main extends JFrame {
         pnlCenter.add(pnlQuanLyNhanVien, "Quản lý nhân viên");
         pnlCenter.add(pnlRoomProductivity, "Thống kê hiệu suất");
         pnlCenter.add(pnlQuanLyPhuPhi, "Quản lý phụ phí");
+        pnlCenter.add(pnlThietLapHeThong, "Thiết lập hệ thống");
 //        showCard("Quản lý đặt phòng");
 
         showCenterCard("Quản lý đặt phòng");
     }
 
     private JButton createWoringHistoryButton(){
-        btnWorkingHistory = new JButton("\uD83D\uDDD3\uFE0F");
+        btnWorkingHistory = new JButton(IconUtil.createMenuIcon("/icons/calendar.png"));
         btnWorkingHistory.setSize(60,60);
         btnWorkingHistory.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24));
         btnWorkingHistory.setForeground(CustomUI.white);
@@ -345,15 +380,8 @@ public class Main extends JFrame {
         btnWorkingHistory.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btnWorkingHistory.setBackground(this.pnlTop.getBackground());
         workingHistoryDialog = new WorkingHistoryDialog(this);
-        btnWorkingHistory.addActionListener( e -> {
-            if(!getCurrentLoginSession().equalsIgnoreCase(workingHistoryDialog.getMaPhienDangNhapHienTai()) &&
-            workingHistoryDialog.getMaPhienDangNhapHienTai() != null)
-            {
-                workingHistoryDialog.updateWorkingHistory();
-                System.out.println("Khác");
-            }
-            workingHistoryDialog.open();
-            workingHistoryDialog.setVisible(true);
+        btnWorkingHistory.addActionListener(e -> {
+            workingHistoryDialog.open(Main.getCurrentLoginSession());
         });
         return btnWorkingHistory;
     }
@@ -366,5 +394,8 @@ public class Main extends JFrame {
         }
     }
 
-
+    private void createAutomaticallyBackupCronjob(){
+        BackupDatabase.scheduleFullBackup();
+        BackupDatabase.scheduleDiffBackup();
+    }
 }

@@ -8,6 +8,7 @@ public class ReservationInfoDetailResponse {
     private String maDonDatPhong;
     private String status;
     private boolean isAdvance;
+    private String type;
     private List<ReservationDetailResponse> details;
     private List<RoomUsageServiceResponse> services;
     private List<MovingHistoryResponse> movingHistories;
@@ -24,6 +25,21 @@ public class ReservationInfoDetailResponse {
         this.maDonDatPhong = maDonDatPhong;
         this.status = status;
         this.isAdvance = isAdvance;
+        this.details = details;
+        this.services = services;
+        this.movingHistories = movingHistories;
+    }
+
+    public ReservationInfoDetailResponse(String CCCD, String customerName, String maDonDatPhong, String status,
+                                         boolean isAdvance, String type, List<ReservationDetailResponse> details,
+                                         List<RoomUsageServiceResponse> services,
+                                         List<MovingHistoryResponse> movingHistories) {
+        this.CCCD = CCCD;
+        this.customerName = customerName;
+        this.maDonDatPhong = maDonDatPhong;
+        this.status = status;
+        this.isAdvance = isAdvance;
+        this.type = type;
         this.details = details;
         this.services = services;
         this.movingHistories = movingHistories;
@@ -47,6 +63,10 @@ public class ReservationInfoDetailResponse {
 
     public boolean isAdvance() {
         return isAdvance;
+    }
+
+    public String getType() {
+        return type;
     }
 
     public List<ReservationDetailResponse> getDetails() {

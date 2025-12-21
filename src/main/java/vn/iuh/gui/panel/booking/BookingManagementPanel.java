@@ -60,6 +60,9 @@ public class BookingManagementPanel extends JPanel {
 
     private final String ALL_STATUS = "TẤT CẢ";
 
+    // Flag to prevent recursive listener calls
+    private boolean isUpdatingValues = false;
+
     public BookingManagementPanel() {
         init();
         setupMultiBookingCallbacks();
@@ -118,18 +121,19 @@ public class BookingManagementPanel extends JPanel {
     }
 
     private void createTopPanel() {
-        JPanel pnlTop = new JPanel();
+        JPanel pnlTop = new JPanel(new BorderLayout());
         JLabel lblTop = new JLabel("QUẢN LÝ ĐẶT PHÒNG", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
         lblTop.setFont(CustomUI.bigFont);
 
         pnlTop.setBackground(CustomUI.blue);
-        pnlTop.add(lblTop);
+        pnlTop.add(lblTop, BorderLayout.CENTER);
 
-        pnlTop.setPreferredSize(new Dimension(0, 40));
-        pnlTop.setMinimumSize(new Dimension(0, 40));
-        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        pnlTop.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
+        pnlTop.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        pnlTop.add(lblTop, BorderLayout.CENTER);
 
         add(pnlTop);
     }
@@ -138,7 +142,7 @@ public class BookingManagementPanel extends JPanel {
         // Main container panel for search and status sections (50/50 split)
         JPanel mainContainer = new JPanel(new GridLayout(1, 2, 10, 0));
         mainContainer.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-
+        mainContainer.setBackground(CustomUI.white);
         mainContainer.setPreferredSize(new Dimension(0, 200));
         mainContainer.setMinimumSize(new Dimension(0, 200));
         mainContainer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
@@ -159,7 +163,7 @@ public class BookingManagementPanel extends JPanel {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(CustomUI.white);
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(CustomUI.lightBlue, 2),
+                BorderFactory.createLineBorder(CustomUI.gray, 2),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
 
@@ -198,7 +202,8 @@ public class BookingManagementPanel extends JPanel {
 
         // Capacity dropdown
         cmbCapacity = new JComboBox<>();
-        Set<Integer> capacities = roomCategories.stream().map(RoomCategoryResponse::getSoLuongKhach).collect(Collectors.toSet());
+        Set<Integer> capacities =
+                roomCategories.stream().map(RoomCategoryResponse::getSoLuongKhach).collect(Collectors.toSet());
         for (Integer capacity : capacities) {
             cmbCapacity.addItem(capacity);
         }
@@ -240,7 +245,7 @@ public class BookingManagementPanel extends JPanel {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(CustomUI.white);
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(CustomUI.green, 2),
+                BorderFactory.createLineBorder(CustomUI.gray, 2),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
         panel.setPreferredSize(new Dimension(600, 80));
@@ -256,48 +261,64 @@ public class BookingManagementPanel extends JPanel {
         int usingCount = getStatusCount(RoomStatus.ROOM_USING_STATUS.getStatus());
         int lateCount = getStatusCount(RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus());
         int cleaningCount = getStatusCount(RoomStatus.ROOM_CLEANING_STATUS.getStatus());
-        int maintenanceCount = getStatusCount(RoomStatus.ROOM_MAINTENANCE_STATUS.getStatus());
 
         // Create status buttons with actual quantities and proper colors
         JButton btnAll = createStatusButton(ALL_STATUS + " (" + totalRooms + ")", CustomUI.green, ALL_STATUS);
-        gbc.gridx = 0; gbc.gridy = 0; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         panel.add(btnAll, gbc);
 
-        JButton btnAvailable = createStatusButton(RoomStatus.ROOM_EMPTY_STATUS.getStatus() + " (" + availableCount + ")", CustomUI.green, RoomStatus.ROOM_EMPTY_STATUS.getStatus());
-        gbc.gridx = 1; gbc.gridy = 0;
+        JButton btnAvailable =
+                createStatusButton(RoomStatus.ROOM_EMPTY_STATUS.getStatus() + " (" + availableCount + ")",
+                                   CustomUI.green, RoomStatus.ROOM_EMPTY_STATUS.getStatus());
+        gbc.gridx = 1;
+        gbc.gridy = 0;
         panel.add(btnAvailable, gbc);
 
-        JButton btnBooked = createStatusButton(RoomStatus.ROOM_BOOKED_STATUS.getStatus() + " (" + bookedCount + ")", CustomUI.cyan, RoomStatus.ROOM_BOOKED_STATUS.getStatus());
-        gbc.gridx = 2; gbc.gridy = 0;
+        JButton btnBooked =
+                createStatusButton(RoomStatus.ROOM_BOOKED_STATUS.getStatus() + " (" + bookedCount + ")", CustomUI.cyan,
+                                   RoomStatus.ROOM_BOOKED_STATUS.getStatus());
+        gbc.gridx = 2;
+        gbc.gridy = 0;
         panel.add(btnBooked, gbc);
 
-        JButton btnChecking = createStatusButton(RoomStatus.ROOM_CHECKING_STATUS.getStatus() + " (" + checkingCount + ")", CustomUI.lightBlue, RoomStatus.ROOM_CHECKING_STATUS.getStatus());
-        gbc.gridx = 0; gbc.gridy = 1;
+        JButton btnChecking =
+                createStatusButton(RoomStatus.ROOM_CHECKING_STATUS.getStatus() + " (" + checkingCount + ")",
+                                   CustomUI.lightBlue, RoomStatus.ROOM_CHECKING_STATUS.getStatus());
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         panel.add(btnChecking, gbc);
 
-        JButton btnUsing = createStatusButton(RoomStatus.ROOM_USING_STATUS.getStatus() + " (" + usingCount + ")", CustomUI.orange, RoomStatus.ROOM_USING_STATUS.getStatus());
-        gbc.gridx = 1; gbc.gridy = 1;
+        JButton btnUsing = createStatusButton(RoomStatus.ROOM_USING_STATUS.getStatus() + " (" + usingCount + ")",
+                                              CustomUI.lightOrange, RoomStatus.ROOM_USING_STATUS.getStatus());
+        gbc.gridx = 1;
+        gbc.gridy = 1;
         panel.add(btnUsing, gbc);
 
-        JButton btnLate = createStatusButton(RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus() + " (" + lateCount + ")", CustomUI.red, RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus());
-        gbc.gridx = 2; gbc.gridy = 1;
+        JButton btnLate = createStatusButton(RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus() + " (" + lateCount + ")",
+                                             CustomUI.red, RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus());
+        gbc.gridx = 2;
+        gbc.gridy = 1;
         panel.add(btnLate, gbc);
 
-        JButton btnCleaning = createStatusButton(RoomStatus.ROOM_CLEANING_STATUS.getStatus() + " (" + cleaningCount + ")", CustomUI.lightGreen, RoomStatus.ROOM_CLEANING_STATUS.getStatus());
-        gbc.gridx = 0; gbc.gridy = 2;
+        JButton btnCleaning =
+                createStatusButton(RoomStatus.ROOM_CLEANING_STATUS.getStatus() + " (" + cleaningCount + ")",
+                                   CustomUI.lightGreen, RoomStatus.ROOM_CLEANING_STATUS.getStatus());
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         panel.add(btnCleaning, gbc);
-
-        JButton btnMaintenance = createStatusButton(RoomStatus.ROOM_MAINTENANCE_STATUS.getStatus() + " (" + maintenanceCount + ")", CustomUI.gray, RoomStatus.ROOM_MAINTENANCE_STATUS.getStatus());
-        gbc.gridx = 1; gbc.gridy = 2;
-        panel.add(btnMaintenance, gbc);
 
         JButton btnReset = createStatusButton("LÀM MỚI", CustomUI.lightGray, null);
         btnReset.removeActionListener(btnReset.getActionListeners()[0]); // Remove existing listener
         btnReset.addActionListener(e -> refreshPanel());
-        gbc.gridx = 2; gbc.gridy = 2;
+        gbc.gridx = 1;
+        gbc.gridy = 2;
         panel.add(btnReset, gbc);
         // Store references to status buttons for later updates
-        statusButtons = new JButton[] {btnAll, btnAvailable, btnBooked, btnChecking, btnUsing, btnLate, btnCleaning, btnMaintenance, btnReset};
+        statusButtons =
+                new JButton[]{btnAll, btnAvailable, btnBooked, btnChecking, btnUsing, btnLate, btnCleaning, btnReset};
 
         return panel;
     }
@@ -310,7 +331,6 @@ public class BookingManagementPanel extends JPanel {
         int usingCount = 0;
         int lateCount = 0;
         int cleaningCount = 0;
-        int maintenanceCount = 0;
 
         if (roomFilter.checkInDate != null && roomFilter.checkOutDate != null) {
             availableCount = filteredRooms.size();
@@ -324,7 +344,9 @@ public class BookingManagementPanel extends JPanel {
                     case ROOM_USING_STATUS -> usingCount++;
                     case ROOM_CHECKOUT_LATE_STATUS -> lateCount++;
                     case ROOM_CLEANING_STATUS -> cleaningCount++;
-                    case ROOM_MAINTENANCE_STATUS -> maintenanceCount++;
+                    case ROOM_MAINTENANCE_STATUS -> {
+                        // Maintenance status, do nothing for now
+                    }
                     case null -> {
                         // Unknown status, do nothing
                     }
@@ -338,7 +360,6 @@ public class BookingManagementPanel extends JPanel {
         statusButtons[4].setText(RoomStatus.ROOM_USING_STATUS.getStatus() + " (" + usingCount + ")");
         statusButtons[5].setText(RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus() + " (" + lateCount + ")");
         statusButtons[6].setText(RoomStatus.ROOM_CLEANING_STATUS.getStatus() + " (" + cleaningCount + ")");
-        statusButtons[7].setText(RoomStatus.ROOM_MAINTENANCE_STATUS.getStatus() + " (" + maintenanceCount + ")");
     }
 
     private int getStatusCount(String status) {
@@ -377,9 +398,9 @@ public class BookingManagementPanel extends JPanel {
         JPanel modePanel = new JPanel(new BorderLayout());
         modePanel.setBackground(CustomUI.white);
         modePanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(CustomUI.lightGray, 2),
-                BorderFactory.createEmptyBorder(5, 15, 5, 15
-                )));
+                BorderFactory.createLineBorder(CustomUI.gray, 2),
+                BorderFactory.createEmptyBorder(5, 15, 5, 15)
+        ));
 
         // Left panel with toggle button
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
@@ -397,7 +418,8 @@ public class BookingManagementPanel extends JPanel {
         btnMultiBookingToggle.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent evt) {
                 btnMultiBookingToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                btnMultiBookingToggle.setBackground(btnMultiBookingToggle.isSelected() ? CustomUI.darkRed : CustomUI.blue);
+                btnMultiBookingToggle.setBackground(
+                        btnMultiBookingToggle.isSelected() ? CustomUI.darkRed : CustomUI.blue);
             }
 
             public void mouseExited(MouseEvent evt) {
@@ -498,7 +520,8 @@ public class BookingManagementPanel extends JPanel {
 
     private void setDefaultValueForEmptyCondition() {
         Date checkin = spnCheckInDate.getValue() != null ? (Date) spnCheckInDate.getValue() : new Date();
-        Date checkout = spnCheckOutDate.getValue() != null ? (Date) spnCheckOutDate.getValue() : Date.from(checkin.toInstant().plus(1, ChronoUnit.DAYS));
+        Date checkout = spnCheckOutDate.getValue() != null ? (Date) spnCheckOutDate.getValue() : Date.from(
+                checkin.toInstant().plus(1, ChronoUnit.DAYS));
         roomFilter.checkOutDate = checkout;
         roomFilter.checkInDate = checkin;
         roomFilter.roomType = roomFilter.roomType == null ? ALL_STATUS : roomFilter.roomType;
@@ -531,7 +554,8 @@ public class BookingManagementPanel extends JPanel {
 
         // Show confirmation dialog
         int result = JOptionPane.showConfirmDialog(this,
-                                                   "Bạn đã chọn " + selectedRooms.size() + " phòng. Tiếp tục đặt phòng?",
+                                                   "Bạn đã chọn " + selectedRooms.size() +
+                                                   " phòng. Tiếp tục đặt phòng?",
                                                    "Xác nhận",
                                                    JOptionPane.YES_NO_OPTION,
                                                    JOptionPane.QUESTION_MESSAGE);
@@ -549,10 +573,12 @@ public class BookingManagementPanel extends JPanel {
         gridRoomPanels = new GridRoomPanel(allRoomItems);
         gridRoomPanels.setBackground(CustomUI.white);
         gridRoomPanels.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
         JScrollPane scrollPane = new JScrollPane(gridRoomPanels,
                                                  JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                                                  JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setBorder(BorderFactory.createLineBorder(CustomUI.gray, 2));
         setOpaque(true);
         add(scrollPane);
 
@@ -562,6 +588,7 @@ public class BookingManagementPanel extends JPanel {
     private void handleStatusFilter(String status) {
         if (status == null || status.equals(ALL_STATUS)) {
             roomFilter.roomStatus = null;
+            gridRoomPanels.setLocking(false);
         } else {
             roomFilter.roomStatus = status;
         }
@@ -582,20 +609,15 @@ public class BookingManagementPanel extends JPanel {
     }
 
     private void handleCheckinDateChange() {
-        try {
-            spnCheckInDate.commitEdit();
-            spnCheckOutDate.commitEdit();
-        } catch (java.text.ParseException e) {
-            System.out.println("Error parsing date from spinner: " + e.getMessage());
-        }
+        if (isUpdatingValues) return;
 
         Date now = new Date();
         Date checkInDate = (Date) spnCheckInDate.getValue();
-        System.out.println("Check-in date changed to: " + checkInDate);
         Date currentCheckOutDate = (Date) spnCheckOutDate.getValue();
 
         // Handle past check-in date
-        if (checkInDate.before(Date.from(now.toInstant().minus(1, ChronoUnit.MINUTES)))) {
+        if (checkInDate.before(Date.from(now.toInstant().minus(10, ChronoUnit.MINUTES)))) {
+            isUpdatingValues = true;
             JOptionPane.showMessageDialog(this,
                                           "Ngày check-in không được trước ngày hiện tại!",
                                           "Lỗi ngày tháng",
@@ -604,18 +626,21 @@ public class BookingManagementPanel extends JPanel {
             spnCheckOutDate.setValue(Date.from(now.toInstant().plus(1, ChronoUnit.DAYS)));
             roomFilter.checkInDate = now;
             roomFilter.checkOutDate = Date.from(now.toInstant().plus(1, ChronoUnit.DAYS));
+            isUpdatingValues = false;
             search();
             refreshFilterBtn();
             return;
         }
 
         // Auto increase check-out date if it's not after check-in or less than 1 hour after check-in
-        if (!currentCheckOutDate.after(checkInDate) ||
+        if (currentCheckOutDate.before(Date.from(checkInDate.toInstant().minus(1, ChronoUnit.MINUTES))) ||
             (currentCheckOutDate.getTime() - checkInDate.getTime()) < (60 * 60 * 1000)) {
             // Set checkout to be 1 day after checkin
             Date newCheckOutDate = Date.from(checkInDate.toInstant().plus(1, ChronoUnit.DAYS));
+            isUpdatingValues = true;
             spnCheckOutDate.setValue(newCheckOutDate);
             roomFilter.checkOutDate = newCheckOutDate;
+            isUpdatingValues = false;  // Reset flag AFTER updating roomFilter
         }
 
         roomFilter.checkInDate = checkInDate;
@@ -631,12 +656,7 @@ public class BookingManagementPanel extends JPanel {
     }
 
     private void handleCheckoutDateChange() {
-        try {
-            spnCheckInDate.commitEdit();
-            spnCheckOutDate.commitEdit();
-        } catch (java.text.ParseException e) {
-            System.out.println("Error parsing date from spinner: " + e.getMessage());
-        }
+        if (isUpdatingValues) return;
 
         Date checkInDate = (Date) spnCheckInDate.getValue();
         Date checkOutDate = (Date) spnCheckOutDate.getValue();
@@ -645,6 +665,7 @@ public class BookingManagementPanel extends JPanel {
         if (!checkOutDate.after(checkInDate) ||
             (checkOutDate.getTime() - checkInDate.getTime()) < (60 * 60 * 1000)) {
 
+            isUpdatingValues = true;
             JOptionPane.showMessageDialog(this,
                                           "Ngày check-out phải sau ngày check-in ít nhất 1 giờ!",
                                           "Lỗi ngày tháng",
@@ -657,9 +678,14 @@ public class BookingManagementPanel extends JPanel {
                 spnCheckInDate.setValue(now);
                 roomFilter.checkInDate = now;
             }
-            Date newCheckOutDate = Date.from(roomFilter.checkInDate.toInstant().plus(1, ChronoUnit.DAYS));
+
+            Date newCheckOutDate = roomFilter.checkInDate != null ?
+                    Date.from(roomFilter.checkInDate.toInstant().plus(1, ChronoUnit.DAYS)) :
+                    Date.from(now.toInstant().plus(1, ChronoUnit.DAYS));
+            ;
             spnCheckOutDate.setValue(newCheckOutDate);
             roomFilter.checkOutDate = newCheckOutDate;
+            isUpdatingValues = false;
             search();
             refreshFilterBtn();
             return;
@@ -674,7 +700,8 @@ public class BookingManagementPanel extends JPanel {
         TimeFilterHelper.setCheckoutTime(checkOutDate);
     }
 
-    private void addFormRow(JPanel panel, GridBagConstraints gbc, int row, int col, String labelText, JComponent component) {
+    private void addFormRow(JPanel panel, GridBagConstraints gbc, int row, int col, String labelText,
+                            JComponent component) {
         gbc.gridy = row;
         gbc.gridwidth = 1;
         gbc.fill = GridBagConstraints.NONE;
@@ -709,6 +736,8 @@ public class BookingManagementPanel extends JPanel {
     }
 
     private void search() {
+        gridRoomPanels.setLocking(true);
+
         // Toggle off multi-booking mode if active
         boolean wasMultiBookingMode = isMultiBookingMode;
         if (isMultiBookingMode) {
@@ -724,7 +753,6 @@ public class BookingManagementPanel extends JPanel {
                     new Timestamp(roomFilter.checkInDate.getTime()),
                     new Timestamp(roomFilter.checkOutDate.getTime())
             );
-            System.out.println("Non-empty rooms in range: " + nonEmptyRoomIds.size());
 
             // Loop through all empty rooms (sorted) and apply filters
             for (String roomId : emptyRoomMap.keySet().stream().sorted().toList()) {
@@ -783,9 +811,9 @@ public class BookingManagementPanel extends JPanel {
                 return false;
             }
         }
-
         // Accept cleaning room only when room status filter is set to cleaning
-        if (roomFilter.roomStatus == null || !roomFilter.roomStatus.equals(RoomStatus.ROOM_CLEANING_STATUS.getStatus())) {
+        if (roomFilter.roomStatus == null ||
+            !roomFilter.roomStatus.equals(RoomStatus.ROOM_CLEANING_STATUS.getStatus())) {
             if (bookingResponse.getRoomStatus().equals(RoomStatus.ROOM_CLEANING_STATUS.getStatus())) {
                 return false;
             }
@@ -871,11 +899,11 @@ public class BookingManagementPanel extends JPanel {
                                             .build();
 
             Trigger trigger = TriggerBuilder.newTrigger()
-                                                       .withIdentity("roomStatusUpdateTrigger", "group1")
-                                                       .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                                                                          .withIntervalInSeconds(30)
-                                                                                          .repeatForever())
-                                                       .build();
+                                            .withIdentity("roomStatusUpdateTrigger", "group1")
+                                            .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                                                               .withIntervalInSeconds(30)
+                                                                               .repeatForever())
+                                            .build();
 
             scheduler.start();
             scheduler.scheduleJob(jobDetail, trigger);

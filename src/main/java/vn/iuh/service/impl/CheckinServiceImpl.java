@@ -1,14 +1,12 @@
 package vn.iuh.service.impl;
 
-import vn.iuh.constraint.ActionType;
-import vn.iuh.constraint.EntityIDSymbol;
-import vn.iuh.constraint.Fee;
-import vn.iuh.constraint.RoomStatus;
+import vn.iuh.constraint.*;
 import vn.iuh.dao.*;
 import vn.iuh.dto.repository.ThongTinPhuPhi;
 import vn.iuh.entity.*;
 import vn.iuh.gui.base.Main;
 import vn.iuh.service.CheckinService;
+import vn.iuh.util.DatabaseUtil;
 import vn.iuh.util.EntityUtil;
 import vn.iuh.util.FeeValue;
 
@@ -47,20 +45,18 @@ public class CheckinServiceImpl implements CheckinService {
 
         String maPhienDangNhap = Main.getCurrentLoginSession();
 
-        DatPhongDAO datPhongDAO = new DatPhongDAO();
         try {
             // 1) Bắt đầu transaction
-            datPhongDAO.khoiTaoGiaoTac();
-            Connection conn = datPhongDAO.getConnection();
+            DatabaseUtil.khoiTaoGiaoTac();
 
             // 2) Khởi tạo DAO dùng chung connection (để rollback khi cần)
-            LichSuDiVaoDAO lichSuDiVaoDAO = new LichSuDiVaoDAO(conn);
-            CongViecDAO congViecDAO = new CongViecDAO(conn);
-            LichSuThaoTacDAO lichSuThaoTacDAO = new LichSuThaoTacDAO(conn);
-            ChiTietDatPhongDAO chiTietDatPhongDAO = new ChiTietDatPhongDAO(conn);
-            PhongTinhPhuPhiDAO phongTinhPhuPhiDAO = new PhongTinhPhuPhiDAO(conn);
-            PhuPhiDAO phuPhiDAO = new PhuPhiDAO(conn);
-            PhongDAO phongDAO = new PhongDAO(conn);
+            LichSuDiVaoDAO lichSuDiVaoDAO = new LichSuDiVaoDAO();
+            CongViecDAO congViecDAO = new CongViecDAO();
+            LichSuThaoTacDAO lichSuThaoTacDAO = new LichSuThaoTacDAO();
+            ChiTietDatPhongDAO chiTietDatPhongDAO = new ChiTietDatPhongDAO();
+            PhongTinhPhuPhiDAO phongTinhPhuPhiDAO = new PhongTinhPhuPhiDAO();
+            PhuPhiDAO phuPhiDAO = new PhuPhiDAO();
+            PhongDAO phongDAO = new PhongDAO();
 
             // Xóa khoảng trắng cho các tham số truyền vào
             String maDonDatPhongMain = trimToNull(maDonDatPhong);
@@ -107,7 +103,7 @@ public class CheckinServiceImpl implements CheckinService {
             boolean alreadyCheckedIn = lichSuDiVaoDAO.daTonTai(maChiTietDatPhongMain);
             if (alreadyCheckedIn) {
                 thongBaoLoi = "Đơn này đã được check-in trước đó.";
-                datPhongDAO.hoanTacGiaoTac();
+                DatabaseUtil.hoanTacGiaoTac();
                 return false;
             }
 
@@ -170,7 +166,7 @@ public class CheckinServiceImpl implements CheckinService {
                             prevJobId = newJobId;
                             String tenTrangThaiChecking = RoomStatus.ROOM_CHECKING_STATUS.getStatus();
                             Timestamp tgBatDauChecking = now;
-                            Timestamp tgKetThucChecking = new Timestamp(tgBatDauChecking.getTime() + 30L * 60L * 1000L);
+                            Timestamp tgKetThucChecking = new Timestamp(tgBatDauChecking.getTime() + WorkTimeCost.CHECKING_WAITING_TIME.getMinutes() * 60L * 1000L);
                             CongViec checkingJob = new CongViec(newJobId, tenTrangThaiChecking, tgBatDauChecking, tgKetThucChecking, trimToNull(ct.getMaPhong()), tgBatDauChecking);
                             congViecDAO.themCongViec(checkingJob);
                         }
@@ -188,7 +184,7 @@ public class CheckinServiceImpl implements CheckinService {
                         lichSuThaoTacDAO.themLichSuThaoTac(newLichSuThaoTac);
 
                         // Commit và return
-                        datPhongDAO.thucHienGiaoTac();
+                        DatabaseUtil.thucHienGiaoTac();
                         thongBaoLoi = null;
                         return true;
                     }
@@ -235,7 +231,7 @@ public class CheckinServiceImpl implements CheckinService {
 
                         String tenTrangThaiChecking = RoomStatus.ROOM_CHECKING_STATUS.getStatus();
                         Timestamp tgBatDauChecking = now;
-                        Timestamp tgKetThucChecking = new Timestamp(tgBatDauChecking.getTime() + 30L * 60L * 1000L);
+                        Timestamp tgKetThucChecking = new Timestamp(tgBatDauChecking.getTime() + WorkTimeCost.CHECKING_WAITING_TIME.getMinutes() * 60L * 1000L);
                         CongViec checkingJob = new CongViec(newJobId, tenTrangThaiChecking, tgBatDauChecking, tgKetThucChecking, maPh, tgBatDauChecking);
                         congViecDAO.themCongViec(checkingJob);
 
@@ -252,7 +248,7 @@ public class CheckinServiceImpl implements CheckinService {
                         lichSuThaoTacDAO.themLichSuThaoTac(newLichSuThaoTac);
 
                         // Commit và trả về
-                        datPhongDAO.thucHienGiaoTac();
+                        DatabaseUtil.thucHienGiaoTac();
                         thongBaoLoi = null;
                         return true;
                     }
@@ -266,7 +262,7 @@ public class CheckinServiceImpl implements CheckinService {
 
                     if (forbidden) {
                         thongBaoLoi = "Phòng đang ở trạng thái '" + congViecHienTai.getTenTrangThai() + "'. Không thể check-in.";
-                        datPhongDAO.hoanTacGiaoTac();
+                        DatabaseUtil.hoanTacGiaoTac();
                         return false;
                     }
                 }
@@ -340,7 +336,7 @@ public class CheckinServiceImpl implements CheckinService {
 
                             String tenTrangThai = RoomStatus.ROOM_CHECKING_STATUS.getStatus();
                             Timestamp tgBatDau = now;
-                            Timestamp tgKetThuc = new Timestamp(tgBatDau.getTime() + 30L * 60L * 1000L);
+                            Timestamp tgKetThuc = new Timestamp(tgBatDau.getTime() + WorkTimeCost.CHECKING_WAITING_TIME.getMinutes() * 60L * 1000L);
                             CongViec jobMoi = new CongViec(newJobId, tenTrangThai, tgBatDau, tgKetThuc, roomId, tgBatDau);
                             congViecDAO.themCongViec(jobMoi);
                         }
@@ -418,7 +414,7 @@ public class CheckinServiceImpl implements CheckinService {
                     lichSuThaoTacDAO.themLichSuThaoTac(newLichSuThaoTac);
 
                     // Commit
-                    datPhongDAO.thucHienGiaoTac();
+                    DatabaseUtil.thucHienGiaoTac();
                     thongBaoLoi = null;
                     return true;
 
@@ -492,7 +488,7 @@ public class CheckinServiceImpl implements CheckinService {
 
             String tenTrangThai = RoomStatus.ROOM_CHECKING_STATUS.getStatus();
             Timestamp tgBatDau = now;
-            Timestamp tgKetThuc = new Timestamp(tgBatDau.getTime() + 30L * 60L * 1000L);
+            Timestamp tgKetThuc = new Timestamp(tgBatDau.getTime() + WorkTimeCost.CHECKING_WAITING_TIME.getMinutes()  * 60L * 1000L);
             CongViec jobMoi = new CongViec(newJobId, tenTrangThai, tgBatDau, tgKetThuc, maPh, tgBatDau);
             congViecDAO.themCongViec(jobMoi);
 
@@ -508,14 +504,14 @@ public class CheckinServiceImpl implements CheckinService {
             lichSuThaoTacDAO.themLichSuThaoTac(newLichSuThaoTac);
 
             // Commit nếu mọi thứ OK
-            datPhongDAO.thucHienGiaoTac();
+            DatabaseUtil.thucHienGiaoTac();
             thongBaoLoi = null;
             return true;
 
         } catch (Exception e) {
             // Rollback transaction nếu có lỗi
             try {
-                datPhongDAO.hoanTacGiaoTac();
+                DatabaseUtil.hoanTacGiaoTac();
             } catch (Exception ex) {
                 System.err.println("Lỗi khi rollback trong checkin: " + ex.getMessage());
                 ex.printStackTrace();

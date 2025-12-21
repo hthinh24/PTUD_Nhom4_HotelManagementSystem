@@ -1,6 +1,7 @@
 package vn.iuh.dao;
 
 import com.github.lgooddatepicker.zinternaltools.Pair;
+import vn.iuh.constraint.PriceType;
 import vn.iuh.entity.LoaiPhong;
 import vn.iuh.exception.TableEntityMismatch;
 import vn.iuh.gui.panel.statistic.RoomCategoryStatistic;
@@ -10,25 +11,17 @@ import vn.iuh.util.DatabaseUtil;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class LoaiPhongDAO {
-    private final Connection connection;
-
-    public LoaiPhongDAO() {
-        this.connection = DatabaseUtil.getConnect();
-    }
-
-    public LoaiPhongDAO(Connection connection) {
-        this.connection = connection;
-    }
-
     public LoaiPhong getRoomCategoryByID(String id) {
         String query = "SELECT * FROM LoaiPhong WHERE ma_loai_phong = ? AND da_xoa = 0";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, id);
 
@@ -52,6 +45,7 @@ public class LoaiPhongDAO {
         List<LoaiPhong> danhSachLoaiPhong = new java.util.ArrayList<>();
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
 
             ResultSet rs = ps.executeQuery();
@@ -78,6 +72,7 @@ public class LoaiPhongDAO {
         List<RoomStatistic> danhSachPhong = new java.util.ArrayList<>();
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setTimestamp(1, startTime);
             ps.setTimestamp(2, endTime);
@@ -107,6 +102,7 @@ public class LoaiPhongDAO {
                 "VALUES (?, ?, ?, ?)";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, loaiPhong.getMaLoaiPhong());
             ps.setString(2, loaiPhong.getTenLoaiPhong());
@@ -132,6 +128,7 @@ public class LoaiPhongDAO {
                 " WHERE ma_loai_phong = ?";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, loaiPhong.getTenLoaiPhong());
             ps.setInt(2, loaiPhong.getSoLuongKhach());
@@ -160,6 +157,7 @@ public class LoaiPhongDAO {
         String query = "UPDATE LoaiPhong SET da_xoa = 1 WHERE ma_loai_phong = ?";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, id);
             int rowsAffected = ps.executeUpdate();
@@ -178,6 +176,7 @@ public class LoaiPhongDAO {
         String query = "SELECT TOP 1 * FROM LoaiPhong WHERE da_xoa = 0 ORDER BY ma_loai_phong DESC";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
 
             ResultSet rs = ps.executeQuery();
@@ -214,6 +213,7 @@ public class LoaiPhongDAO {
         Map<String, Double> listPrice = new HashMap<>();
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, loaiPhongId);
             ResultSet rs = ps.executeQuery();
@@ -231,21 +231,22 @@ public class LoaiPhongDAO {
         return null;
     }
 
-    public Map<String, BigDecimal> layGiaLoaiPhongTheoMaPhong(String maPhong) {
+    public Map<PriceType, BigDecimal> layGiaLoaiPhongTheoMaPhong(String maPhong) {
         String query = "select top 1  gp.gia_ngay_moi as gia_ngay , gp.gia_gio_moi as gia_gio from Phong p\n" +
                         "left join LoaiPhong lp on lp.ma_loai_phong = p.ma_loai_phong\n" +
                         "left join GiaPhong gp on lp.ma_loai_phong = gp.ma_loai_phong\n" +
                         "where gp.da_xoa = 0 and ma_phong = ? \n" +
                         "order by gp.thoi_gian_tao desc";
-        Map<String, BigDecimal> listPrice = new HashMap<>();
+        Map<PriceType, BigDecimal> listPrice = new HashMap<>();
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, maPhong);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                listPrice.put("gia_ngay", rs.getBigDecimal("gia_ngay"));
-                listPrice.put("gia_gio", rs.getBigDecimal("gia_gio"));
+                listPrice.put(PriceType.GIA_NGAY, rs.getBigDecimal("gia_ngay"));
+                listPrice.put(PriceType.GIA_GIO, rs.getBigDecimal("gia_gio"));
             }
 
             return listPrice;
@@ -260,6 +261,7 @@ public class LoaiPhongDAO {
     public LoaiPhong timLoaiPhongMoiNhatBaoGomDaXoa() {
         String query = "SELECT TOP 1 * FROM LoaiPhong ORDER BY ma_loai_phong DESC";
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -285,7 +287,9 @@ public class LoaiPhongDAO {
 
         Timestamp now = loaiPhong.getThoiGianTao() != null ? loaiPhong.getThoiGianTao() : new Timestamp(System.currentTimeMillis());
 
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, loaiPhong.getMaLoaiPhong());
             ps.setString(2, loaiPhong.getTenLoaiPhong());
             ps.setInt(3, loaiPhong.getSoLuongKhach());
@@ -304,6 +308,30 @@ public class LoaiPhongDAO {
         }
     }
 
+    public Map<String, Double> layGiaLoaiPhongTheoIdV2(String loaiPhongId) {
+        String query = "select gia_gio_moi as gia_gio, gia_ngay_moi as gia_ngay from GiaPhong gp\n" +
+                "where\tgp.ma_loai_phong = ?\n" +
+                "order by thoi_gian_tao desc\n";
+        Map<String, Double> listPrice = new HashMap<>();
+
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+            ps.setString(1, loaiPhongId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                listPrice.put("gia_ngay", rs.getDouble("gia_ngay"));
+                listPrice.put("gia_gio", rs.getDouble("gia_gio"));
+            }
+
+            return listPrice;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (TableEntityMismatch te) {
+            System.out.println(te.getMessage());
+        }
+        return null;
+    }
 
 }
 

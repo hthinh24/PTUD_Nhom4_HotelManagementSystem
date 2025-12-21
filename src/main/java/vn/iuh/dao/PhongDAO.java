@@ -1,7 +1,9 @@
 package vn.iuh.dao;
 
+import vn.iuh.constraint.RoomStatus;
 import vn.iuh.dto.repository.RoomFurnitureItem;
 import vn.iuh.dto.repository.RoomWithCategory;
+import vn.iuh.dto.repository.ThongTinDonDep;
 import vn.iuh.dto.repository.ThongTinPhong;
 import vn.iuh.entity.CongViec;
 import vn.iuh.entity.Phong;
@@ -14,20 +16,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class PhongDAO {
-    private final Connection connection;
-
-    public PhongDAO() {
-        connection = DatabaseUtil.getConnect();
-    }
-
-    public PhongDAO(Connection connection) {
-        this.connection = connection;
-    }
-
     public Phong timPhong(String roomID) {
         String query = "SELECT * FROM Phong WHERE ma_phong = ? AND da_xoa = 0";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, roomID);
 
@@ -48,6 +41,7 @@ public class PhongDAO {
         String query = "SELECT * FROM Phong WHERE ten_phong = ?";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, tenPhong);
 
@@ -69,6 +63,7 @@ public class PhongDAO {
         List<Phong> phongs = new ArrayList<>();
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
 
             var rs = ps.executeQuery();
@@ -112,6 +107,7 @@ public class PhongDAO {
         List<RoomWithCategory> results = new ArrayList<>();
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             for (int i = 0; i < danhSachMaPhong.size(); i++) {
                 ps.setString(i + 1, danhSachMaPhong.get(i));
@@ -141,6 +137,7 @@ public class PhongDAO {
         List<RoomFurnitureItem> furnitureItems = new ArrayList<>();
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, roomID);
 
@@ -161,6 +158,7 @@ public class PhongDAO {
         String query = "INSERT INTO Phong (ma_phong, ten_phong, dang_hoat_dong, ghi_chu, mo_ta_phong, ma_loai_phong) " +
                        "VALUES (?, ?, ?, ?, ?, ?)";
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, phong.getMaPhong());
             ps.setString(2, phong.getTenPhong());
@@ -187,6 +185,7 @@ public class PhongDAO {
                        "mo_ta_phong = ?, ma_loai_phong = ? WHERE ma_phong = ?";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, phong.getTenPhong());
             ps.setBoolean(2, phong.isDangHoatDong());
@@ -215,6 +214,7 @@ public class PhongDAO {
         String query = "DELETE FROM Phong WHERE ma_phong = ?";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, roomID);
 
@@ -230,6 +230,7 @@ public class PhongDAO {
         String query = "SELECT TOP 1 * FROM Phong ORDER BY ma_phong DESC";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
 
             var rs = ps.executeQuery();
@@ -298,18 +299,18 @@ public class PhongDAO {
         try {
             // 1) Lấy ma_loai_phong của phòng hiện tại
             String qGetLoai = "SELECT p.ma_loai_phong " +
-                    "FROM Phong p " +
-                    "WHERE p.ma_phong = ?";
+                              "FROM Phong p " +
+                              "WHERE p.ma_phong = ?";
 
             String maLoaiPhong = null;
-            try (PreparedStatement ps = connection.prepareStatement(qGetLoai)) {
-                ps.setString(1, currentRoomId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        maLoaiPhong = rs.getString("ma_loai_phong");
-                    } else {
-                        return results;
-                    }
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(qGetLoai);
+            ps.setString(1, currentRoomId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    maLoaiPhong = rs.getString("ma_loai_phong");
+                } else {
+                    return results;
                 }
             }
 
@@ -322,27 +323,27 @@ public class PhongDAO {
 
             // 2) Lấy danh sách phòng khác cùng ma_loai_phong, đang hoạt động, đủ chỗ
             String baseQuery = "SELECT p.* FROM Phong p " +
-                    "WHERE p.ma_phong <> ? " +
-                    "AND p.ma_loai_phong = ? " +
-                    "AND ISNULL(p.dang_hoat_dong, 0) = 1 " +
-                    "AND ISNULL(p.da_xoa,0) = 0";
+                               "WHERE p.ma_phong <> ? " +
+                               "AND p.ma_loai_phong = ? " +
+                               "AND ISNULL(p.dang_hoat_dong, 0) = 1 " +
+                               "AND ISNULL(p.da_xoa,0) = 0";
 
             // 3) Kiểm tra xem có bị trùng chi tiết đặt phòng hay không
             // nếu trùng thời gian trên chi tiết đặt phòng ==> Không thể đổi phòng
             final String bookingOverlap =
                     "SELECT 1 FROM ChiTietDatPhong cdp " +
-                            "WHERE cdp.ma_phong = ? AND ISNULL(cdp.da_xoa,0)=0 " +
-                            "  AND cdp.kieu_ket_thuc IS NULL " +
-                            "  AND cdp.tg_nhan_phong IS NOT NULL AND cdp.tg_tra_phong IS NOT NULL " +
-                            "  AND cdp.tg_nhan_phong < cdp.tg_tra_phong " +
-                            "  AND NOT (cdp.tg_tra_phong <= ? OR cdp.tg_nhan_phong >= ?)";
+                    "WHERE cdp.ma_phong = ? AND ISNULL(cdp.da_xoa,0)=0 " +
+                    "  AND cdp.kieu_ket_thuc IS NULL " +
+                    "  AND cdp.tg_nhan_phong IS NOT NULL AND cdp.tg_tra_phong IS NOT NULL " +
+                    "  AND cdp.tg_nhan_phong < cdp.tg_tra_phong " +
+                    "  AND NOT (cdp.tg_tra_phong <= ? OR cdp.tg_nhan_phong >= ?)";
 
             final String workOverlap =
                     "SELECT 1 FROM CongViec cv " +
-                            "WHERE cv.ma_phong = ? AND ISNULL(cv.da_xoa,0)=0 " +
-                            "  AND cv.tg_bat_dau IS NOT NULL AND cv.tg_ket_thuc IS NOT NULL " +
-                            "  AND cv.tg_bat_dau < cv.tg_ket_thuc " +
-                            "  AND NOT (cv.tg_ket_thuc <= ? OR cv.tg_bat_dau >= ?)";
+                    "WHERE cv.ma_phong = ? AND ISNULL(cv.da_xoa,0)=0 " +
+                    "  AND cv.tg_bat_dau IS NOT NULL AND cv.tg_ket_thuc IS NOT NULL " +
+                    "  AND cv.tg_bat_dau < cv.tg_ket_thuc " +
+                    "  AND NOT (cv.tg_ket_thuc <= ? OR cv.tg_bat_dau >= ?)";
 
             try (PreparedStatement psBase = connection.prepareStatement(baseQuery);
                  PreparedStatement psBookingOverlap = connection.prepareStatement(bookingOverlap);
@@ -397,9 +398,13 @@ public class PhongDAO {
     // Lấy giá mới nhất của một loại phòng
     public double[] getLatestPriceForLoaiPhong(String maLoaiPhong) {
         double[] price = new double[]{0.0, 0.0};
-        String query = "SELECT TOP 1 gia_ngay_moi, gia_gio_moi FROM GiaPhong WHERE ma_loai_phong = ? AND ISNULL(da_xoa,0)=0 ORDER BY thoi_gian_tao DESC";
+        String query =
+                "SELECT TOP 1 gia_ngay_moi, gia_gio_moi FROM GiaPhong WHERE ma_loai_phong = ? AND ISNULL(da_xoa,0)=0 ORDER BY thoi_gian_tao DESC";
 
-        try (PreparedStatement ps = connection.prepareStatement(query)) {
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maLoaiPhong);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -422,13 +427,16 @@ public class PhongDAO {
     // Tìm danh sách nội thất theo loại phòng
     public List<RoomFurnitureItem> timNoiThatTheoLoaiPhong(String maLoaiPhong) {
         String query = "SELECT nttlp.ma_noi_that, nt.ten_noi_that, nttlp.so_luong " +
-                "FROM NoiThatTrongLoaiPhong nttlp " +
-                "JOIN NoiThat nt ON nttlp.ma_noi_that = nt.ma_noi_that " +
-                "WHERE nttlp.ma_loai_phong = ? AND ISNULL(nttlp.da_xoa,0) = 0";
+                       "FROM NoiThatTrongLoaiPhong nttlp " +
+                       "JOIN NoiThat nt ON nttlp.ma_noi_that = nt.ma_noi_that " +
+                       "WHERE nttlp.ma_loai_phong = ? AND ISNULL(nttlp.da_xoa,0) = 0";
 
         List<RoomFurnitureItem> furnitureItems = new ArrayList<>();
 
-        try (PreparedStatement ps = connection.prepareStatement(query)) {
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maLoaiPhong);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -451,7 +459,9 @@ public class PhongDAO {
         String query = "UPDATE Phong SET da_xoa = 1 WHERE ma_phong = ?";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, roomID);
 
             int rowsAffected = ps.executeUpdate();
@@ -467,7 +477,9 @@ public class PhongDAO {
         List<Phong> phongs = new ArrayList<>();
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
 
             var rs = ps.executeQuery();
             while (rs.next())
@@ -484,12 +496,15 @@ public class PhongDAO {
 
     public CongViec layCongViecHienTaiCuaPhong(String maPhong) {
         String query = "SELECT TOP 1 * FROM CongViec " +
-                "WHERE ma_phong = ? AND ISNULL(da_xoa,0) = 0 " +
-                "  AND ( (tg_bat_dau IS NOT NULL AND tg_ket_thuc IS NOT NULL AND ? BETWEEN tg_bat_dau AND tg_ket_thuc) " +
-                "        OR (tg_bat_dau IS NOT NULL AND tg_ket_thuc IS NULL AND tg_bat_dau <= ?) ) " +
-                "ORDER BY tg_bat_dau DESC";
+                       "WHERE ma_phong = ? AND ISNULL(da_xoa,0) = 0 " +
+                       "  AND ( (tg_bat_dau IS NOT NULL AND tg_ket_thuc IS NOT NULL AND ? BETWEEN tg_bat_dau AND tg_ket_thuc) " +
+                       "        OR (tg_bat_dau IS NOT NULL AND tg_ket_thuc IS NULL AND tg_bat_dau <= ?) ) " +
+                       "ORDER BY tg_bat_dau DESC";
 
-        try (PreparedStatement ps = connection.prepareStatement(query)) {
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+
             Timestamp now = new Timestamp(System.currentTimeMillis());
             ps.setString(1, maPhong);
             ps.setTimestamp(2, now);
@@ -513,5 +528,55 @@ public class PhongDAO {
             throw new RuntimeException(e);
         }
         return null;
+    }
+
+    public ThongTinDonDep getCleaningInfoById(String roomId) {
+        String query = "SELECT p.ma_phong, p.ten_phong, cv.tg_bat_dau, cv.tg_ket_thuc " +
+                       "FROM Phong p " +
+                       "JOIN CongViec cv ON p.ma_phong = cv.ma_phong " +
+                       "WHERE p.ma_phong = ? " +
+                       "AND p.da_xoa = 0 " +
+                       "  AND cv.da_xoa = 0 " +
+                       "  AND cv.ten_trang_thai = ? " +
+                       "ORDER BY cv.tg_bat_dau DESC";
+
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+
+            ps.setString(1, roomId);
+            ps.setString(2, RoomStatus.ROOM_CLEANING_STATUS.getStatus());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ThongTinDonDep info = new ThongTinDonDep(
+                            rs.getString("ma_phong"),
+                            rs.getString("ten_phong"),
+                            rs.getTimestamp("tg_bat_dau"),
+                            rs.getTimestamp("tg_ket_thuc")
+                    );
+                    return info;
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    public boolean existsRoomForLoaiPhong(String maLoaiPhong) {
+        if (maLoaiPhong == null || maLoaiPhong.isBlank()) return false;
+        String query = "SELECT 1 FROM Phong WHERE ma_loai_phong = ? AND ISNULL(da_xoa,0) = 0";
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+            ps.setString(1, maLoaiPhong);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi kiểm tra phòng theo loại: " + e.getMessage(), e);
+        }
     }
 }

@@ -20,46 +20,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class DatPhongDAO {
-    private final Connection connection;
-
-    public DatPhongDAO() {
-        this.connection = DatabaseUtil.getConnect();
-    }
-
-    public Connection getConnection() {
-        return this.connection;
-    }
-
-    public void khoiTaoGiaoTac() {
-        DatabaseUtil.enableTransaction(connection);
-    }
-
-    public void thucHienGiaoTac() {
-        try {
-            if (connection != null && !connection.getAutoCommit()) {
-                connection.commit();
-                DatabaseUtil.disableTransaction(connection);
-            }
-        } catch (SQLException e) {
-            System.out.println("Lỗi commit transaction: " + e.getMessage());
-            DatabaseUtil.closeConnection(connection);
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void hoanTacGiaoTac() {
-        try {
-            if (connection != null && !connection.getAutoCommit()) {
-                connection.rollback();
-                DatabaseUtil.disableTransaction(connection);
-            }
-        } catch (SQLException e) {
-            System.out.println("Lỗi rollback transaction: " + e.getMessage());
-            DatabaseUtil.closeConnection(connection);
-            throw new RuntimeException(e);
-        }
-    }
-
     public boolean themDonDatPhong(DonDatPhong donDatPhongEntity) {
         String query = "INSERT INTO DonDatPhong" +
                        " (ma_don_dat_phong, mo_ta, tg_nhan_phong, tg_tra_phong, tong_tien_du_tinh, tien_dat_coc" +
@@ -67,7 +27,9 @@ public class DatPhongDAO {
                        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, donDatPhongEntity.getMaDonDatPhong());
             ps.setString(2, donDatPhongEntity.getMoTa());
             ps.setTimestamp(3, donDatPhongEntity.getTgNhanPhong());
@@ -95,7 +57,9 @@ public class DatPhongDAO {
                        " VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
 
             for (ChiTietDatPhong chiTietDatPhong : chiTietDatPhongs) {
                 ps.setString(1, chiTietDatPhong.getMaChiTietDatPhong());
@@ -124,6 +88,7 @@ public class DatPhongDAO {
                        " VALUES (?, ?, ?)";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
 
             for (LichSuDiVao historyCheckIn : lichSuDiVaos) {
@@ -146,7 +111,9 @@ public class DatPhongDAO {
         String query = "SELECT * FROM DonDatPhong WHERE ma_don_dat_phong = ? AND da_xoa = 0";
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maDonDatPhong);
 
             var rs = ps.executeQuery();
@@ -178,11 +145,14 @@ public class DatPhongDAO {
                        "    SELECT TOP 1 cv.ten_trang_thai " +
                        "    FROM CongViec cv " +
                        "    WHERE cv.ma_phong = p.ma_phong AND (GETDATE() >= cv.tg_bat_dau) and da_xoa = 0" +
-                       ") AS cv";
+                       ") AS cv " +
+                       "WHERE p.da_xoa = 0 " +
+                       "AND p.dang_hoat_dong != 0 ";
         List<ThongTinPhong> thongTinPhongs = new ArrayList<>();
 
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
 
             var rs = ps.executeQuery();
             while (rs.next())
@@ -217,7 +187,8 @@ public class DatPhongDAO {
 
         List<PhieuDatPhong> danhSachPhieuDatPhong = new ArrayList<>();
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setInt(1, -WorkTimeCost.CHECKIN_LATE_MAX.getMinutes());
             ps.setString(2, RoomStatus.ROOM_BOOKED_STATUS.getStatus());
 
@@ -242,7 +213,8 @@ public class DatPhongDAO {
                        " WHERE ddp.ma_don_dat_phong = ?";
 
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maDonDatPhong);
 
             var rs = ps.executeQuery();
@@ -265,24 +237,28 @@ public class DatPhongDAO {
     }
 
 
-    public CustomerInfo timThongTinKhachHangBangMaChiTietDatPhong(String maChiTietDatPhong) {
-        String query = "SELECT kh.ma_khach_hang, kh.CCCD, kh.ten_khach_hang, kh.so_dien_thoai" +
+    public CustomerWithBookingInfo timThongTinKhachHangBangMaChiTietDatPhong(String maChiTietDatPhong) {
+        String query = "SELECT kh.ma_khach_hang, kh.CCCD, kh.ten_khach_hang, kh.so_dien_thoai, ctdp.tg_nhan_phong, ctdp.tg_tra_phong, ctdp.ghi_chu" +
                        " FROM ChiTietDatPhong ctdp" +
                        " JOIN DonDatPhong ddp ON ddp.ma_don_dat_phong = ctdp.ma_don_dat_phong" +
                        " JOIN KhachHang kh ON kh.ma_khach_hang = ddp.ma_khach_hang" +
                        " WHERE ctdp.ma_chi_tiet_dat_phong = ?";
 
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maChiTietDatPhong);
 
             var rs = ps.executeQuery();
             if (rs.next())
-                return new CustomerInfo(
+                return new CustomerWithBookingInfo(
                         rs.getString("ma_khach_hang"),
                         rs.getString("CCCD"),
                         rs.getString("ten_khach_hang"),
-                        rs.getString("so_dien_thoai")
+                        rs.getString("so_dien_thoai"),
+                        rs.getTimestamp("tg_nhan_phong"),
+                        rs.getTimestamp("tg_tra_phong"),
+                        rs.getString("ghi_chu")
                 );
             else
                 return null;
@@ -312,7 +288,9 @@ public class DatPhongDAO {
 
         List<PhieuDatPhong> danhSachPhieuDatPhong = new ArrayList<>();
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, RoomStatus.ROOM_BOOKED_STATUS.getStatus());
             ps.setString(2, id);
 
@@ -357,6 +335,8 @@ public class DatPhongDAO {
 
         List<ThongTinDatPhong> thongTinDatPhongs = new ArrayList<>();
         try {
+            Connection connection = DatabaseUtil.getConnect();
+
             PreparedStatement ps = connection.prepareStatement(query.toString());
 
             int i = 1;
@@ -400,7 +380,8 @@ public class DatPhongDAO {
 
         List<ThongTinPhong> danhSachThongTinPhongTrong = new ArrayList<>();
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setTimestamp(1, timeIn);
             ps.setTimestamp(2, timeIn);
             ps.setTimestamp(3, timeOut);
@@ -449,7 +430,8 @@ public class DatPhongDAO {
 
         List<String> danhSachThongMaPhongKhongKhaDung = new ArrayList<>();
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, RoomStatus.ROOM_CHECKOUT_LATE_STATUS.getStatus());
             ps.setInt(2, WorkTimeCost.CHECKOUT_LATE_MAX.getMinutes());
             ps.setTimestamp(3, timeIn);
@@ -501,6 +483,7 @@ public class DatPhongDAO {
 
         List<ThongTinDatPhong> thongTinDatPhongs = new ArrayList<>();
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query.toString());
 
             int index = 1;
@@ -533,7 +516,8 @@ public class DatPhongDAO {
         List<ChiTietDatPhong> chiTietDatPhongs = new ArrayList<>();
 
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maDatPhong);
 
             var rs = ps.executeQuery();
@@ -553,7 +537,8 @@ public class DatPhongDAO {
         String query = "SELECT * FROM ChiTietDatPhong WHERE ma_don_dat_phong = ? AND ma_phong = ? AND da_xoa = 0";
 
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maDatPhong);
             ps.setString(2, maPhong);
 
@@ -574,7 +559,8 @@ public class DatPhongDAO {
         String query = "UPDATE DonDatPhong SET da_xoa = 1 WHERE ma_don_dat_phong = ?";
 
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maDatPhong);
 
             ps.executeUpdate();
@@ -600,6 +586,7 @@ public class DatPhongDAO {
         query.append(")");
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query.toString());
 
             for (int i = 0; i < ids.size(); i++) {
@@ -618,7 +605,8 @@ public class DatPhongDAO {
         String query = "UPDATE ChiTietDatPhong SET da_xoa = 1 WHERE ma_chi_tiet_dat_phong = ?";
 
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maChiTietDatPhong);
             ps.executeUpdate();
 
@@ -632,7 +620,8 @@ public class DatPhongDAO {
         String query = "SELECT TOP 1 * FROM DonDatPhong ORDER BY ma_don_dat_phong DESC";
 
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
 
             var rs = ps.executeQuery();
             if (rs.next())
@@ -652,7 +641,8 @@ public class DatPhongDAO {
         String query = "SELECT TOP 1 * FROM ChiTietDatPhong ORDER BY ma_chi_tiet_dat_phong DESC";
 
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
 
             var rs = ps.executeQuery();
             if (rs.next())
@@ -673,7 +663,9 @@ public class DatPhongDAO {
         List<ChiTietDatPhong> chiTietDatPhongs = new ArrayList<>();
 
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maDatPhong);
 
             var rs = ps.executeQuery();
@@ -698,7 +690,9 @@ public class DatPhongDAO {
                 "LEFT JOIN KhachHang kh ON kh.ma_khach_hang = ddp.ma_khach_hang " +
                 "WHERE  p.ma_phong = ? and ctdp.tg_nhan_phong BETWEEN dateadd(second, -10 , ?) AND ?";
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maPhong);
             ps.setTimestamp(2, tgBatDau);
             ps.setTimestamp(3, tgKetThuc);
@@ -720,7 +714,9 @@ public class DatPhongDAO {
     public DonDatPhong getDonDatPhongById(String maDonDatPhong) {
         String query = "SELECT * FROM DonDatPhong WHERE ma_don_dat_phong = ? AND da_xoa = 0";
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maDonDatPhong);
 
             var rs = ps.executeQuery();
@@ -743,7 +739,9 @@ public class DatPhongDAO {
             query += " AND da_xoa = 0";
         }
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maDonDatPhong);
 
             var rs = ps.executeQuery();
@@ -776,7 +774,9 @@ public class DatPhongDAO {
 
         List<DonDatPhong> reservationIds = new ArrayList<>();
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, InvoiceType.PAYMENT_INVOICE.getStatus());
             var rs = ps.executeQuery();
             while (rs.next()) {
@@ -809,6 +809,7 @@ public class DatPhongDAO {
 
         List<KhachHang> customers = new ArrayList<>();
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query.toString());
             for (int i = 0; i < currentReservationIds.size(); i++) {
                 ps.setString(i + 1, currentReservationIds.get(i));
@@ -861,6 +862,7 @@ public class DatPhongDAO {
 
         List<ReservationStatusRepository> reservations = new ArrayList<>();
         try {
+            Connection connection = DatabaseUtil.getConnect();
             PreparedStatement ps = connection.prepareStatement(query.toString());
             for (int i = 0; i < reservationIds.size(); i++) {
                 ps.setString(i + 1, reservationIds.get(i));
@@ -899,7 +901,8 @@ public class DatPhongDAO {
 
         List<vn.iuh.dto.response.ReservationResponse> reservations = new ArrayList<>();
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setBoolean(1, true);
             ps.setString(2, RoomEndType.TRA_PHONG.getStatus());
             ps.setString(3, RoomEndType.KHONG_NHAN_PHONG.getStatus());
@@ -932,7 +935,9 @@ public class DatPhongDAO {
                        "WHERE ctdp.ma_don_dat_phong = ? "
                 ;
 
-        try (PreparedStatement ps = connection.prepareStatement(query)) {
+        try{
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, maDonDatPhong);
             ResultSet rs = ps.executeQuery();
 
@@ -1062,7 +1067,8 @@ public class DatPhongDAO {
         String query = "SELECT * FROM ChiTietDatPhong WHERE ma_chi_tiet_dat_phong = ? AND da_xoa = 0";
 
         try {
-            PreparedStatement ps = connection.prepareStatement(query);
+            Connection connection = DatabaseUtil.getConnect();PreparedStatement ps = connection.prepareStatement(query);
+
             ps.setString(1, maChiTietDatPhong);
 
             var rs = ps.executeQuery();
@@ -1076,6 +1082,58 @@ public class DatPhongDAO {
         }
 
         return null;
+    }
+
+    public List<ThongTinDonDep> timTatCaThongTinDonDepTheoDanhSachMaPhong(List<String> cleaningRoomIds) {
+        if (cleaningRoomIds.isEmpty())
+            return new ArrayList<>();
+
+        StringBuilder query = new StringBuilder(
+                "SELECT p.ma_phong, p.ten_phong, cv.tg_bat_dau, cv.tg_ket_thuc" +
+                " FROM Phong p" +
+                " JOIN CongViec cv ON cv.ma_phong = p.ma_phong " +
+                " AND (GETDATE() >= cv.tg_bat_dau) " +
+                " AND GETDATE() <= cv.tg_ket_thuc " +
+                " AND cv.ten_trang_thai = ?" +
+                " AND cv.da_xoa = 0" +
+                " AND p.ma_phong IN (");
+
+        for (int i = 0; i < cleaningRoomIds.size(); i++) {
+            query.append("?");
+            if (i < cleaningRoomIds.size() - 1) {
+                query.append(", ");
+            }
+        }
+        query.append(") ORDER by cv.tg_bat_dau ASC");
+
+        List<ThongTinDonDep> thongTinDonDeps = new ArrayList<>();
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+
+            PreparedStatement ps = connection.prepareStatement(query.toString());
+
+            int i = 1;
+            ps.setString(i, RoomStatus.ROOM_CLEANING_STATUS.getStatus()); i++;
+            for (String maPhong : cleaningRoomIds) {
+                ps.setString(i, maPhong);
+                i++;
+            }
+
+            var rs = ps.executeQuery();
+
+            while (rs.next())
+                thongTinDonDeps.add(new ThongTinDonDep(
+                        rs.getString("ma_phong"),
+                        rs.getString("ten_phong"),
+                        rs.getTimestamp("tg_bat_dau"),
+                        rs.getTimestamp("tg_ket_thuc")
+                ));
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return thongTinDonDeps;
     }
 }
 

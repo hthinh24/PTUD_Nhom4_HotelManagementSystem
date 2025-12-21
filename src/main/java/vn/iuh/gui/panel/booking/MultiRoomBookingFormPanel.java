@@ -163,21 +163,23 @@ public class MultiRoomBookingFormPanel extends JPanel {
     private void setupLayout() {
         // Header panel
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setPreferredSize(new Dimension(0, 40));
         headerPanel.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
         headerPanel.setBackground(CustomUI.blue);
+        headerPanel.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
 
         // Title Panel
-        JPanel titlePanel = new JPanel();
+        JPanel titlePanel = new JPanel(new BorderLayout());
         titlePanel.setOpaque(false);
 
         // Title for multi-room booking
-        JLabel titleLabel = new JLabel("Đặt nhiều phòng (" + selectedRooms.size() + " phòng)", SwingConstants.CENTER);
+        JLabel titleLabel = new JLabel("ĐẶT NHIỀU PHÒNG (" + selectedRooms.size() + " PHÒNG)", SwingConstants.CENTER);
         titleLabel.setFont(CustomUI.bigFont);
         titleLabel.setForeground(CustomUI.white);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 150, 0, 150));
 
-        titlePanel.add(titleLabel);
+        titlePanel.add(titleLabel, BorderLayout.CENTER);
 
         closeButton = new JButton("x");
         closeButton.setFont(CustomUI.bigFont);
@@ -223,11 +225,14 @@ public class MultiRoomBookingFormPanel extends JPanel {
         JPanel footerPanel = new JPanel(new BorderLayout());
         footerPanel.setPreferredSize(new Dimension(0, 50));
         footerPanel.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
-        footerPanel.setBackground(CustomUI.darkBlue);
+        footerPanel.setBackground(CustomUI.white);
+
+        // gray line border on top
+        footerPanel.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, CustomUI.darkBlue));
 
         // Button panel with horizontal layout
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
-        buttonPanel.setBackground(CustomUI.darkBlue);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 3));
+        buttonPanel.setBackground(CustomUI.white);
         buttonPanel.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
         buttonPanel.setOpaque(true);
 
@@ -240,7 +245,7 @@ public class MultiRoomBookingFormPanel extends JPanel {
         btnGoiDichVu.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
 
         btnDatPhong.setFont(CustomUI.bigFont);
-        btnDatPhong.setBackground(CustomUI.darkGreen.brighter());
+        btnDatPhong.setBackground(CustomUI.darkGreen);
         btnDatPhong.setForeground(CustomUI.white);
         btnDatPhong.setPreferredSize(new Dimension(300, 40));
         btnDatPhong.setFocusPainted(false);
@@ -250,7 +255,7 @@ public class MultiRoomBookingFormPanel extends JPanel {
         btnGoiDichVu.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                btnGoiDichVu.setBackground(CustomUI.blue.brighter());
+                btnGoiDichVu.setBackground(CustomUI.blue.darker());
             }
 
             @Override
@@ -262,12 +267,12 @@ public class MultiRoomBookingFormPanel extends JPanel {
         btnDatPhong.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                btnDatPhong.setBackground(CustomUI.darkGreen);
+                btnDatPhong.setBackground(CustomUI.darkGreen.darker());
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                btnDatPhong.setBackground(CustomUI.darkGreen.brighter());
+                btnDatPhong.setBackground(CustomUI.darkGreen);
             }
         });
 
@@ -321,12 +326,12 @@ public class MultiRoomBookingFormPanel extends JPanel {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(Color.WHITE);
 
-        ImageIcon roomIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/room.png")));
+        ImageIcon roomIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/bed.png")));
         roomIcon = new ImageIcon(roomIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH));
 
         // Create collapsible header
         JPanel headerPanel = createCollapsibleHeader(roomIcon, "DANH SÁCH PHÒNG ĐÃ CHỌN",
-                                                     CustomUI.orange, Color.WHITE, () -> {
+                                                     CustomUI.darkBlue, Color.WHITE, () -> {
                     isRoomListCollapsed = !isRoomListCollapsed;
                     togglePanelVisibility(roomListContent, isRoomListCollapsed);
                 });
@@ -335,7 +340,7 @@ public class MultiRoomBookingFormPanel extends JPanel {
         roomListContent = new JPanel(new BorderLayout());
         roomListContent.setBackground(Color.WHITE);
         roomListContent.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(CustomUI.orange, 2),
+                BorderFactory.createLineBorder(CustomUI.darkBlue, 2),
                 BorderFactory.createEmptyBorder(10, 15, 10, 15)
         ));
 
@@ -439,7 +444,7 @@ public class MultiRoomBookingFormPanel extends JPanel {
         customerIcon = new ImageIcon(customerIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH));
 
         JPanel headerPanel = createCollapsibleHeader(customerIcon, "THÔNG TIN KHÁCH HÀNG",
-            new Color(70, 130, 180), CustomUI.white, () -> {
+            CustomUI.darkBlue, CustomUI.white, () -> {
                 isCustomerInfoCollapsed = !isCustomerInfoCollapsed;
                 togglePanelVisibility(customerInfoContent, isCustomerInfoCollapsed);
             });
@@ -447,7 +452,7 @@ public class MultiRoomBookingFormPanel extends JPanel {
         customerInfoContent = new JPanel(new GridBagLayout());
         customerInfoContent.setBackground(Color.WHITE);
         customerInfoContent.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(70, 130, 180), 2),
+            BorderFactory.createLineBorder(CustomUI.darkBlue, 2),
             BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
 
@@ -486,7 +491,7 @@ public class MultiRoomBookingFormPanel extends JPanel {
         bookingIcon = new ImageIcon(bookingIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH));
 
         JPanel headerPanel = createCollapsibleHeader(bookingIcon, "THÔNG TIN ĐẶT PHÒNG",
-                                                     CustomUI.darkGreen, Color.WHITE, () -> {
+                                                     CustomUI.darkBlue, Color.WHITE, () -> {
                     isBookingInfoCollapsed = !isBookingInfoCollapsed;
                     togglePanelVisibility(bookingInfoContent, isBookingInfoCollapsed);
                 });
@@ -494,7 +499,7 @@ public class MultiRoomBookingFormPanel extends JPanel {
         bookingInfoContent = new JPanel(new GridBagLayout());
         bookingInfoContent.setBackground(Color.WHITE);
         bookingInfoContent.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(CustomUI.darkGreen, 2),
+                BorderFactory.createLineBorder(CustomUI.darkBlue, 2),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
 
@@ -525,7 +530,7 @@ public class MultiRoomBookingFormPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         reservationButton.setFont(CustomUI.smallFont);
         reservationButton.setForeground(CustomUI.white);
-        reservationButton.setBackground(CustomUI.purple);
+        reservationButton.setBackground(CustomUI.blue);
         reservationButton.setEnabled(false);
 
         ImageIcon calendar = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/calendar.png")));
@@ -597,7 +602,7 @@ public class MultiRoomBookingFormPanel extends JPanel {
 
         return button;
     }
-    
+
     private void populateActionItems() {
         List<ActionItem> actionItems = getActionItems();
 
