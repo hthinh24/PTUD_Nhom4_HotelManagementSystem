@@ -337,7 +337,7 @@ public class LoginPanelV2 extends JPanel implements ActionListener {
                 }
             } else {
                 JOptionPane.showMessageDialog(this,
-                        "Thông tin xác thực không chính xác.\nVui lòng kiểm tra lại Họ tên, SĐT, CCCD và Username.",
+                        "Thông tin xác thực không chính xác.\nVui lòng kiểm tra lại Họ tên, SĐT, CCCD và tên đăng nhập.",
                         "Sai thông tin",
                         JOptionPane.ERROR_MESSAGE);
             }

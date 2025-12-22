@@ -275,49 +275,61 @@ public class EmployeeDialog extends JDialog {
         String cccd = txtCCCD.getText().trim();
         String sdt = txtSDT.getText().trim();
 
-        if (txtMaNV.getText().trim().isEmpty() && !isEditMode) {
-            JOptionPane.showMessageDialog(this, "Mã nhân viên không được để trống.", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtMaNV.requestFocus();
-            return false;
-        }
+        // 2. Kiểm tra Tên
         if (tenNV.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Tên nhân viên không được để trống.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             txtTenNV.requestFocus();
             return false;
         }
+        // Yêu cầu: 12 số, bắt đầu bằng 0 hoặc 1
         if (cccd.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Số CCCD không được để trống.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             txtCCCD.requestFocus();
             return false;
         }
 
-        // Ví dụ: if (!cccd.matches("^0[0-9]{11}$")) { ... }
+        if (!cccd.matches("^[01][0-9]{11}$")) {
+            JOptionPane.showMessageDialog(this,
+                    "CCCD không hợp lệ!\nPhải có đúng 12 chữ số và bắt đầu bằng số 0 hoặc 1.",
+                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            txtCCCD.requestFocus();
+            return false;
+        }
 
+        // Yêu cầu: 10 số, bắt đầu bằng 02, 03, 05, 07, 09
         if (sdt.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Số điện thoại không được để trống.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             txtSDT.requestFocus();
             return false;
         }
-        // Ví dụ: if (!sdt.matches("^0[0-9]{9}$")) { ... }
 
+        if (!sdt.matches("^(02|03|05|07|09)[0-9]{8}$")) {
+            JOptionPane.showMessageDialog(this,
+                    "Số điện thoại không hợp lệ!\nPhải có 10 số và bắt đầu bằng: 03, 05, 07, 09 hoặc 02.",
+                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            txtSDT.requestFocus();
+            return false;
+        }
+
+        // 3. Kiểm tra Ngày sinh
         if (datePickerNgaySinh.getDate() == null) {
             JOptionPane.showMessageDialog(this, "Ngày sinh không được để trống.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
-        // Kiểm tra ngày sinh không được là ngày tương lai
+        // Kiểm tra ngày tương lai
         if (datePickerNgaySinh.getDate().isAfter(LocalDate.now())) {
             JOptionPane.showMessageDialog(this, "Ngày sinh không thể là ngày trong tương lai.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
+        // Kiểm tra đủ 18 tuổi
         LocalDate da18Tuoi = datePickerNgaySinh.getDate().plusYears(18);
         LocalDate homNay = LocalDate.now();
         if (da18Tuoi.isAfter(homNay)) {
-            JOptionPane.showMessageDialog(this, "Nhân viên phải đủ 18 tuổi.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Nhân viên phải đủ 18 tuổi mới được tuyển dụng.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-
         return true;
     }
 

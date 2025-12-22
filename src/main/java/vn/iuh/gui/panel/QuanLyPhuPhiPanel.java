@@ -54,7 +54,7 @@ public class QuanLyPhuPhiPanel extends RoleChecking {
 
     private void createTopPanel() {
         JPanel pnlTop = new JPanel(new BorderLayout());
-        JLabel lblTop = new JLabel("Quản lý phụ phí", SwingConstants.CENTER);
+        JLabel lblTop = new JLabel("QUẢN LÝ PHỤ PHÍ", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
         lblTop.setFont(CustomUI.normalFont != null ? CustomUI.normalFont.deriveFont(Font.BOLD, 18f) : new Font("Arial", Font.BOLD, 18));
         pnlTop.setBackground(CustomUI.blue);

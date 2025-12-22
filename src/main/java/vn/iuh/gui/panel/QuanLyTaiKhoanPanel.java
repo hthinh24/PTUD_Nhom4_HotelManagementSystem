@@ -238,7 +238,7 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
 
     private void createTopPanel() {
         JPanel pnlTop = new JPanel(new BorderLayout());
-        JLabel lblTop = new JLabel("Quản lý tài khoản", SwingConstants.CENTER);
+        JLabel lblTop = new JLabel("QUẢN LÝ TÀI KHOẢN", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
         lblTop.setFont(CustomUI.normalFont != null ? CustomUI.normalFont.deriveFont(Font.BOLD, 20f) : FONT_ACTION);
 

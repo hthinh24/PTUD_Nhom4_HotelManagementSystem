@@ -72,7 +72,7 @@ public class TroGiupPanel extends JPanel {
         root.add(nodeEmp);
 
         //Nhóm 8: Quản lý tài khoản
-        DefaultMutableTreeNode nodeAcc = createCategoryNode("Quản Lý Tài Khoản");
+        DefaultMutableTreeNode nodeAcc = createCategoryNode("Quản Lý tài khoản");
         nodeAcc.add(new DefaultMutableTreeNode("Thêm tài khoản"));
         nodeAcc.add(new DefaultMutableTreeNode("Sửa tài khoản"));
         root.add(nodeAcc);
@@ -511,7 +511,7 @@ public class TroGiupPanel extends JPanel {
 
     private void createTopPanel() {
         JPanel pnlTop = new JPanel(new BorderLayout());
-        JLabel lblTop = new JLabel("Trợ giúp", SwingConstants.CENTER);
+        JLabel lblTop = new JLabel("TRỢ GIÚP NGƯỜI DÙNG", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
         lblTop.setFont(CustomUI.normalFont != null ? CustomUI.normalFont.deriveFont(Font.BOLD, 20f) : new Font("Arial", Font.BOLD, 18));
 
