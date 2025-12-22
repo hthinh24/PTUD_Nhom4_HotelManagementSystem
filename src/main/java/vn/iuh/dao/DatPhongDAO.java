@@ -1038,7 +1038,7 @@ public class DatPhongDAO {
                     rs.getString("loai"),
                     rs.getString("ma_khach_hang"),
                     rs.getString("ma_phien_dang_nhap"),
-                    rs.getString("thoi_gian_tao"),
+                    rs.getTimestamp("thoi_gian_tao"),
                     rs.getBoolean("da_xoa")
             );
         } catch (SQLException e) {

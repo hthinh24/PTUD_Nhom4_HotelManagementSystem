@@ -154,9 +154,9 @@ public class SuaPhongDialog extends JDialog {
         bottom.add(btnCancel);
         add(bottom, BorderLayout.SOUTH);
 
-        // Thiết lập trạng thái mặc định
-        btnStartMaintenance.setEnabled(true);
-        btnEndMaintenance.setEnabled(true);
+        // Thiết lập trạng thái mặc định: disable hai nút bảo trì cho đến khi loadData hoàn tất
+        btnStartMaintenance.setEnabled(false);
+        btnEndMaintenance.setEnabled(false);
 
         // Action: Hủy
         btnCancel.addActionListener(e -> {
@@ -405,7 +405,20 @@ public class SuaPhongDialog extends JDialog {
                         furnitureModel.clear();
                     }
 
-                    // KHÔNG kiểm tra trạng thái ở dialog nữa: luôn cho phép thao tác (QuanLyPhongPanel đã kiểm tra trước khi mở dialog)
+                    // Kiểm tra trạng thái bảo trì của phòng và set 2 nút tương ứng
+                    // NOTE: phong.isDangHoatDong() == true  => phòng đang HOẠT ĐỘNG (không bảo trì)
+                    //       phong.isDangHoatDong() == false => phòng đang BẢO TRÌ
+                    if (!phong.isDangHoatDong()) {
+                        // đang bảo trì
+                        btnStartMaintenance.setEnabled(false);
+                        btnEndMaintenance.setEnabled(true);
+                    } else {
+                        // đang hoạt động
+                        btnStartMaintenance.setEnabled(true);
+                        btnEndMaintenance.setEnabled(false);
+                    }
+
+                    // Hiển thị UI chính
                     setControlsEnabled(true);
                     lblInfo.setVisible(false);
 
@@ -413,6 +426,9 @@ public class SuaPhongDialog extends JDialog {
                     e.printStackTrace();
                     spSoNguoi.setValue(1);
                     furnitureModel.clear();
+                    // Nếu load lỗi thì ít nhất cho phép thao tác chỉnh sửa và disable cả 2 nút bảo trì (an toàn)
+                    btnStartMaintenance.setEnabled(false);
+                    btnEndMaintenance.setEnabled(false);
                     setControlsEnabled(true);
                 }
             }
@@ -474,8 +490,8 @@ public class SuaPhongDialog extends JDialog {
         btnSave.setEnabled(enabled);
         // list nội thất chỉ đọc
         // giữ cho các nút bảo trì tương tự
-        btnStartMaintenance.setEnabled(enabled);
-        btnEndMaintenance.setEnabled(enabled);
+        btnStartMaintenance.setEnabled(enabled && btnStartMaintenance.isEnabled());
+        btnEndMaintenance.setEnabled(enabled && btnEndMaintenance.isEnabled());
     }
 
     // Chuyển dialog sang chế độ read-only và hiển thị thông báo lý do

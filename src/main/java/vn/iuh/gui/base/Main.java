@@ -254,9 +254,9 @@ public class Main extends JFrame {
             pnlQuanLyLoaiPhong.checkRoleAndLoadData();
         }
 
-        if (pnlQuanLyLoaiDichVu != null) {
-            pnlQuanLyLoaiDichVu.checkRoleAndLoadData();
-        }
+//        if (pnlQuanLyLoaiDichVu != null) {
+//            pnlQuanLyLoaiDichVu.checkRoleAndLoadData();
+//        }
 
         if (pnlThietLapHeThong != null) {
             pnlThietLapHeThong.checkRoleAndLoadData();

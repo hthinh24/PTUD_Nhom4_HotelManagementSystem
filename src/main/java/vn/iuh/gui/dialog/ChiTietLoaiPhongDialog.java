@@ -3,6 +3,7 @@ package vn.iuh.gui.dialog;
 import vn.iuh.dto.response.RoomCategoryPriceHistory;
 import vn.iuh.entity.LoaiPhong;
 import vn.iuh.entity.NoiThat;
+import vn.iuh.entity.NoiThatTrongLoaiPhong;
 import vn.iuh.gui.base.CustomUI;
 import vn.iuh.service.LoaiPhongService;
 import vn.iuh.service.NoiThatService;
@@ -180,7 +181,8 @@ public class ChiTietLoaiPhongDialog extends JDialog {
     private void loadDataAsync() {
         SwingWorker<Void, Void> wk = new SwingWorker<>() {
             private LoaiPhong lp = null;
-            private List<NoiThat> furn = Collections.emptyList();
+            // biến mới: hiển thị nội thất đã format (tên, mã, số lượng)
+            private List<String> furnitureDisplay = Collections.emptyList();
             private double latestGiaGio = 0.0;
             private double latestGiaNgay = 0.0;
             private List<HistoryRow> historyRows = new ArrayList<>();
@@ -193,10 +195,31 @@ public class ChiTietLoaiPhongDialog extends JDialog {
                         if (loaiPhongService != null) lp = loaiPhongService.getRoomCategoryByIDV2(maLoaiPhong);
                     } catch (Throwable ignore) { lp = null; }
 
-                    // 2) lấy danh sách nội thất qua service
+                    // 2) lấy danh sách nội thất + số lượng qua service mapping
                     try {
-                        if (noiThatService != null) furn = noiThatService.getNoiThatByLoaiPhong(maLoaiPhong);
-                    } catch (Throwable ignore) { furn = Collections.emptyList(); }
+                        if (noiThatService != null) {
+                            List<NoiThatTrongLoaiPhong> mappings = noiThatService.getMappingForLoaiPhong(maLoaiPhong);
+                            List<String> tmp = new ArrayList<>();
+                            if (mappings != null && !mappings.isEmpty()) {
+                                for (NoiThatTrongLoaiPhong m : mappings) {
+                                    try {
+                                        NoiThat n = noiThatService.getNoiThatById(m.getMaNoiThat());
+                                        String name = n != null && n.getTenNoiThat() != null ? n.getTenNoiThat() : "-";
+                                        String code = m.getMaNoiThat() != null ? m.getMaNoiThat() : "-";
+                                        int qty = Math.max(1, m.getSoLuong());
+                                        tmp.add(name + "  —  (" + code + ")  x " + qty);
+                                    } catch (Throwable ignoreInner) {
+                                        String code = m.getMaNoiThat() != null ? m.getMaNoiThat() : "-";
+                                        int qty = Math.max(1, m.getSoLuong());
+                                        tmp.add(code + "  x " + qty);
+                                    }
+                                }
+                            }
+                            furnitureDisplay = tmp;
+                        }
+                    } catch (Throwable ignore) {
+                        furnitureDisplay = Collections.emptyList();
+                    }
 
                     // 3) lấy lịch sử giá qua DAO (DAO chứa truy vấn DB)
                     // dùng service (không gọi DAO trực tiếp)
@@ -243,13 +266,11 @@ public class ChiTietLoaiPhongDialog extends JDialog {
                     lblType.setText("-");
                 }
 
-                // furniture list
+                // furniture list: dùng furnitureDisplay đã build ở background
                 furnitureModel.clear();
-                if (furn != null && !furn.isEmpty()) {
-                    for (NoiThat n : furn) {
-                        String name = n.getTenNoiThat() != null ? n.getTenNoiThat() : "-";
-                        String code = n.getMaNoiThat() != null ? n.getMaNoiThat() : "-";
-                        furnitureModel.addElement(name + "  —  (" + code + ")");
+                if (furnitureDisplay != null && !furnitureDisplay.isEmpty()) {
+                    for (String s : furnitureDisplay) {
+                        furnitureModel.addElement(s);
                     }
                 } else {
                     furnitureModel.addElement("Không có nội thất mẫu.");

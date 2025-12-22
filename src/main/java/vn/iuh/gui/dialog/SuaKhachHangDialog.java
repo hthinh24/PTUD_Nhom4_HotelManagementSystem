@@ -5,14 +5,9 @@ import vn.iuh.service.CustomerService;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Objects;
 
-/**
- * Dialog sửa khách hàng.
- * - Không cho sửa mã khách hàng.
- * - Gọi customerService.updateCustomer(...) để thực hiện cập nhật.
- * - Bắt IllegalStateException / IllegalArgumentException để hiển thị lỗi hợp lý.
- * - Khi cập nhật thành công, đóng dialog và gọi onSuccess.run() (nếu != null) để reload UI.
- */
+
 public class SuaKhachHangDialog extends JDialog {
 
     private final CustomerService customerService;
@@ -23,6 +18,9 @@ public class SuaKhachHangDialog extends JDialog {
     private JTextField txtTen;
     private JTextField txtCCCD;
     private JTextField txtPhone;
+
+    // lưu thông tin gốc để so sánh thay đổi
+    private KhachHang originalKhach;
 
     public SuaKhachHangDialog(Window owner, CustomerService customerService, String maKhachHang, Runnable onSuccess) {
         super(owner, "Sửa khách hàng", ModalityType.APPLICATION_MODAL);
@@ -115,6 +113,9 @@ public class SuaKhachHangDialog extends JDialog {
                 return;
             }
 
+            // lưu bản gốc để so sánh
+            originalKhach = kh;
+
             lblMa.setText(kh.getMaKhachHang());
             txtTen.setText(kh.getTenKhachHang() != null ? kh.getTenKhachHang() : "");
             txtCCCD.setText(kh.getCCCD() != null ? kh.getCCCD() : "");
@@ -128,13 +129,52 @@ public class SuaKhachHangDialog extends JDialog {
 
     private void onSave() {
         String ten = txtTen.getText() != null ? txtTen.getText().trim() : "";
-        String cccd = txtCCCD.getText() != null ? txtCCCD.getText().trim() : null;
-        String phone = txtPhone.getText() != null ? txtPhone.getText().trim() : null;
+        String cccd = txtCCCD.getText() != null ? txtCCCD.getText().trim() : "";
+        String phone = txtPhone.getText() != null ? txtPhone.getText().trim() : "";
 
+        // Validate giống dialog thêm khách hàng
         if (ten.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Tên khách hàng không được để trống.", "Thông báo", JOptionPane.WARNING_MESSAGE);
             txtTen.requestFocus();
             return;
+        }
+
+        // Validate CCCD: bắt buộc, đúng 12 chữ số, bắt đầu bằng 0 hoặc 1
+        if (cccd.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập số căn cước (12 chữ số, bắt đầu bằng 0 hoặc 1)", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            txtCCCD.requestFocus();
+            return;
+        }
+        if (!cccd.matches("^[01]\\d{11}$")) {
+            JOptionPane.showMessageDialog(this, "CCCD không hợp lệ. CCCD phải gồm đúng 12 chữ số và bắt đầu bằng 0 hoặc 1.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            txtCCCD.requestFocus();
+            return;
+        }
+
+        // Validate phone: bắt buộc, đúng 10 chữ số, bắt đầu bằng 09, 03, 05, 02, 07
+        if (phone.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập số điện thoại (10 chữ số)", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            txtPhone.requestFocus();
+            return;
+        }
+        if (!phone.matches("^(09|03|05|02|07)\\d{8}$")) {
+            JOptionPane.showMessageDialog(this, "Số điện thoại không hợp lệ. Phải có 10 chữ số và bắt đầu bằng một trong các đầu: 09, 03, 05, 02, 07.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            txtPhone.requestFocus();
+            return;
+        }
+
+        // Kiểm tra có thay đổi dữ liệu hay không
+        if (originalKhach != null) {
+            String origTen = originalKhach.getTenKhachHang() != null ? originalKhach.getTenKhachHang().trim() : "";
+            String origCCCD = originalKhach.getCCCD() != null ? originalKhach.getCCCD().trim() : "";
+            String origPhone = originalKhach.getSoDienThoai() != null ? originalKhach.getSoDienThoai().trim() : "";
+
+            boolean changed = !Objects.equals(origTen, ten) || !Objects.equals(origCCCD, cccd) || !Objects.equals(origPhone, phone);
+            if (!changed) {
+                JOptionPane.showMessageDialog(this, "Không có thay đổi nào để cập nhật.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                dispose();
+                return;
+            }
         }
 
         // build entity
@@ -153,7 +193,7 @@ public class SuaKhachHangDialog extends JDialog {
                     try { onSuccess.run(); } catch (Exception ex) { ex.printStackTrace(); }
                 }
             } else {
-                // Service có thể trả null khi không cập nhật (tùy impl) — vẫn thông báo thành công và reload
+                // Service có thể trả null khi không cập nhật (tùy impl)
                 JOptionPane.showMessageDialog(this, "Cập nhật hoàn tất.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
                 dispose();
                 if (onSuccess != null) {
@@ -161,10 +201,8 @@ public class SuaKhachHangDialog extends JDialog {
                 }
             }
         } catch (IllegalArgumentException iae) {
-            // ví dụ: tên rỗng (service cũng có thể ném)
             JOptionPane.showMessageDialog(this, iae.getMessage(), "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
         } catch (IllegalStateException ise) {
-            // service ném khi trùng dữ liệu hoặc không cho phép sửa do booking
             JOptionPane.showMessageDialog(this, ise.getMessage(), "Không thể cập nhật", JOptionPane.WARNING_MESSAGE);
         } catch (Exception ex) {
             ex.printStackTrace();

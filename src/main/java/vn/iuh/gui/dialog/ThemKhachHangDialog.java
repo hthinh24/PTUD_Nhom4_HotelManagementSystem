@@ -67,8 +67,32 @@ public class ThemKhachHangDialog extends JDialog {
             String cccd = tfCCCD.getText().trim();
             String phone = tfPhone.getText().trim();
 
+            // Validate name
             if (ten.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Vui lòng nhập tên khách hàng", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                tfTen.requestFocusInWindow();
+                return;
+            }
+
+            if (cccd.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập số căn cước (12 chữ số, bắt đầu bằng 0 hoặc 1)", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                tfCCCD.requestFocusInWindow();
+                return;
+            }
+            if (!cccd.matches("^[01]\\d{11}$")) {
+                JOptionPane.showMessageDialog(this, "CCCD không hợp lệ. CCCD phải gồm đúng 12 chữ số và bắt đầu bằng 0 hoặc 1.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                tfCCCD.requestFocusInWindow();
+                return;
+            }
+
+            if (phone.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập số điện thoại (10 chữ số)", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                tfPhone.requestFocusInWindow();
+                return;
+            }
+            if (!phone.matches("^(09|03|05|02|07)\\d{8}$")) {
+                JOptionPane.showMessageDialog(this, "Số điện thoại không hợp lệ. Phải có 10 chữ số và bắt đầu bằng một trong các đầu: 09, 03, 05, 02, 07.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                tfPhone.requestFocusInWindow();
                 return;
             }
 

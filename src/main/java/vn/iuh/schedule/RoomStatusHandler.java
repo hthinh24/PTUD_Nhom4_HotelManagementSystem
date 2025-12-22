@@ -55,7 +55,7 @@ public class RoomStatusHandler implements Job {
         List<String> congViecCanKetThuc = new ArrayList<>();
         List<String> maCTDPCapNhat = new ArrayList<>();
 
-        Timestamp pivot = new Timestamp(System.currentTimeMillis());
+        Timestamp pivot = new Timestamp(System.currentTimeMillis() + 35_000); // thời điểm hiện tại + 35 giây
         String maCongViecMoiNhat = congViecService.taoMaCongViecMoi(null);
 
         // dùng để lấy danh sách phòng trễ checkout
@@ -221,8 +221,8 @@ public class RoomStatusHandler implements Job {
         }
 
         // Cập nhật giao diện
-//        gridRoomPanel.updateRoomItemStatus(updatedBookingResponse);
-        RefreshManager.refreshAll();
+        gridRoomPanel.updateRoomItemStatus(updatedBookingResponse);
+//        RefreshManager.refreshAll();
 
         System.out.printf("Đã thêm %d công việc mới, xóa %d công việc cũ%n",
                 congViecCanThem.size(), congViecCanKetThuc.size());

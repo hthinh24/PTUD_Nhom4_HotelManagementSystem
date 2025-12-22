@@ -5,8 +5,10 @@ import vn.iuh.dao.NoiThatDAO;
 import vn.iuh.dao.NoiThatTrongLoaiPhongDAO;
 import vn.iuh.dto.repository.NoiThatAssignment;
 import vn.iuh.entity.NoiThat;
+import vn.iuh.entity.NoiThatTrongLoaiPhong;
 import vn.iuh.service.NoiThatService;
 
+import java.util.Collections;
 import java.util.List;
 
 public class NoiThatServiceImpl implements NoiThatService {
@@ -36,6 +38,21 @@ public class NoiThatServiceImpl implements NoiThatService {
         if (itemsWithQty == null) itemsWithQty = java.util.Collections.emptyList();
         // convert to DAO-level operation
         return mappingDAO.replaceMappingsWithQuantities(maLoaiPhong, itemsWithQty);
+    }
+
+    @Override
+    public List<NoiThatTrongLoaiPhong> getMappingForLoaiPhong(String maLoaiPhong) {
+        try {
+            return mappingDAO.findMappingsByLoaiPhong(maLoaiPhong);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public NoiThat getNoiThatById(String maNoiThat) {
+        return noiThatDAO.findById(maNoiThat);
     }
 
 }

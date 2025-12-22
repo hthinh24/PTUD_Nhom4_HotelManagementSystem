@@ -325,6 +325,7 @@ public class BookingManagementPanel extends JPanel {
 
     // HandleUpdateStatusCount
     private void updateStatusCount() {
+        int total = allRoomItems != null ? allRoomItems.size() : 0;
         int availableCount = 0;
         int bookedCount = 0;
         int checkingCount = 0;
@@ -354,6 +355,7 @@ public class BookingManagementPanel extends JPanel {
             }
         }
 
+        statusButtons[0].setText(ALL_STATUS + " (" + total + ")");
         statusButtons[1].setText(RoomStatus.ROOM_EMPTY_STATUS.getStatus() + " (" + availableCount + ")");
         statusButtons[2].setText(RoomStatus.ROOM_BOOKED_STATUS.getStatus() + " (" + bookedCount + ")");
         statusButtons[3].setText(RoomStatus.ROOM_CHECKING_STATUS.getStatus() + " (" + checkingCount + ")");

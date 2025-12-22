@@ -599,4 +599,26 @@ public class ChiTietDatPhongDAO {
         return chiTietDatPhongs;
     }
 
+    public ChiTietDatPhong findActiveByRoom(String maPhong) {
+        if (maPhong == null) return null;
+        String sql = "SELECT TOP 1 * FROM ChiTietDatPhong " +
+                "WHERE ma_phong = ? AND ISNULL(da_xoa,0)=0 " +
+                " AND tg_nhan_phong <= GETDATE() " +
+                " AND (tg_tra_phong IS NULL OR tg_tra_phong >= GETDATE()) " +
+                "ORDER BY tg_nhan_phong DESC";
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, maPhong);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToChiTietDatPhong(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
 }

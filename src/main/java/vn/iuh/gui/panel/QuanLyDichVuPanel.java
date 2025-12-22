@@ -96,6 +96,14 @@ public class QuanLyDichVuPanel extends RoleChecking {
 
         AppEventBus.subscribe("CATEGORY_UPDATED", this::reloadAllData);
 
+        addComponentListener(new ComponentAdapter() {
+            @Override public void componentShown(ComponentEvent e) {
+                // non-blocking reload
+                reload();
+            }
+        });
+
+
     }
 
     // ------------------- demo data models (simple POJOs) -------------------
@@ -277,13 +285,6 @@ public class QuanLyDichVuPanel extends RoleChecking {
         add(pnlTop);
     }
 
-    /**
-     * Tạo panel tìm kiếm + action giống phong cách QuanLyKhachHangPanel:
-     * - Combo chọn kiểu tìm (Tên dịch vụ / Loại dịch vụ)
-     * - Khi "Loại dịch vụ" được chọn -> hiển thị combobox loại để tìm
-     * - TextField (placeholder bold) + nút TÌM
-     * - Hàng nút hành động (Thêm / Sửa / Xóa) căn giữa
-     */
     private void createSearchAndActionPanel() {
         JPanel container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));
@@ -790,6 +791,24 @@ public class QuanLyDichVuPanel extends RoleChecking {
                     populateServiceList(services);
                 });
         dlg.setVisible(true);
+    }
+
+    public void reload() {
+        new SwingWorker<Void, Void>() {
+            @Override protected Void doInBackground() {
+                try {
+                    initSampleData();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                return null;
+            }
+            @Override protected void done() {
+                // cập nhật UI
+                rebuildCategorySearchCombo();
+                populateServiceList(services);
+            }
+        }.execute();
     }
 
 }

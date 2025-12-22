@@ -144,7 +144,6 @@ CREATE TABLE DonDatPhong (
     tong_tien_du_tinh real not null,
     tien_dat_coc real not null,
 	da_dat_truoc bit default 0,
-    da_gia_han_tre bit default 0,
     loai NVARCHAR(255) default N'ĐẶT ĐƠN',
 	ma_khach_hang CHAR(11),
 	ma_phien_dang_nhap CHAR(11),
@@ -457,7 +456,8 @@ VALUES
 INSERT INTO ChucVu (ma_chuc_vu, ten_chuc_vu)
 VALUES
 ('CV001', N'Nhân viên'),
-('CV002', N'Quản lý');
+('CV002', N'Quản lý'),
+('CV003', N'Admin');
 
 --Employee
 INSERT INTO NhanVien (ma_nhan_vien, ten_nhan_vien, CCCD, ngay_sinh, so_dien_thoai)
@@ -851,6 +851,8 @@ values('CV00000013', N'CHECKOUT TRỄ', dateadd(minute, -59, getdate()), dateadd
 ('CV00000015', N'CHECKOUT TRỄ', dateadd(minute, -59, getdate()), dateadd(minute, 1, getdate()),0, dateadd(minute, -59, getdate()),'PH00000005')
 
 
+
+
 --Tới hạn check-in
 INSERT INTO DonDatPhong 
 (ma_don_dat_phong, mo_ta, tg_nhan_phong, tg_tra_phong, tong_tien_du_tinh, tien_dat_coc, da_dat_truoc, ma_khach_hang, ma_phien_dang_nhap, thoi_gian_tao)
@@ -874,12 +876,3 @@ VALUES
 insert into CongViec(ma_cong_viec, ten_trang_thai, tg_bat_dau, tg_ket_thuc, da_xoa, thoi_gian_tao, ma_phong)
 values ('CV00000017', N'CHỜ CHECKIN', dateadd(minute, 3, getdate()), dateadd(hour, 12, getdate()),0, dateadd(day, -2, getdate()),'PH00000007'),
 ('CV00000018', N'CHỜ CHECKIN', dateadd(minute, 3, getdate()), dateadd(hour, 12, getdate()),0, dateadd(day, -2, getdate()),'PH00000008')
-
--- Thêm hóa đơn đặt cọc cho các đơn trên
-INSERT INTO HoaDon (ma_hoa_don, phuong_thuc_thanh_toan, kieu_hoa_don, tinh_trang_thanh_toan, ma_phien_dang_nhap, ma_don_dat_phong, ma_khach_hang)
-VALUES
-    ('HD00000011', N'Tiền mặt', N'ĐẶT CỌC', N'Đã thanh toán', 'PN00000001', 'DP00000011', 'KH00000001'),
-    ('HD00000012', N'Tiền mặt', N'ĐẶT CỌC', N'Đã thanh toán', 'PN00000001', 'DP00000012', 'KH00000001'),
-    ('HD00000013', N'Tiền mặt', N'ĐẶT CỌC', N'Đã thanh toán', 'PN00000001', 'DP00000013', 'KH00000001'),
-    ('HD00000014', N'Tiền mặt', N'ĐẶT CỌC', N'Đã thanh toán', 'PN00000002', 'DP00000014', 'KH00000002'),
-    ('HD00000015', N'Tiền mặt', N'ĐẶT CỌC', N'Đã thanh toán', 'PN00000002', 'DP00000015', 'KH00000003');
