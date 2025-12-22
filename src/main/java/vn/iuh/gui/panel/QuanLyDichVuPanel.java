@@ -85,6 +85,14 @@ public class QuanLyDichVuPanel extends JPanel {
 
         AppEventBus.subscribe("CATEGORY_UPDATED", this::reloadAllData);
 
+        addComponentListener(new ComponentAdapter() {
+            @Override public void componentShown(ComponentEvent e) {
+                // non-blocking reload
+                reload();
+            }
+        });
+
+
     }
 
     // ------------------- demo data models (simple POJOs) -------------------
@@ -772,6 +780,24 @@ public class QuanLyDichVuPanel extends JPanel {
                     populateServiceList(services);
                 });
         dlg.setVisible(true);
+    }
+
+    public void reload() {
+        new SwingWorker<Void, Void>() {
+            @Override protected Void doInBackground() {
+                try {
+                    initSampleData();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                return null;
+            }
+            @Override protected void done() {
+                // cập nhật UI
+                rebuildCategorySearchCombo();
+                populateServiceList(services);
+            }
+        }.execute();
     }
 
 }

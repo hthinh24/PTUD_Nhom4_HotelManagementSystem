@@ -105,6 +105,15 @@ public class QuanLyLoaiPhongPanel extends JPanel {
                 }
             }
         });
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                ensureLazyInit();
+                // gọi reload ngay — phương thức này dùng supplier tự tạo service tạm nên an toàn gọi ngay
+                reloadListFromService();
+            }
+        });
     }
 
 
@@ -435,7 +444,7 @@ public class QuanLyLoaiPhongPanel extends JPanel {
         categoryNameComboBox.addItem("Tất cả");
         categoryNameComboBox.addActionListener(ev -> applyFilters());
 
-        String[] statusOptions = {"Tất cả", "Thường", "VIP"};
+        String[] statusOptions = {"Tất cả", "Thường", "Vip"};
         statusComboBox = new JComboBox<>(statusOptions);
         statusComboBox.setPreferredSize(new Dimension(160, 45));
         statusComboBox.setMaximumSize(new Dimension(200, 45));

@@ -74,6 +74,12 @@ public class QuanLyLoaiDichVuPanel extends JPanel {
             });
         });
 
+        addComponentListener(new ComponentAdapter() {
+            @Override public void componentShown(ComponentEvent e) {
+                reload();
+            }
+        });
+
     }
 
     private void init() {
@@ -628,5 +634,24 @@ public class QuanLyLoaiDichVuPanel extends JPanel {
     public void setServiceCount(String maLoai, int count) {
         serviceCountMap.put(maLoai, count);
         populateTable(categories);
+    }
+
+    public void reload() {
+        new SwingWorker<Void, Void>() {
+            @Override protected Void doInBackground() {
+                try {
+                    initSampleData(); // gọi service/DAO (blocking)
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                return null;
+            }
+
+            @Override protected void done() {
+                // cập nhật UI trên EDT
+                rebuildCategoryCombo();
+                populateTable(categories);
+            }
+        }.execute();
     }
 }
