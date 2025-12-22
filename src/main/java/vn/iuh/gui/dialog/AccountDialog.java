@@ -2,8 +2,12 @@ package vn.iuh.gui.dialog;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import vn.iuh.config.SecurityConfig;
+import vn.iuh.dao.NhanVienDAO;
+import vn.iuh.dao.TaiKhoanDAO;
+import vn.iuh.entity.NhanVien;
 import vn.iuh.entity.TaiKhoan;
 import vn.iuh.gui.base.CustomUI;
+import vn.iuh.gui.base.Main;
 import vn.iuh.util.AccountUtil;
 
 import javax.swing.*;
@@ -46,7 +50,7 @@ public class AccountDialog extends JDialog {
     }
 
     public AccountDialog(Frame owner, String title, TaiKhoan existingTaiKhoan) {
-        super(owner, title, true); // true = modal
+        super(owner, title, true);
         this.isEditMode = true;
         this.taiKhoan = existingTaiKhoan;
 
@@ -190,7 +194,13 @@ public class AccountDialog extends JDialog {
         txtMatKhau.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "******");
 
         cmbChucVu.setSelectedItem(convertMaChucVuToTen(tk.getMaChucVu()));
-
+        NhanVienDAO nvDao = new NhanVienDAO();
+        NhanVien currentUser = nvDao.layNVTheoMaPhienDangNhap(Main.getCurrentLoginSession());
+        // Nếu người đang đăng nhập trùng với người được load lên form
+        if (currentUser != null && currentUser.getMaNhanVien().equals(tk.getMaNhanVien())) {
+            cmbChucVu.setEnabled(false);
+            cmbChucVu.setToolTipText("Bạn không thể tự thay đổi chức vụ của chính mình");
+        }
         txtMaTK.setEnabled(false);
         txtMaNV.setEnabled(false);
         txtMaTK.setBackground(Color.decode("#E5E7EB"));
@@ -211,6 +221,25 @@ public class AccountDialog extends JDialog {
         if (!validateInput()) {
             return;
         }
+        String selectedRoleName = (String) cmbChucVu.getSelectedItem();
+        String targetRoleID = convertTenToMaChucVu(selectedRoleName);
+
+        // Lấy mã chức vụ của BẢN THÂN người đang thao tác
+        String currentRoleID = getCurrentLoginedRoleID();
+
+        // So sánh cấp bậc
+        int currentLevel = getRoleLevel(currentRoleID);
+        int targetLevel = getRoleLevel(targetRoleID);
+
+        // Nếu cấp bậc hiện tại < cấp bậc muốn gán -> CHẶN
+        if (currentLevel < targetLevel) {
+            JOptionPane.showMessageDialog(this,
+                    "Bạn không đủ quyền hạn để cấp chức vụ cao hơn chức vụ hiện tại của bạn!\n" +
+                            "Quyền hiện tại: " + convertMaChucVuToTen(currentRoleID) + "\n" +
+                            "Quyền muốn cấp: " + selectedRoleName,
+                    "Lỗi phân quyền", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         if (!isEditMode) {
             this.taiKhoan = new TaiKhoan();
@@ -218,7 +247,6 @@ public class AccountDialog extends JDialog {
             this.taiKhoan.setMaNhanVien(txtMaNV.getText());
         }
         this.taiKhoan.setTenDangNhap(txtTenDangNhap.getText().trim());
-        this.taiKhoan.setMatKhau(new String(txtMatKhau.getPassword()));
 
         // Chuyển đổi tên Ví d như (Lễ tân) về mã (CV001)
         String selectedRole = (String) cmbChucVu.getSelectedItem();
@@ -242,15 +270,9 @@ public class AccountDialog extends JDialog {
             return false;
         }
 
-        // Regex đơn giản: ít nhất 6 ký tự, không khoảng trắng
-//        if (!tenDN.matches("^[a-zA-Z0-9_]{6,}$")) {
-//            JOptionPane.showMessageDialog(this, "Tên đăng nhập phải có ít nhất 6 ký tự và không chứa khoảng trắng hoặc ký tự đặc biệt.", "Lỗi", JOptionPane.ERROR_MESSAGE);
-//            txtTenDangNhap.requestFocus();
-//            return false;
-//        }
-
         if (isEditMode && matKhau.isEmpty()) {
             // Đang ở chế độ "Sửa" và mật khẩu để trống -> Hợp lệ (nghĩa là không đổi)
+
         } else {
             // Đây là chế độ "Thêm" (mật khẩu không được trống hoặc chế độ "Sửa" (người dùng đã nhập mật khẩu mới)
             // Phải validate mật khẩu mới
@@ -269,6 +291,26 @@ public class AccountDialog extends JDialog {
         if (cmbChucVu.getSelectedIndex() == -1) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn chức vụ.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return false;
+        }
+
+        if (isEditMode) {
+            // --- TRƯỜNG HỢP SỬA ---
+            // Nếu mật khẩu TRỐNG -> Hợp lệ (Cho qua, để hàm onSave xử lý giữ pass cũ)
+            // Nếu mật khẩu CÓ NHẬP -> Thì mới kiểm tra độ dài (nếu muốn)
+            /*
+            if (!matKhau.isEmpty() && matKhau.length() < 6) {
+                 JOptionPane.showMessageDialog(this, "Mật khẩu mới phải có ít nhất 6 ký tự.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                 txtMatKhau.requestFocus();
+                 return false;
+            }
+            */
+        } else {
+            // thêm mới mật khẩu
+            if (matKhau.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập mật khẩu cho tài khoản mới.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                txtMatKhau.requestFocus();
+                return false;
+            }
         }
 
         return true;
@@ -290,6 +332,29 @@ public class AccountDialog extends JDialog {
             case "Quản lý" -> "CV002";
             case "Admin" -> "CV003";
             default -> "CV001";
+        };
+    }
+
+    private String getCurrentLoginedRoleID() {
+        String session = Main.getCurrentLoginSession();
+        if (session == null) return null;
+
+        NhanVienDAO nvDao = new NhanVienDAO();
+        TaiKhoanDAO tkDao = new TaiKhoanDAO();
+
+        NhanVien nv = nvDao.layNVTheoMaPhienDangNhap(session);
+        if (nv == null) return null;
+
+        return tkDao.getChucVuBangMaNhanVien(nv.getMaNhanVien());
+    }
+
+    private int getRoleLevel(String maChucVu) {
+        if (maChucVu == null) return 0;
+        return switch (maChucVu.trim().toUpperCase()) {
+            case "CV003" -> 3;
+            case "CV002" -> 2;
+            case "CV001" -> 1;
+            default -> 0;
         };
     }
 

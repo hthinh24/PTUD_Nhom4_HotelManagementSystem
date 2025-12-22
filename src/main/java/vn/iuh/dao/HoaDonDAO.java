@@ -3,12 +3,16 @@ package vn.iuh.dao;
 import vn.iuh.constraint.InvoiceType;
 import vn.iuh.constraint.PaymentStatus;
 import vn.iuh.dto.repository.CustomerPayments;
+import vn.iuh.dto.repository.ThongTinHoaDon;
 import vn.iuh.entity.HoaDon;
+import vn.iuh.entity.KhachHang;
+import vn.iuh.entity.TaiKhoan;
 import vn.iuh.exception.TableEntityMismatch;
 import vn.iuh.util.DatabaseUtil;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +38,36 @@ public class HoaDonDAO {
 
         return null;
     }
+
+    public ThongTinHoaDon timThongTinHoaDon(String id) {
+        String query = "select hd.ma_hoa_don, hd.kieu_hoa_don, hd.ma_don_dat_phong, kh.ten_khach_hang, tk.ten_dang_nhap "+
+                "from HoaDon hd left join KhachHang kh on hd.ma_khach_hang = kh.ma_khach_hang " +
+                "left join PhienDangNhap pdn on hd.ma_phien_dang_nhap = pdn.ma_phien_dang_nhap " +
+                "left join TaiKhoan tk on pdn.ma_tai_khoan = tk.ma_tai_khoan " +
+                "WHERE hd.ma_hoa_don = ?";
+        ThongTinHoaDon thongTinHoaDon = null;
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+
+            ps.setString(1, id);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String kieu = rs.getString("kieu_hoa_don");
+                String ddp = rs.getString("ma_don_dat_phong");
+                String tenKH = rs.getString("ten_khach_hang");
+                String tenDN = rs.getString("ten_dang_nhap");
+
+                thongTinHoaDon = new ThongTinHoaDon(id, kieu, ddp, tenKH, tenDN);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return thongTinHoaDon;
+    }
+
+
 
     public HoaDon createInvoice(HoaDon hoaDon) {
         String sql = "Insert into HoaDon (ma_hoa_don, phuong_thuc_thanh_toan, kieu_hoa_don, tinh_trang_thanh_toan, ma_phien_dang_nhap, ma_don_dat_phong, ma_khach_hang, tong_tien, tien_thue, tong_hoa_don) " +
@@ -144,6 +178,36 @@ public class HoaDonDAO {
         }
     }
 
+    public List<ThongTinHoaDon> getAllThongTinHoaDon() {
+        List<ThongTinHoaDon> list = new ArrayList<>();
+
+        String query = "select hd.ma_hoa_don, hd.kieu_hoa_don, hd.ma_don_dat_phong, kh.ten_khach_hang, tk.ten_dang_nhap "+
+                "from HoaDon hd left join KhachHang kh on hd.ma_khach_hang = kh.ma_khach_hang " +
+                "left join PhienDangNhap pdn on hd.ma_phien_dang_nhap = pdn.ma_phien_dang_nhap " +
+                "left join TaiKhoan tk on pdn.ma_tai_khoan = tk.ma_tai_khoan ";
+
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(query);
+            var rs = ps.executeQuery();
+            while(rs.next()){
+                String ma = rs.getString("ma_hoa_don");
+                String kieu = rs.getString("kieu_hoa_don");
+                String ddp = rs.getString("ma_don_dat_phong");
+                String tenKH = rs.getString("ten_khach_hang");
+                String tenTK = rs.getString("ten_dang_nhap");
+
+                ThongTinHoaDon tt = new ThongTinHoaDon(ma, kieu, ddp, tenKH, tenTK);
+                list.add(tt);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+
+
     public List<HoaDon> layDanhSachHoaDon(){
         List<HoaDon> list = new ArrayList<>();
         String query = "select * from HoaDon";
@@ -167,7 +231,42 @@ public class HoaDonDAO {
         return list;
     }
 
+    public List<ThongTinHoaDon> danhSachThongTinHoaDonTrongKhoang(Timestamp from, Timestamp to) {
+        List<ThongTinHoaDon> list = new ArrayList<>();
 
+        String sql = "select hd.ma_hoa_don, hd.kieu_hoa_don, hd.ma_don_dat_phong, " +
+                "kh.ten_khach_hang, tk.ten_dang_nhap " +
+                "FROM HoaDon hd " +
+                "LEFT JOIN KhachHang kh ON hd.ma_khach_hang = kh.ma_khach_hang " +
+                "LEFT JOIN PhienDangNhap pdn ON hd.ma_phien_dang_nhap = pdn.ma_phien_dang_nhap " +
+                "LEFT JOIN TaiKhoan tk ON pdn.ma_tai_khoan = tk.ma_tai_khoan " +
+                "WHERE hd.thoi_gian_tao between ? and ?";
+
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(sql);
+
+            ps.setTimestamp(1, from);
+            ps.setTimestamp(2, to);
+
+            var rs = ps.executeQuery();
+
+            while (rs.next()) {
+                String maHD = rs.getString("ma_hoa_don");
+                String kieuHD = rs.getString("kieu_hoa_don");
+                String maDDP = rs.getString("ma_don_dat_phong");
+                String tenKH = rs.getString("ten_khach_hang");
+                String tenTK = rs.getString("ten_dang_nhap");
+
+                ThongTinHoaDon dto = new ThongTinHoaDon(maHD, kieuHD, maDDP, tenKH, tenTK);
+                list.add(dto);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
 
     public List<HoaDon> danhSachHoaDonTrongKhoang(Timestamp from, Timestamp to) {
         String query = "SELECT hd.ma_hoa_don, hd.kieu_hoa_don, hd.ma_don_dat_phong, hd.ma_khach_hang " +

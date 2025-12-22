@@ -5,6 +5,7 @@ import com.formdev.flatlaf.ui.FlatLineBorder;
 import vn.iuh.constraint.Fee;
 import vn.iuh.dao.HoaDonDAO;
 //import vn.iuh.dto.event.create.InvoiceCreationEvent;
+import vn.iuh.dto.repository.ThongTinHoaDon;
 import vn.iuh.dto.repository.ThongTinPhuPhi;
 import vn.iuh.dto.response.InvoiceResponse;
 import vn.iuh.entity.HoaDon;
@@ -37,7 +38,7 @@ public class QuanLyHoaDonPanel extends JPanel{
     private static final Dimension SEARCH_BUTTON_SIZE = new Dimension(90, 40);
     private static final Dimension ACTION_BUTTON_SIZE = new Dimension(290, 55);
     private static final int TOP_PANEL_HEIGHT = 50;
-    private static final Font FONT_LABEL = new Font("Arial", Font.BOLD, 15);
+    private static final Font FONT_LABEL = new Font("Arial", Font.PLAIN, 15);
     private static final Font FONT_ACTION = new Font("Arial", Font.BOLD, 20);
     private static final Font TABLE_FONT = FONT_LABEL;
     private static final Font HEADER_FONT = new Font("Arial", Font.BOLD, 15);
@@ -237,7 +238,7 @@ public class QuanLyHoaDonPanel extends JPanel{
         wrap.setBackground(CustomUI.white);
         wrap.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
 
-        String[] columns = {"Mã hóa đơn", "Kiểu hóa đơn", "Mã đặt phòng", "Mã khách hàng"};
+        String[] columns = {"Mã hóa đơn", "Kiểu hóa đơn", "Mã đặt phòng", "Tên khách hàng", "Tên đăng nhập NV"};
 
         tableModel = new DefaultTableModel(columns, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
@@ -380,27 +381,28 @@ public class QuanLyHoaDonPanel extends JPanel{
 
     private void loadInvoiceData(Object... params){
         tableModel.setRowCount(0);
-        List<HoaDon> dsHoaDon = null;
-
+//        List<HoaDon> dsHoaDon = null;
+        List<ThongTinHoaDon> ttHoaDon = null;
         try {
             if (params.length == 0) {
-                dsHoaDon = hoaDonDAO.layDanhSachHoaDon();
+                ttHoaDon = hoaDonDAO.getAllThongTinHoaDon();
             } else if (params.length == 1) {
-                HoaDon hd = hoaDonDAO.timHoaDon((String) params[0]);
-                if (hd != null) dsHoaDon = List.of(hd);
+                ThongTinHoaDon tthd = hoaDonDAO.timThongTinHoaDon((String) params[0]);
+//                HoaDon hd = hoaDonDAO.timHoaDon((String) params[0]);
+                if (tthd != null) ttHoaDon = List.of(tthd);
             } else if (params.length == 2) {
                 java.util.Date fromUtil = (java.util.Date) params[0];
                 java.util.Date toUtil   = (java.util.Date) params[1];
                 Timestamp from = new Timestamp(fromUtil.getTime());
                 Timestamp to = new Timestamp(toUtil.getTime());
-                dsHoaDon = hoaDonDAO.danhSachHoaDonTrongKhoang(from, to);
+                ttHoaDon = hoaDonDAO.danhSachThongTinHoaDonTrongKhoang(from, to);
             }
 
-            if (dsHoaDon != null) {
-                for (HoaDon hd : dsHoaDon) {
+            if (ttHoaDon != null) {
+                for (ThongTinHoaDon tthd : ttHoaDon) {
                     tableModel.addRow(new Object[]{
-                            hd.getMaHoaDon(), hd.getKieuHoaDon(),
-                            hd.getMaDonDatPhong(), hd.getMaKhachHang()
+                            tthd.getMaHoaDon(), tthd.getKieuHoaDon(),
+                            tthd.getMaDonDatPhong(), tthd.getKhachHang(), tthd.getTaiKhoan()
                     });
                 }
             }

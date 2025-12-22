@@ -6,6 +6,7 @@ import vn.iuh.constraint.EntityIDSymbol;
 import vn.iuh.dao.NhanVienDAO;
 import vn.iuh.entity.NhanVien;
 import vn.iuh.gui.base.CustomUI;
+import vn.iuh.gui.base.Main;
 import vn.iuh.gui.base.RoleChecking;
 import vn.iuh.gui.dialog.EmployeeDialog;
 import vn.iuh.service.EmployeeService;
@@ -33,7 +34,7 @@ public class QuanLyNhanVienPanel extends RoleChecking {
     private static final Dimension ACTION_BUTTON_SIZE = new Dimension(220, 50);
     private static final int TOP_PANEL_HEIGHT = 40;
 
-    private static final Font FONT_LABEL = new Font("Arial", Font.PLAIN, 14);
+    private static final Font FONT_LABEL = new Font("Arial", Font.BOLD, 14);
     private static final Font FONT_ACTION = new Font("Arial", Font.BOLD, 18);
     private static final Font TABLE_FONT = FONT_LABEL;
     private static final Font HEADER_FONT = new Font("Arial", Font.BOLD, 15);
@@ -44,11 +45,11 @@ public class QuanLyNhanVienPanel extends RoleChecking {
     private JButton addButton;
     private JButton deleteButton;
     private JButton editButton;
-    private JButton refreshButton;
+    private JButton refreshButton; // Nút mới
 
     private JTable table;
     private DefaultTableModel tableModel;
-    private NhanVienDAO nhanVienDao;
+    private NhanVienDAO nhanVienDao; // DAO
     private EmployeeService employeeService;
     private NhanVien nhanVien;
     private JComboBox<String> searchTypeComboBox;
@@ -139,7 +140,7 @@ public class QuanLyNhanVienPanel extends RoleChecking {
             Frame owner = (Frame) SwingUtilities.getWindowAncestor(this);
 
             EmployeeDialog editDialog = new EmployeeDialog(owner, "Cập nhật thông tin nhân viên", existingEmployee);
-            editDialog.setVisible(true); 
+            editDialog.setVisible(true);
 
             if (editDialog.isSaved()) {
                 NhanVien updatedEmployee = editDialog.getNhanVien();
@@ -162,6 +163,17 @@ public class QuanLyNhanVienPanel extends RoleChecking {
 
             String employeeId = (String) tableModel.getValueAt(selectedRow, 0);
             String employeeName = (String) tableModel.getValueAt(selectedRow, 1);
+
+            String maPhienHienTai = Main.getCurrentLoginSession();
+            NhanVien nvDangNhap = nhanVienDao.layNVTheoMaPhienDangNhap(maPhienHienTai);
+
+            if (nvDangNhap != null && nvDangNhap.getMaNhanVien().equals(employeeId)) {
+                JOptionPane.showMessageDialog(this,
+                        "Bạn không thể xóa tài khoản nhân viên đang đăng nhập hệ thống!",
+                        "Hành động bị chặn",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
 
             int confirm = JOptionPane.showConfirmDialog(this,
                     "Bạn có chắc chắn muốn xóa nhân viên. Xóa nhân viên đồng nghĩa xóa luôn tài khoản'" + employeeName + "' (Mã: " + employeeId + ") không?",
@@ -468,9 +480,10 @@ public class QuanLyNhanVienPanel extends RoleChecking {
         table.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
 
         DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
-        leftRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
         leftRenderer.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
         table.getColumnModel().getColumn(1).setCellRenderer(leftRenderer);
+
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(null);
