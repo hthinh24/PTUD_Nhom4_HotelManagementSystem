@@ -3,6 +3,7 @@ package vn.iuh.dao;
 
 import vn.iuh.dto.repository.NoiThatAssignment;
 import vn.iuh.entity.NoiThat;
+import vn.iuh.entity.NoiThatTrongLoaiPhong;
 import vn.iuh.exception.TableEntityMismatch;
 import vn.iuh.util.DatabaseUtil;
 import vn.iuh.util.EntityUtil;
@@ -11,13 +12,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO quản lý bảng NoiThatTrongLoaiPhong (ma_noi_that_trong_loai_phong, so_luong, ma_loai_phong, ma_noi_that, ...)
- * - findByLoaiPhong(maLoai)
- * - replaceMappings(maLoai, List<NoiThat>) : cập nhật mapping (soft-delete mapping cũ, insert mapping mới)
- *
- * Lưu ý: id prefix cho mapping là "NP" giống dữ liệu mẫu (NP00000001...)
- */
 public class NoiThatTrongLoaiPhongDAO {
     /**
      * Lấy danh sách NoiThat được gán cho 1 LoaiPhong (chỉ lấy mapping da_xoa = 0 và noi_that.da_xoa = 0)
@@ -161,5 +155,32 @@ public class NoiThatTrongLoaiPhongDAO {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public List<NoiThatTrongLoaiPhong> findMappingsByLoaiPhong(String maLoaiPhong) {
+        List<NoiThatTrongLoaiPhong> out = new ArrayList<>();
+        if (maLoaiPhong == null) return out;
+        String sql = "SELECT ma_noi_that_trong_loai_phong, so_luong, ma_loai_phong, ma_noi_that, thoi_gian_tao " +
+                "FROM NoiThatTrongLoaiPhong " +
+                "WHERE ma_loai_phong = ? AND ISNULL(da_xoa,0) = 0 ORDER BY ma_noi_that_trong_loai_phong ASC";
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, maLoaiPhong);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    NoiThatTrongLoaiPhong m = new NoiThatTrongLoaiPhong();
+                    m.setMaNoiThatTrongLoaiPhong(rs.getString("ma_noi_that_trong_loai_phong"));
+                    m.setSoLuong(rs.getInt("so_luong"));
+                    m.setMaLoaiPhong(rs.getString("ma_loai_phong"));
+                    m.setMaNoiThat(rs.getString("ma_noi_that"));
+                    m.setThoiGianTao(rs.getTimestamp("thoi_gian_tao"));
+                    out.add(m);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return out;
     }
 }
