@@ -343,7 +343,8 @@ public class CheckOutServiceImpl implements CheckOutService {
                     danhSachMaChiTietDatPhong.add(ct.getMaChiTietDatPhong());
                     Timestamp thoiDiemHienTai = new Timestamp(System.currentTimeMillis());
                     if (thoiDiemHienTai.after(ct.getTgTraPhong())) {
-                        thoiGianCheckOutTre = tinhKhoangCachGio(ct.getTgTraPhong(), thoiDiemHienTai);
+                        thoiGianCheckOutTre = tinhKhoangCachGio(ct.getTgTraPhong(),
+                                new Timestamp(ct.getTgTraPhong().getTime() + WorkTimeCost.CHECKOUT_LATE_MIN.getMinutes() * 60L * 1000L));
                     }
                 }
                 ChiTietHoaDon chiTietHoaDon = createInvoiceDetailFromEntity(ct.getMaPhong(), ct.getMaChiTietDatPhong(), hoaDonThanhToan.getMaHoaDon(), finalDonGiaHienThi, thoiGianSuDung, maChiTietHoaDonMoiNhat);

@@ -478,4 +478,8 @@ public class LoginPanelV2 extends JPanel implements ActionListener {
 //        try { UIManager.setLookAndFeel(new FlatMacLightLaf()); } catch (UnsupportedLookAndFeelException e) { e.printStackTrace(); }
 //        SwingUtilities.invokeLater(() -> { Main mainFrame = new Main(); mainFrame.setVisible(true); });
 //    }
+
+    public JButton getBtnLogin() {
+        return btnLogin;
+    }
 }

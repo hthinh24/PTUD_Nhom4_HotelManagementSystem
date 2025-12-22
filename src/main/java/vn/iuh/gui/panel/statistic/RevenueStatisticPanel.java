@@ -214,7 +214,7 @@ public class RevenueStatisticPanel extends RoleChecking {
         });
         group.add(radTable);
         pnlRadio.add(lblDisplayType);
-        pnlRadio.add(radGraph);
+//        pnlRadio.add(radGraph);
         pnlRadio.add(radTable);
         pnlRadio.setBackground(CustomUI.white);
 

@@ -222,7 +222,6 @@ public class RoomStatusHandler implements Job {
 
         // Cập nhật giao diện
         gridRoomPanel.updateRoomItemStatus(updatedBookingResponse);
-//        RefreshManager.refreshAll();
 
         System.out.printf("Đã thêm %d công việc mới, xóa %d công việc cũ%n",
                 congViecCanThem.size(), congViecCanKetThuc.size());

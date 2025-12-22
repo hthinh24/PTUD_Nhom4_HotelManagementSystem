@@ -122,7 +122,7 @@ public class Main extends JFrame {
         pnlRoot.add(pnlMainUI, "MainUI");
 
         showRootCard("Login");
-
+        getRootPane().setDefaultButton(loginPanel.getBtnLogin());
         this.pMain.add(pnlRoot, BorderLayout.CENTER);
         this.add(pMain);
         createAutomaticallyBackupCronjob();

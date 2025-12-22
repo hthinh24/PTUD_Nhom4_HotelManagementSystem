@@ -24,14 +24,11 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.sql.SQLException;
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class SystemConfigPanel extends RoleChecking {
@@ -253,25 +250,17 @@ public class SystemConfigPanel extends RoleChecking {
 
         ButtonGroup group = new ButtonGroup();
 
-        autoBackupRadio = new JRadioButton("Tự động sao lưu, khi kết thúc chương trình");
+        autoBackupRadio = new JRadioButton("Tự động sao lưu");
         autoBackupRadio.setFont(CustomUI.TABLE_FONT);
         autoBackupRadio.setOpaque(false);
         autoBackupRadio.setAlignmentX(Component.LEFT_ALIGNMENT);
+        autoBackupRadio.setSelected(true);
         group.add(autoBackupRadio);
         radioPanel.add(autoBackupRadio);
         radioPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        warningBackupRadio = new JRadioButton("Cảnh báo sao lưu khi kết thúc chương trình");
-        warningBackupRadio.setFont(CustomUI.TABLE_FONT);
-        warningBackupRadio.setOpaque(false);
-        warningBackupRadio.setAlignmentX(Component.LEFT_ALIGNMENT);
-        group.add(warningBackupRadio);
-        radioPanel.add(warningBackupRadio);
-        radioPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-
         noBackupRadio = new JRadioButton("Không sao lưu");
         noBackupRadio.setFont(CustomUI.TABLE_FONT);
-        noBackupRadio.setSelected(true);
         noBackupRadio.setOpaque(false);
         noBackupRadio.setAlignmentX(Component.LEFT_ALIGNMENT);
         group.add(noBackupRadio);
@@ -698,40 +687,25 @@ public class SystemConfigPanel extends RoleChecking {
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selected = chooser.getSelectedFile();
                 String fileName = selected.getName();
-                if(selectedFiles.isEmpty() && !fileName.contains("FULL")){
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Vui lòng chọn 1 file backup toàn bộ (FULL) trước",
-                            "Cảnh báo",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-                    return;
-                }
 
-                if(selectedFiles.size() == 1 && !fileName.contains("DIF")){
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Vui lòng chọn 1 file backup theo ngày (DIF)",
-                            "Cảnh báo",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-                    return;
-                }
+                if (selectedFiles.size() == 1) {
+                    File firstFile = selectedFiles.getFirst();
+                    String firstName = firstFile.getName();
 
-                // Giới hạn tối đa 2 file
-                if (selectedFiles.size() >= 2) {
-                    JOptionPane.showMessageDialog(this,
-                            "Bạn chỉ có thể chọn tối đa 2 file!",
-                            "Giới hạn", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
+                    boolean firstIsFull = firstName.contains("FULL");
+                    boolean firstIsDif = firstName.contains("DIF");
+                    boolean currentIsFull = fileName.contains("FULL");
+                    boolean currentIsDif = fileName.contains("DIF");
 
-                //Kiểm tra trùng file
-                if (selectedFiles.stream().anyMatch(f -> f.getAbsolutePath().equals(selected.getAbsolutePath()))) {
-                    JOptionPane.showMessageDialog(this,
-                            "File này đã được chọn trước đó!",
-                            "Trùng file", JOptionPane.WARNING_MESSAGE);
-                    return;
+                    if ((firstIsFull && currentIsFull) || (firstIsDif && currentIsDif)) {
+                        JOptionPane.showMessageDialog(
+                                this,
+                                "File thứ hai phải khác loại với file thứ nhất (FULL ↔ DIF)",
+                                "Sai loại file",
+                                JOptionPane.WARNING_MESSAGE
+                        );
+                        return;
+                    }
                 }
 
                 // Thêm vào danh sách global
@@ -837,7 +811,6 @@ public class SystemConfigPanel extends RoleChecking {
     }
 
     private void handleRestoreBtn() {
-        // 1. Kiểm tra số lượng file
         if (selectedFiles.size() != 2) {
             JOptionPane.showMessageDialog(
                     null,
@@ -862,7 +835,6 @@ public class SystemConfigPanel extends RoleChecking {
             diffFile = selectedFiles.get(0);
         }
 
-        // 2. Kiểm tra file tồn tại
         if (!fullFile.exists() || !diffFile.exists()) {
             JOptionPane.showMessageDialog(
                     null,
@@ -873,7 +845,16 @@ public class SystemConfigPanel extends RoleChecking {
             return;
         }
 
-        // 3. Xác nhận restore
+        if(!RestoreDataBase.canRestoreWithNearestFull(fullFile.getName(), diffFile.getName())){
+            JOptionPane.showMessageDialog(
+                    null,
+                    "Dữ liệu 2 file không trùng khớp",
+                    "Lỗi file",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
         int choice = JOptionPane.showConfirmDialog(
                 null,
                 "Bạn có chắc chắn muốn khôi phục database?\n"
@@ -885,10 +866,8 @@ public class SystemConfigPanel extends RoleChecking {
 
         if (choice != JOptionPane.YES_OPTION) return;
 
-        // 4. Disable UI trong lúc restore
         restoreBtn.setEnabled(false);
 
-        // 5. Chạy restore không block UI
         new Thread(() -> {
             JDialog loadingDialog = new JDialog();
             loadingDialog.setTitle("Khôi phục dữ liệu");
