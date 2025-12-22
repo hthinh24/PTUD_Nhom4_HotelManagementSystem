@@ -232,10 +232,9 @@ public class DoiPhongServiceImpl implements DoiPhongService {
 
             // 6e) Áp phụ phí cho chi tiết mới nếu yêu cầu
             if (applyFee) {
-                String phuPhiName = Fee.DOI_PHONG.getStatus();
-                var thongTin = phuPhiDAO.getThongTinPhuPhiByName(phuPhiName);
+                var thongTin = FeeValue.getInstance().get(Fee.DOI_PHONG);
                 String maPhuPhi = (thongTin == null) ? null : thongTin.getMaPhuPhi();
-                BigDecimal amount = BigDecimal.valueOf(100000L);
+                BigDecimal amount = thongTin.getGiaHienTai();
 
                 var latestPtpp = phongTinhPhuPhiDAO.getLatest();
                 String lastPtppId2 = (latestPtpp == null) ? null : latestPtpp.getMaPhongTinhPhuPhi();

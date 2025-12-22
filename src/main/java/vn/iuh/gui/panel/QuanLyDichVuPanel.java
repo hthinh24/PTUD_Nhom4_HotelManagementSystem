@@ -266,13 +266,6 @@ public class QuanLyDichVuPanel extends JPanel {
         add(pnlTop);
     }
 
-    /**
-     * Tạo panel tìm kiếm + action giống phong cách QuanLyKhachHangPanel:
-     * - Combo chọn kiểu tìm (Tên dịch vụ / Loại dịch vụ)
-     * - Khi "Loại dịch vụ" được chọn -> hiển thị combobox loại để tìm
-     * - TextField (placeholder bold) + nút TÌM
-     * - Hàng nút hành động (Thêm / Sửa / Xóa) căn giữa
-     */
     private void createSearchAndActionPanel() {
         JPanel container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));
