@@ -711,13 +711,17 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
     }
 
     private JTable createCustomTable(DefaultTableModel model) {
-        return new JTable(model) {
+        JTable table = new JTable(model) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+
             @Override
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component c = super.prepareRenderer(renderer, row, column);
                 c.setFont(CustomUI.TABLE_FONT);
 
-                // Xử lý màu nền khi chọn dòng hoặc xen kẽ chẵn lẻ
                 if (isRowSelected(row)) {
                     c.setBackground(CustomUI.ROW_SELECTED_COLOR);
                     c.setForeground(CustomUI.black);
@@ -733,11 +737,14 @@ public class QuanLyTaiKhoanPanel extends RoleChecking {
                 if (c instanceof JLabel) {
                     ((JLabel) c).setHorizontalAlignment(JLabel.CENTER);
                 }
-
                 ((JComponent) c).setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, CustomUI.tableBorder));
-
                 return c;
             }
         };
+
+        table.setDefaultEditor(Object.class, null);
+        table.setFocusable(false);
+        table.setRowSelectionAllowed(true);
+        return table;
     }
 }
