@@ -404,7 +404,7 @@ public class CheckinServiceImpl implements CheckinService {
                                 }
                             }
                         } else {
-                            System.err.println("Không tìm thấy cấu hình phụ phí 'Check-in sớm' (Fee.CHECK_IN_SOM).");
+                            System.err.println("Không tìm thấy phụ phí 'Check-in sớm'");
                         }
                     } catch (Exception ex) {
                         System.err.println("Lỗi khi áp phụ phí check-in-sớm cho đơn nhiều: " + ex.getMessage());

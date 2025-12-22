@@ -366,4 +366,10 @@ public class DoiPhongServiceImpl implements DoiPhongService {
     public List<ChangeRoomRecord> layLichSuDoiPhongTheoDon(String maDonDatPhong) {
         return chiTietDatPhongDAO.layLichSuDoiPhongTheoDon(maDonDatPhong);
     }
+
+    @Override
+    public BigDecimal layGiaPhuPhiHienTai() {
+        var thongTin = FeeValue.getInstance().get(Fee.DOI_PHONG);
+        return thongTin.getGiaHienTai();
+    }
 }

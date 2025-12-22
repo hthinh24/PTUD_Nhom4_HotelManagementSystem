@@ -19,6 +19,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -354,15 +355,16 @@ public class DoiPhongDiaLog extends JPanel {
 
         // 1) Hỏi tính phụ phí đổi phòng
         boolean applyFee = chkApplyFee != null && chkApplyFee.isSelected();
+        BigDecimal giaPhuPhiHienTai = doiPhongService.layGiaPhuPhiHienTai();
         if (!applyFee) {
             int feeChoice = JOptionPane.showConfirmDialog(this,
-                    "Bạn có muốn tính phụ phí đổi phòng 100.000 VND không?",
+                    "Bạn có muốn tính phụ phí đổi phòng " + giaPhuPhiHienTai + "VND không?",
                     "Phụ phí đổi phòng", JOptionPane.YES_NO_OPTION);
             applyFee = (feeChoice == JOptionPane.YES_OPTION);
         }
 
         // 2) Xác nhận tính phụ phí
-        String feeText = applyFee ? "\n(Phụ phí 100.000 VND sẽ được tính.)" : "";
+        String feeText = applyFee ? "\n(Phụ phí " + giaPhuPhiHienTai + "VND sẽ được tính.)" : "";
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Xác nhận đổi phòng từ " + (currentBooking != null ? currentBooking.getRoomName() : "") +
                         " sang " + chosen.getRoomName() + "?" + feeText,
