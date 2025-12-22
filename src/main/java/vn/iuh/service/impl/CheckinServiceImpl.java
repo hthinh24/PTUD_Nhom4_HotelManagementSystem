@@ -1,3 +1,4 @@
+// File: CheckinServiceImpl.java
 package vn.iuh.service.impl;
 
 import vn.iuh.constraint.*;
@@ -11,7 +12,6 @@ import vn.iuh.util.EntityUtil;
 import vn.iuh.util.FeeValue;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.Normalizer;
@@ -206,6 +206,17 @@ public class CheckinServiceImpl implements CheckinService {
                     // Xử lí khi phòng ở trạng thái chờ checkin
                     if (roomStatus == RoomStatus.ROOM_BOOKED_STATUS) {
 
+                        // Kiểm tra đơn hiện tại của phòng có trùng với đơn đang checkin hay không
+                        ChiTietDatPhong activeDetail = chiTietDatPhongDAO.findActiveByRoom(maPh);
+                        if (activeDetail != null) {
+                            String activeDon = trimToNull(activeDetail.getMaDonDatPhong());
+                            if (!Objects.equals(activeDon, maDonDatPhongMain)) {
+                                thongBaoLoi = "Phòng hiện đang có đơn khác ở trạng thái 'CHỜ CHECKIN' (" + activeDon + "). Không thể check-in đơn này.";
+                                DatabaseUtil.hoanTacGiaoTac();
+                                return false;
+                            }
+                        }
+
                         // 1) Ghi lịch sử đi vào cho chi tiết hiện tại
                         var lastLichSuDiVao = lichSuDiVaoDAO.timLichSuDiVaoMoiNhat();
                         String lastCheckinId = (lastLichSuDiVao == null) ? null : trimToNull(lastLichSuDiVao.getMaLichSuDiVao());
@@ -393,7 +404,7 @@ public class CheckinServiceImpl implements CheckinService {
                                 }
                             }
                         } else {
-                            System.err.println("Không tìm thấy cấu hình phụ phí 'Check-in sớm' (Fee.CHECK_IN_SOM).");
+                            System.err.println("Không tìm thấy phụ phí 'Check-in sớm'");
                         }
                     } catch (Exception ex) {
                         System.err.println("Lỗi khi áp phụ phí check-in-sớm cho đơn nhiều: " + ex.getMessage());

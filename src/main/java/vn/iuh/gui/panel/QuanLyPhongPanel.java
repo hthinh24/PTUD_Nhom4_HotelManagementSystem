@@ -88,6 +88,14 @@ public class QuanLyPhongPanel extends RoleChecking {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(CustomUI.white);
         init();
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                // thay 'this::reloadCategories' bằng 'QuanLyPhongPanel.this::reloadCategories'
+                reloadRoomsAsync(() -> roomService.getAllQuanLyPhongPanel(), QuanLyPhongPanel.this::reloadCategories);
+            }
+        });
     }
 
     // Hàm init tập hợp các bước khởi tạo giao diện chính

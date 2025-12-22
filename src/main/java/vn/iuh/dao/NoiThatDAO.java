@@ -150,4 +150,31 @@ public class NoiThatDAO {
         return list;
     }
 
+    public NoiThat findById(String maNoiThat) {
+        if (maNoiThat == null || maNoiThat.isBlank()) return null;
+
+        String sql = "SELECT ma_noi_that, ten_noi_that, mo_ta " +
+                "FROM NoiThat " +
+                "WHERE ma_noi_that = ? AND ISNULL(da_xoa,0) = 0";
+
+        try {
+            Connection connection = DatabaseUtil.getConnect();
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, maNoiThat);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    NoiThat n = new NoiThat();
+                    n.setMaNoiThat(rs.getString("ma_noi_that"));
+                    n.setTenNoiThat(rs.getString("ten_noi_that"));
+                    n.setMoTa(rs.getString("mo_ta"));
+                    return n;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
 }

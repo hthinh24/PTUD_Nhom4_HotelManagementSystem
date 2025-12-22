@@ -53,7 +53,7 @@ public class KhachHangDAO {
     }
 
     public KhachHang timKhachHangMoiNhat() {
-        String query = "SELECT TOP 1 * FROM KhachHang WHERE da_xoa = 0 ORDER BY ma_khach_hang DESC";
+        String query = "SELECT TOP 1 * FROM KhachHang ORDER BY ma_khach_hang DESC";
 
         try {
             Connection connection = DatabaseUtil.getConnect();
@@ -309,27 +309,18 @@ public class KhachHangDAO {
         if (maKhachHang == null || maKhachHang.isBlank()) return false;
 
         String sql = """
-    SELECT TOP 1 1
-    FROM DonDatPhong ddp
-    WHERE ddp.ma_khach_hang = ?
-      AND ISNULL(ddp.da_xoa,0) = 0
-      AND (
-           -- trường hợp: tg_tra_phong trên form vẫn sau hiện tại (đơn chưa kết thúc)
-           ddp.tg_tra_phong >= GETDATE()
-        OR
-           -- hoặc có ít nhất 1 chi tiết đặt phòng (chi tiết) đang ở tương lai / đang active
-           EXISTS (
-             SELECT 1
-             FROM ChiTietDatPhong c
-             WHERE c.ma_don_dat_phong = ddp.ma_don_dat_phong
-               AND ISNULL(c.da_xoa,0) = 0
-               AND (
-                    c.tg_nhan_phong > GETDATE()
-                 OR (c.tg_nhan_phong <= GETDATE() AND (c.tg_tra_phong IS NULL OR c.tg_tra_phong >= GETDATE()))
-               )
-           )
-      )
-    """;
+                    SELECT TOP 1 1
+                    FROM DonDatPhong ddp
+                    WHERE ddp.ma_khach_hang = ?
+                      AND ISNULL(ddp.da_xoa,0) = 0
+                      AND EXISTS (
+                          SELECT 1
+                          FROM ChiTietDatPhong c
+                          WHERE c.ma_don_dat_phong = ddp.ma_don_dat_phong
+                            AND ISNULL(c.da_xoa,0) = 0
+                            AND c.kieu_ket_thuc IS NULL
+                      )
+                    """;
 
         Connection connection = DatabaseUtil.getConnect();
         // debug (tùy bạn bật/tắt)

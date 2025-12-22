@@ -15,6 +15,8 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -62,6 +64,14 @@ public class QuanLyKhachHangPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(CustomUI.white);
         init();
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                // gọi reload (non-blocking, chạy load trong background)
+                reload();
+            }
+        });
     }
 
     private void init() {
@@ -466,5 +476,22 @@ public class QuanLyKhachHangPanel extends JPanel {
         CustomerData(String code, String name, String cccd, String phone) {
             this.code = code; this.name = name; this.cccd = cccd; this.phone = phone;
         }
+    }
+
+    public void reload() {
+        new SwingWorker<Void, Void>() {
+            @Override protected Void doInBackground() {
+                try {
+                    loadCustomersFromService();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                return null;
+            }
+            @Override protected void done() {
+                // cập nhật UI (applyFilters đã dùng SwingUtilities.invokeLater trong populate)
+                applyFilters();
+            }
+        }.execute();
     }
 }

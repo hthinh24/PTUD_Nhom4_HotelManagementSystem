@@ -7,6 +7,7 @@ import vn.iuh.dto.repository.NoiThatAssignment;
 import vn.iuh.entity.LichSuThaoTac;
 import vn.iuh.entity.LoaiPhong;
 import vn.iuh.entity.NoiThat;
+import vn.iuh.entity.NoiThatTrongLoaiPhong;
 import vn.iuh.gui.base.Main;
 import vn.iuh.service.LoaiPhongService;
 import vn.iuh.service.NoiThatService;
@@ -248,44 +249,51 @@ public class SuaLoaiPhongDialog extends JDialog {
             initialGiaNgay = null;
         }
 
-        // load all furniture and mark selected
+        // --- Lấy selected bằng cách lấy mapping + join với chi tiết NoiThat ---
         List<NoiThat> all = new ArrayList<>();
         try {
             all = noiThatService.getAllNoiThat();
         } catch (Exception ignored) { all = new ArrayList<>(); }
 
-        // selected (from parameter or via service)
-        List<NoiThat> selected = (currentFurniture != null) ? currentFurniture : new ArrayList<>();
-        if (selected.isEmpty()) {
-            try {
-                selected = noiThatService.getNoiThatByLoaiPhong(current != null ? current.getMaLoaiPhong() : "");
-            } catch (Exception ignored) { selected = new ArrayList<>(); }
+        // Lấy mapping (ma_noi_that + so_luong) từ service
+        List<NoiThatTrongLoaiPhong> mappings = Collections.emptyList();
+        try {
+            mappings = noiThatService.getMappingForLoaiPhong(current != null ? current.getMaLoaiPhong() : null);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            mappings = Collections.emptyList();
         }
 
-        // populate selected table and available list
+        // Build selected list by resolving mapping -> NoiThat detail
         selectedTableModel.setRowCount(0);
         availableModel.clear();
-
-        // Add selected rows; quantity mặc định = 1 (nếu bạn có cách lấy số lượng mapping thực, thay ở đây)
         initialAssignments.clear();
-        for (NoiThat s : selected) {
-            if (s == null) continue;
-            selectedTableModel.addRow(new Object[] {
-                    s.getMaNoiThat(),
-                    s.getTenNoiThat(),
-                    s.getMoTa(),
-                    Integer.valueOf(1)
-            });
-            initialAssignments.put(s.getMaNoiThat(), 1);
+
+        // map maNoiThat -> NoiThat entity (for fast lookup)
+        Map<String, NoiThat> allById = new HashMap<>();
+        for (NoiThat n : all) {
+            if (n != null && n.getMaNoiThat() != null) allById.put(n.getMaNoiThat(), n);
         }
 
-        for (NoiThat n : all) {
-            boolean isSelected = false;
-            for (NoiThat s : selected) {
-                if (s != null && n != null && s.getMaNoiThat().equals(n.getMaNoiThat())) { isSelected = true; break; }
-            }
-            if (!isSelected) availableModel.addElement(n);
+        for (NoiThatTrongLoaiPhong m : mappings) {
+            if (m == null) continue;
+            String ma = m.getMaNoiThat();
+            int qty = Math.max(1, m.getSoLuong());
+            NoiThat detail = allById.get(ma);
+            String ten = detail != null ? detail.getTenNoiThat() : ma;
+            String moTa = detail != null ? detail.getMoTa() : "";
+            selectedTableModel.addRow(new Object[] { ma, ten, moTa, Integer.valueOf(qty) });
+            initialAssignments.put(ma, qty);
         }
+
+        // fill availableModel with all NoiThat not in selected set
+        for (NoiThat n : all) {
+            if (n == null) continue;
+            String ma = n.getMaNoiThat();
+            boolean chosen = initialAssignments.containsKey(ma);
+            if (!chosen) availableModel.addElement(n);
+        }
+
 
         // snapshot for change detection on basic fields
         initialName = current != null ? current.getTenLoaiPhong() : null;

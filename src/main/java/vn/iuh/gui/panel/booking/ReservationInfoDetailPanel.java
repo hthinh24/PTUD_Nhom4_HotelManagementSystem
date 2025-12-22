@@ -1153,10 +1153,6 @@ public class ReservationInfoDetailPanel extends JPanel {
                     // gọi refresh manager để các panel khác cập nhật
                     RefreshManager.refreshAfterCheckIn();
                     refreshPanel();
-
-                    // Thông báo ngắn cho user
-                    JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(ReservationInfoDetailPanel.this),
-                            "Gia hạn thời gian thành công.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
                 }
 
                 @Override
@@ -1257,10 +1253,6 @@ public class ReservationInfoDetailPanel extends JPanel {
                     RefreshManager.refreshAfterCancelReservation();
                     refreshPanel();
 
-                    // Bạn có thể hiện thông báo thêm (tuỳ ý)
-                    JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(ReservationInfoDetailPanel.this),
-                            "Đã đổi phòng: " + oldRoomId + " → " + (newRoom != null ? newRoom.getRoomName() : newRoom),
-                            "Thông báo", JOptionPane.INFORMATION_MESSAGE);
                 }
             });
 

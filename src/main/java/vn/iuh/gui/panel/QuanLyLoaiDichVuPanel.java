@@ -6,7 +6,6 @@ import vn.iuh.dto.response.ServiceCategoryResponse;
 import vn.iuh.dto.response.ServiceResponse;
 import vn.iuh.gui.base.CustomUI;
 import vn.iuh.gui.base.Main;
-import vn.iuh.gui.base.RoleChecking;
 import vn.iuh.gui.dialog.ChiTietLoaiDichVuDialog;
 import vn.iuh.gui.dialog.SuaLoaiDichVuDialog;
 import vn.iuh.gui.dialog.ThemLoaiDichVuDialog;
@@ -25,7 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 
-public class QuanLyLoaiDichVuPanel extends RoleChecking {
+public class QuanLyLoaiDichVuPanel extends JPanel {
 
     // dùng cùng kích thước với QuanLyDichVuPanel cho nhất quán
     private static final int SEARCH_CONTROL_HEIGHT = 45; // phù hợp với SEARCH_TEXT_SIZE.height (45)
@@ -61,11 +60,6 @@ public class QuanLyLoaiDichVuPanel extends RoleChecking {
 
 
     public QuanLyLoaiDichVuPanel(QuanLyDichVuPanel servicePanel) {
-        super();
-    }
-
-    @Override
-    protected void buildAdminUI() {
         this.servicePanel = servicePanel;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(CustomUI.white);
@@ -79,6 +73,13 @@ public class QuanLyLoaiDichVuPanel extends RoleChecking {
                 populateTable(categories);
             });
         });
+
+        addComponentListener(new ComponentAdapter() {
+            @Override public void componentShown(ComponentEvent e) {
+                reload();
+            }
+        });
+
     }
 
     private void init() {
@@ -633,5 +634,24 @@ public class QuanLyLoaiDichVuPanel extends RoleChecking {
     public void setServiceCount(String maLoai, int count) {
         serviceCountMap.put(maLoai, count);
         populateTable(categories);
+    }
+
+    public void reload() {
+        new SwingWorker<Void, Void>() {
+            @Override protected Void doInBackground() {
+                try {
+                    initSampleData(); // gọi service/DAO (blocking)
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                return null;
+            }
+
+            @Override protected void done() {
+                // cập nhật UI trên EDT
+                rebuildCategoryCombo();
+                populateTable(categories);
+            }
+        }.execute();
     }
 }

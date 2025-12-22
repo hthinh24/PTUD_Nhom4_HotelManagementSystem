@@ -185,14 +185,14 @@ public class BookThemGioServiceImpl implements BookThemGioService {
             CongViecDAO congViecDaoTx = new CongViecDAO();
             LichSuThaoTacDAO lichSuDaoTx = new LichSuThaoTacDAO();
 
-            // 1) Lấy chi tiết đặt phòng hiện tại
+            // 1) Lấy chi tiết đặt phòng hiện tại (chi tiết cần gia hạn)
             ChiTietDatPhong current = chiDaoTx.timChiTietDatPhong(maChiTietDatPhong);
             if (current == null) {
                 DatabaseUtil.hoanTacGiaoTac();
                 return false;
             }
 
-            // 3) Kiểm tra kiểu kết thúc
+            // 2) Kiểm tra kiểu kết thúc của chi tiết hiện tại
             String kieuKetThuc = current.getKieuKetThuc();
             if (kieuKetThuc != null && !kieuKetThuc.trim().isEmpty()) {
                 String kk = kieuKetThuc.trim();
@@ -206,14 +206,41 @@ public class BookThemGioServiceImpl implements BookThemGioService {
                 }
             }
 
-            // 4) Kiểm tra trạng thái hiện tại của phòng, nếu là đang CHECKOUT trễ thì không cho phép book thêm giờ
+            // 3) Lấy công việc hiện tại của phòng (nếu có)
             CongViec congViecHienTai = congViecDaoTx.layCongViecHienTaiCuaPhong(maPhong);
-            if (congViecHienTai != null && congViecHienTai.getTenTrangThai() != null) {
-                String ten = congViecHienTai.getTenTrangThai().toUpperCase();
-                if (ten.contains("TRỄ") || ten.contains("CHECKOUT TRỄ")) {
-                    DatabaseUtil.hoanTacGiaoTac();
-                    return false;
+
+            // 4) Lấy chi tiết đặt phòng hiện tại trên phòng
+            ChiTietDatPhong activeOnRoom = chiDaoTx.findActiveByRoom(maPhong);
+
+            boolean shouldBlockDueToLateCheckout = false;
+            try {
+                if (activeOnRoom != null && current.getMaDonDatPhong() != null) {
+                    String activeMaDon = activeOnRoom.getMaDonDatPhong();
+                    if (activeMaDon != null && activeMaDon.equals(current.getMaDonDatPhong())) {
+                        // active booking của phòng trùng với booking hiện tại
+                        if (congViecHienTai != null && congViecHienTai.getTenTrangThai() != null) {
+                            String ten = congViecHienTai.getTenTrangThai().toUpperCase();
+                            if (ten.contains("TRỄ") || ten.contains("CHECKOUT TRỄ")) {
+                                shouldBlockDueToLateCheckout = true;
+                            }
+                        }
+                    } else {
+                        // active booking khác đơn đang gia hạn -> không block
+                        shouldBlockDueToLateCheckout = false;
+                    }
+                } else {
+                    // không có active booking trên phòng => không block do checkout trễ
+                    shouldBlockDueToLateCheckout = false;
                 }
+            } catch (Throwable t) {
+
+                t.printStackTrace();
+                shouldBlockDueToLateCheckout = false;
+            }
+
+            if (shouldBlockDueToLateCheckout) {
+                DatabaseUtil.hoanTacGiaoTac();
+                return false;
             }
 
             // 5) Cập nhật tg_tra_phong trong ChiTietDatPhong (chi tiết hiện tại)
