@@ -141,19 +141,15 @@ public class ReservationManagementPanel extends JPanel {
         lblTop.setFont(CustomUI.bigFont);
 
         pnlTop.setBackground(CustomUI.blue);
-        pnlTop.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
-        pnlTop.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
-        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
-        pnlTop.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
-
         pnlTop.add(lblTop, BorderLayout.CENTER);
 
-        // Create wrapper panel with spacing
-        JPanel topWrapper = new JPanel(new BorderLayout());
-        topWrapper.add(pnlTop, BorderLayout.CENTER);
-//        topWrapper.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0)); // Add bottom margin
+        pnlTop.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        pnlTop.add(lblTop, BorderLayout.CENTER);
 
-        add(topWrapper, BorderLayout.NORTH);
+        add(pnlTop);
     }
 
     private void createFilterPanel() {

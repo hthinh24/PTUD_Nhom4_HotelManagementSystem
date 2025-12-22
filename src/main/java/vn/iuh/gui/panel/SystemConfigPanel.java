@@ -50,18 +50,19 @@ public class SystemConfigPanel extends RoleChecking {
 
 
     private JPanel createTopPanel() {
-        JPanel pnlTop = new JPanel();
+        JPanel pnlTop = new JPanel(new BorderLayout());
         JLabel lblTop = new JLabel("THIẾT LẬP HỆ THỐNG", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
         lblTop.setFont(CustomUI.bigFont);
 
         pnlTop.setBackground(CustomUI.blue);
-        pnlTop.add(lblTop);
+        pnlTop.add(lblTop, BorderLayout.CENTER);
 
-        pnlTop.setPreferredSize(new Dimension(0, 40));
-        pnlTop.setMinimumSize(new Dimension(0, 40));
-        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        pnlTop.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
+        pnlTop.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        pnlTop.add(lblTop, BorderLayout.CENTER);
 
         return pnlTop;
     }
@@ -84,19 +85,16 @@ public class SystemConfigPanel extends RoleChecking {
         setLayout(new BorderLayout(10, 10));
         setBackground(Color.WHITE);
 
-        // Main content panel with vertical layout
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
         contentPanel.setBackground(Color.WHITE);
 
-        // Top section - VAT Rate
         JPanel topPanel = createVATPanel();
         topPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
         contentPanel.add(topPanel);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        // Middle section - Backup settings (2 columns)
         JPanel middlePanel = new JPanel(new GridLayout(1, 2, 15, 0));
         middlePanel.setOpaque(false);
         middlePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 250));
@@ -105,11 +103,9 @@ public class SystemConfigPanel extends RoleChecking {
         contentPanel.add(middlePanel);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        // Bottom section - File recovery (takes remaining space)
         JPanel bottomPanel = createRecoveryPanel();
         contentPanel.add(bottomPanel);
 
-        // Wrap in scroll pane for responsive design
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
@@ -140,12 +136,10 @@ public class SystemConfigPanel extends RoleChecking {
         JPanel contentPanel = new JPanel();
         contentPanel.setOpaque(false);
 
-        // Label
         JLabel vatLabel = new JLabel("Thuế GTGT (%):");
         vatLabel.setFont(CustomUI.verySmallFont);
         vatLabel.setPreferredSize(new Dimension(120, 35));
 
-        // Text field
         ThongTinPhuPhi fee = FeeValue.getInstance().get(Fee.THUE);
         vatRateField = new JTextField(fee.getGiaHienTai().toString());
         vatRateField.setEditable(false);
@@ -178,7 +172,6 @@ public class SystemConfigPanel extends RoleChecking {
 
         historyBtn.setToolTipText("Xem lịch sử thay đổi");
 
-//        buttonsPanel.add(editBtn);
         buttonsPanel.add(historyBtn);
 
         contentPanel.add(vatLabel);
@@ -188,6 +181,7 @@ public class SystemConfigPanel extends RoleChecking {
         panel.add(contentPanel);
         return panel;
     }
+
     private double validateInputVAT(String input){
         try {
             return Double.parseDouble(input);
@@ -215,7 +209,6 @@ public class SystemConfigPanel extends RoleChecking {
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setOpaque(false);
 
-        // Backup directory section
         JPanel dirPanel = new JPanel(new BorderLayout(10, 0));
         dirPanel.setOpaque(false);
         dirPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
@@ -242,7 +235,6 @@ public class SystemConfigPanel extends RoleChecking {
         contentPanel.add(dirPanel);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
-        // Radio buttons panel with left alignment
         JPanel radioPanel = new JPanel();
         radioPanel.setLayout(new BoxLayout(radioPanel, BoxLayout.Y_AXIS));
         radioPanel.setOpaque(false);
@@ -400,7 +392,6 @@ public class SystemConfigPanel extends RoleChecking {
         backupBtn.setBorderPainted(false);
         backupBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Hover effect
         backupBtn.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
                 backupBtn.setBackground(new Color(51, 122, 183));
@@ -600,18 +591,14 @@ public class SystemConfigPanel extends RoleChecking {
             public void keyPressed(KeyEvent e) {
                 int selectedRow = fileTable.getSelectedRow();
 
-                // Nếu không có row nào được chọn → bỏ qua
                 if (selectedRow == -1) return;
 
-                // Nếu nhấn Backspace hoặc Delete
                 if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE || e.getKeyCode() == KeyEvent.VK_DELETE) {
 
-                    // Xóa file khỏi global list (nếu lưu theo index)
                     if (selectedRow < selectedFiles.size()) {
                         selectedFiles.remove(selectedRow);
                     }
 
-                    // Xóa row khỏi table
                     tableModel.removeRow(selectedRow);
                 }
             }
@@ -626,7 +613,6 @@ public class SystemConfigPanel extends RoleChecking {
         fileCountLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         fileCountLabel.setForeground(new Color(100, 100, 100));
 
-        // Restore button
         restoreBtn = new JButton("Khôi phục");
         restoreBtn.setFont(CustomUI.verySmallFont);
         restoreBtn.setPreferredSize(new Dimension(120, 38));
@@ -636,7 +622,6 @@ public class SystemConfigPanel extends RoleChecking {
         restoreBtn.setBorderPainted(false);
         restoreBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Hover effect
         restoreBtn.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
                 restoreBtn.setBackground(new Color(51, 122, 183));
@@ -708,13 +693,10 @@ public class SystemConfigPanel extends RoleChecking {
                     }
                 }
 
-                // Thêm vào danh sách global
                 selectedFiles.add(selected);
 
-                // Update lên JTextField nếu cần
                 txt.setText(selected.getAbsolutePath());
 
-                // Đẩy lên table
                 tableModel.insertRow(0, getFileInfo(selected));
             }
         });

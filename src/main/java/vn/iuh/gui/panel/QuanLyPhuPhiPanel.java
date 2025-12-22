@@ -1,6 +1,7 @@
 package vn.iuh.gui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import vn.iuh.constraint.Fee;
 import vn.iuh.constraint.UserRole;
 import vn.iuh.dao.*;
 import vn.iuh.dto.repository.ThongTinPhuPhi;
@@ -9,6 +10,7 @@ import vn.iuh.gui.base.CustomUI;
 import vn.iuh.gui.base.Main;
 import vn.iuh.gui.base.RoleChecking;
 import vn.iuh.gui.dialog.PhuPhiDialog;
+import vn.iuh.util.FeeValue;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -54,13 +56,19 @@ public class QuanLyPhuPhiPanel extends RoleChecking {
 
     private void createTopPanel() {
         JPanel pnlTop = new JPanel(new BorderLayout());
-        JLabel lblTop = new JLabel("Quản lý phụ phí", SwingConstants.CENTER);
+        JLabel lblTop = new JLabel("TÌM PHỤ PHÍ", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
-        lblTop.setFont(CustomUI.normalFont != null ? CustomUI.normalFont.deriveFont(Font.BOLD, 18f) : new Font("Arial", Font.BOLD, 18));
+        lblTop.setFont(CustomUI.bigFont);
+
         pnlTop.setBackground(CustomUI.blue);
         pnlTop.add(lblTop, BorderLayout.CENTER);
-        pnlTop.setPreferredSize(new Dimension(0, TOP_PANEL_HEIGHT));
-        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, TOP_PANEL_HEIGHT));
+
+        pnlTop.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        pnlTop.add(lblTop, BorderLayout.CENTER);
+
         add(pnlTop);
     }
 
@@ -68,7 +76,8 @@ public class QuanLyPhuPhiPanel extends RoleChecking {
         tableModel.setRowCount(0);
 
         try {
-            this.dsPhuPhi = phuPhiDAO.getDanhSachPhuPhi();
+            List<ThongTinPhuPhi> feeList = phuPhiDAO.getDanhSachPhuPhi();
+            this.dsPhuPhi = feeList.stream().filter(e -> !e.getTenPhuPhi().equalsIgnoreCase(Fee.THUE.name)).toList();
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu phụ phí: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);

@@ -511,15 +511,19 @@ public class TroGiupPanel extends JPanel {
 
     private void createTopPanel() {
         JPanel pnlTop = new JPanel(new BorderLayout());
-        JLabel lblTop = new JLabel("Trợ giúp", SwingConstants.CENTER);
+        JLabel lblTop = new JLabel("TRỢ GIÚP", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
-        lblTop.setFont(CustomUI.normalFont != null ? CustomUI.normalFont.deriveFont(Font.BOLD, 20f) : new Font("Arial", Font.BOLD, 18));
+        lblTop.setFont(CustomUI.bigFont);
 
         pnlTop.setBackground(CustomUI.blue);
         pnlTop.add(lblTop, BorderLayout.CENTER);
-        pnlTop.setPreferredSize(new Dimension(0, 50));
-        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+
+        pnlTop.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
         pnlTop.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
-        add(pnlTop, BorderLayout.NORTH);
+        pnlTop.add(lblTop, BorderLayout.CENTER);
+
+        add(pnlTop);
     }
 }

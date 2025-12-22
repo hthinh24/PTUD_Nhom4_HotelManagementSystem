@@ -490,8 +490,12 @@ public class InvoiceDialog2 extends JDialog {
             if (response.getPhongDungDichVuList() != null) {
                 for (var pddv : response.getPhongDungDichVuList()) {
                     Object[] data = pddv.getSimpleObject();
-                    for (Object cell : data) {
-                        tableDV.addCell(new PdfPCell(new Phrase(cell != null ? cell.toString() : "", itextNormalFont)));
+                    for (int i = 0; i < 6; i++) {
+                        String value = "";
+                        if (i < data.length && data[i] != null) {
+                            value = data[i].toString();
+                        }
+                        tableDV.addCell(new PdfPCell(new Phrase(value, itextNormalFont)));
                     }
                 }
             }

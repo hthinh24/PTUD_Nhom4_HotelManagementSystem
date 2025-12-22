@@ -479,6 +479,7 @@ public class BookingManagementPanel extends JPanel {
             }
             btnMultiBookingToggle.setText("THOÁT ĐẶT NHIỀU");
             btnMultiBookingToggle.setBackground(CustomUI.darkRed);
+            btnMultiBookingToggle.addActionListener((e) -> refreshPanel());
         } else {
             btnMultiBookingToggle.setIcon(null);
             btnMultiBookingToggle.setText("ĐẶT NHIỀU PHÒNG");

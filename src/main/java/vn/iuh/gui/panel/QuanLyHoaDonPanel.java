@@ -94,13 +94,19 @@ public class QuanLyHoaDonPanel extends JPanel{
 
     private void createTopPanel() {
         JPanel pnlTop = new JPanel(new BorderLayout());
-        JLabel lblTop = new JLabel("Quản lý hóa đơn", SwingConstants.CENTER);
+        JLabel lblTop = new JLabel("QUẢN LÝ HÓA ĐƠN", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
-        lblTop.setFont(CustomUI.normalFont != null ? CustomUI.normalFont.deriveFont(Font.BOLD, 18f) : new Font("Arial", Font.BOLD, 18));
+        lblTop.setFont(CustomUI.bigFont);
+
         pnlTop.setBackground(CustomUI.blue);
         pnlTop.add(lblTop, BorderLayout.CENTER);
-        pnlTop.setPreferredSize(new Dimension(0, TOP_PANEL_HEIGHT));
-        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, TOP_PANEL_HEIGHT));
+
+        pnlTop.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        pnlTop.add(lblTop, BorderLayout.CENTER);
+
         add(pnlTop);
     }
 

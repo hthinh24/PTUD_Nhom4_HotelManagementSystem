@@ -389,7 +389,7 @@ public class Main extends JFrame {
         pnlCenter.add(pnlQuanLyHoaDon, "Tìm hóa đơn");
         pnlCenter.add(pnlQuanLyNhanVien, "Quản lý nhân viên");
         pnlCenter.add(pnlRoomProductivity, "Thống kê hiệu suất");
-        pnlCenter.add(pnlQuanLyPhuPhi, "Quản lý phụ phí");
+        pnlCenter.add(pnlQuanLyPhuPhi, "Tìm phụ phí");
         pnlCenter.add(pnlThietLapHeThong, "Thiết lập hệ thống");
         pnlCenter.add(pnlTG, "Trợ giúp");
 //        showCard("Quản lý đặt phòng");

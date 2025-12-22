@@ -102,20 +102,21 @@ public class RevenueStatisticPanel extends RoleChecking {
         });
     }
     private void createTopPanel() {
-        JPanel pnlTop = new JPanel();
+        JPanel pnlTop = new JPanel(new BorderLayout());
         JLabel lblTop = new JLabel("THỐNG KÊ DOANH THU", SwingConstants.CENTER);
         lblTop.setForeground(CustomUI.white);
         lblTop.setFont(CustomUI.bigFont);
 
         pnlTop.setBackground(CustomUI.blue);
-        pnlTop.add(lblTop);
+        pnlTop.add(lblTop, BorderLayout.CENTER);
 
-        pnlTop.setPreferredSize(new Dimension(0, 40));
-        pnlTop.setMinimumSize(new Dimension(0, 40));
-        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        pnlTop.putClientProperty(FlatClientProperties.STYLE, " arc: 10");
+        pnlTop.setMinimumSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setPreferredSize(new Dimension(0, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, CustomUI.TOP_PANEL_HEIGHT));
+        pnlTop.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        pnlTop.add(lblTop, BorderLayout.CENTER);
 
-        add(pnlTop, BorderLayout.NORTH);
+        add(pnlTop);
     }
 
     private void createFilterPanel(){
