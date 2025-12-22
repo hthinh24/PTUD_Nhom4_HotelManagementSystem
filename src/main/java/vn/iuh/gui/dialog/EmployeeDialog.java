@@ -88,6 +88,18 @@ public class EmployeeDialog extends JDialog {
         txtCCCD = new JTextField(20);
         txtSDT = new JTextField(20);
         datePickerNgaySinh = new DateChooser();
+        datePickerNgaySinh.setDate(null);
+        for (Component comp : datePickerNgaySinh.getComponents()) {
+            if (comp instanceof JLabel) {
+                JLabel lbl = (JLabel) comp;
+                if ("Hôm nay".equals(lbl.getText())) {
+                    datePickerNgaySinh.remove(lbl);
+                    break;
+                }
+            }
+        }
+        datePickerNgaySinh.revalidate();
+        datePickerNgaySinh.repaint();
         styleField(txtMaNV);
         styleField(txtTenNV);
         styleField(txtCCCD);
